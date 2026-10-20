@@ -258,6 +258,27 @@ resource "aws_iam_policy" "infra_scoped_policy" {
             ]
           }
         }
+      },
+      {
+        Sid    = "AllowKMSKeyManagement"
+        Effect = "Allow"
+        Action = [
+          "kms:CreateKey",
+          "kms:DescribeKey",
+          "kms:EnableKey",
+          "kms:EnableKeyRotation",
+          "kms:GetKeyPolicy",
+          "kms:GetKeyRotationStatus",
+          "kms:ListResourceTags",
+          "kms:PutKeyPolicy",
+          "kms:ScheduleKeyDeletion",
+          "kms:TagResource",
+          "kms:UntagResource",
+          "kms:CreateAlias",
+          "kms:DeleteAlias",
+          "kms:UpdateAlias"
+        ]
+        Resource = "*"
       }
     ]
   })
