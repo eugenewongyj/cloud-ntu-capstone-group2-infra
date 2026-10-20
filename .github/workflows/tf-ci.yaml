@@ -1,0 +1,127 @@
+name: Terraform CI 
+run-name: Running Terraform CI by ${{ github.actor }}
+
+on:
+  # pull_request:
+  #   paths:
+  #     - 'terraform/**'
+  #   branches:
+  #     - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write         # For short-lived OIDC token generation
+  contents: read          # Read repo source
+  #pull-requests: write    # Post plan diff comments back to the PR
+
+jobs:
+  Initial-Checks:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Getting initiator name
+      run: echo "Workflow initiated by ${{ github.actor }} from branch ${{ github.ref_name }}"
+  
+  terraform-checks:
+    runs-on: ubuntu-latest
+    needs: Initial-Checks
+    outputs:
+      status: ${{ job.status }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+          fetch-depth: 0 # Required for Gitleaks to inspect the full PR commit range
+
+      # -------------------------------------------------------------
+      # Gate 1: Secret Leak Prevention
+      # -------------------------------------------------------------
+      # - name: Secret Leak Detection (Gitleaks)
+      #   uses: gitleaks/gitleaks-action@v2
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.APP_ACCESS_TOKEN }}
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        role-to-assume: ${{ vars.OIDC_ROLE }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v4
+
+    - name: Terraform fmt
+      id: fmt
+      run: terraform fmt -check
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Validate
+      id: validate
+      run: terraform validate -no-color
+
+    - uses: terraform-linters/setup-tflint@v3
+      with:
+        tflint_version: latest
+    
+    - name: Show version
+      run: tflint --version
+
+    - name: Init TFLint
+      run: tflint --init
+
+    - name: Run TFLint
+      run: tflint -f compact
+
+    - name: Terraform Plan
+      id: plan
+      run: terraform plan -no-color
+
+  snyk-checks:
+    runs-on: ubuntu-latest
+    needs: terraform-checks
+    outputs:
+      status: ${{ job.status }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run Snyk IaC Test
+        run: snyk iac test --severity-threshold=high
+
+  #################################################
+  # Finally, update summary for snyk-check        #
+  # Update needs statement to include snyk-checks #
+  #################################################
+  summary:
+    needs: [terraform-checks, snyk-checks] # add snyk-checks
+    if: always() 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Adding markdown
+        run: |
+          TF_STATUS=${{ needs.terraform-checks.outputs.status }}
+          SNYK_STATUS=${{ needs.snyk-checks.outputs.status }}
+
+          echo '## 🚀 Preparing Build Summary 🚀' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+
+          echo "| Job Name        | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| tf-check       | $TF_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo " snyk-check     | $SNYK_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+
+          echo '## Job ran by: ${{ github.actor }}' >> $GITHUB_STEP_SUMMARY

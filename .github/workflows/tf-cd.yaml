@@ -1,0 +1,56 @@
+name: Terraform CD
+run-name: Running Terraform CD by ${{ github.actor }}
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write       # Required for OIDC
+  contents: read        # To read repo content
+
+jobs:
+  CD:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+   
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        role-to-assume: ${{ vars.OIDC_ROLE }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v4
+
+    - name: Terraform fmt
+      run: terraform fmt -check
+
+    - name: Terraform Init
+      run: terraform init
+       
+    - name: Terraform Validate
+      run: terraform validate
+
+    - uses: terraform-linters/setup-tflint@v3
+      with:
+        tflint_version: latest
+   
+    - name: Show version
+      run: tflint --version
+
+    - name: Init TFLint
+      run: tflint --init
+
+    - name: Run TFLint
+      run: tflint -f compact
+   
+    - name: Terraform Plan
+      run: terraform plan
+
+    - name: Terraform Apply
+      run: terraform apply --auto-approve

@@ -1,0 +1,43 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write       # Required for AWS OIDC authentication
+  contents: read        # Required to read repository code
+
+jobs:
+  destroy:
+    name: "Terraform Destroy"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.OIDC_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Inspect Workspace and Files
+        run: |
+          echo "Current working directory:"
+          pwd
+          echo "Listing all files in this directory:"
+          ls -la
+          echo "Finding all .tf files:"
+          find . -name "*.tf"
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan for Destroy
+        run: terraform plan -destroy
+
+      - name: Terraform Destroy
+        run: terraform destroy --auto-approve
