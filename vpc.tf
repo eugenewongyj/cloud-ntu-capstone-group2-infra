@@ -32,7 +32,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.project_name}-public-subnet-${count.index + 1}"
+    Name                     = "${var.project_name}-public-subnet-${count.index + 1}"
     "kubernetes.io/role/elb" = "1" # Required by AWS Load Balancer Controller for public internet-facing ALBs
   }
 }
@@ -45,7 +45,7 @@ resource "aws_subnet" "private" {
   availability_zone = data.aws_availability_zones.aws_az.names[count.index]
 
   tags = {
-    Name = "${var.project_name}-private-subnet-${count.index + 1}"
+    Name                              = "${var.project_name}-private-subnet-${count.index + 1}"
     "kubernetes.io/role/internal-elb" = "1" # Required by AWS Load Balancer Controller for internal NLBs/ALBs
   }
 }
