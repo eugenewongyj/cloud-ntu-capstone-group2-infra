@@ -22,8 +22,6 @@ module "eks" {
     node_pools = ["general-purpose", "system"]
   }
 
-  create_auto_mode_iam_resources = true
-
   # Grants cluster admin permissions to the role/user executing Terraform
   enable_cluster_creator_admin_permissions = true
 
