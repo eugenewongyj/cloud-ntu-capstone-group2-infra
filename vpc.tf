@@ -1,3 +1,8 @@
+# Data source to fetch AZs in current region
+data "aws_availability_zones" "aws_az" {
+  state = "available"
+}
+
 # 1. Create VPC
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
@@ -28,6 +33,7 @@ resource "aws_subnet" "public" {
 
   tags = {
     Name = "${var.project_name}-public-subnet-${count.index + 1}"
+    "kubernetes.io/role/elb" = "1" # Required by AWS Load Balancer Controller for public internet-facing ALBs
   }
 }
 
@@ -40,6 +46,7 @@ resource "aws_subnet" "private" {
 
   tags = {
     Name = "${var.project_name}-private-subnet-${count.index + 1}"
+    "kubernetes.io/role/internal-elb" = "1" # Required by AWS Load Balancer Controller for internal NLBs/ALBs
   }
 }
 
