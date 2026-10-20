@@ -279,6 +279,25 @@ resource "aws_iam_policy" "infra_scoped_policy" {
           "kms:UpdateAlias"
         ]
         Resource = "*"
+      },
+      {
+        "Sid": "AllowKMSListAliases",
+        "Effect": "Allow",
+        "Action": [
+          "kms:ListAliases",
+          "kms:DescribeKey"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Sid": "AllowEKSAccessPolicyRead",
+        "Effect": "Allow",
+        "Action": [
+          "eks:ListAssociatedAccessPolicies",
+          "eks:DescribeAccessEntry",
+          "eks:ListAccessEntries"
+        ],
+        "Resource": "*"
       }
     ]
   })
