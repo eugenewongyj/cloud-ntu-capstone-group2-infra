@@ -234,8 +234,11 @@ resource "aws_iam_policy" "infra_scoped_policy" {
         ]
         Resource = [
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/capstone-*",
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*eks*",
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/${var.prefix}-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/capstone-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*eks*",
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/*"
         ]
       },
