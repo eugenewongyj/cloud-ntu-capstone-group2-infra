@@ -2,8 +2,8 @@ name: Terraform CD
 run-name: Running Terraform CD by ${{ github.actor }}
 
 on:
-  push:
-    branches: [ "main" ]
+  # push:
+  #   branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
