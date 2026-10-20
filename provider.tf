@@ -1,5 +1,10 @@
 terraform {
   required_version = ">= 1.5.0"
+  backend "s3" {
+    bucket = "sctp-core-tfstate"
+    key    = "group2/cloud-ntu-capstone-group2-infra.tfstate"
+    region = "ap-southeast-1"
+  }
   required_providers {
     aws = {
       source  = "hashicorp/aws"
