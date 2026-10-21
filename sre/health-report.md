@@ -181,7 +181,6 @@ Our team has configured remote Terraform state in Amazon S3, with separate state
 | Item | Observation | Recommended Action |
 |---|---|---|
 | AWS Provider | Previously shared lock file records `6.69.1`, while root configuration requires `~> 5.0` | Confirm intended provider version and consistent initialisation |
-| ECR Lifecycle | Description says 10 images; rule specifies 14 days | Align policy wording and actual behaviour |
 | NAT Gateway | Single gateway shared by private subnets | Accept staging trade-off or review resilience needs |
 | OIDC Trust | Repository matching uses wildcards | Review least-privilege trust scope |
 | Terraform State Protection | Remote S3 backend configured; locking and recovery not confirmed | Verify state access, locking, versioning and recovery |
