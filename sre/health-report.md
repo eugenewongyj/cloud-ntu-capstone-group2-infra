@@ -105,8 +105,6 @@ Amazon ECR stores the Docker images used to deploy our five application microser
 - [ ] EKS can pull the required images.
 - [ ] Image retention behaviour is suitable for rollback.
 
-**Configuration review:** The ECR lifecycle policy description says it retains the latest 10 images, but the implemented rule expires images older than 14 days. The team should confirm the intended retention policy.
-
 ---
 
 ## 🛒 3. Application Health
