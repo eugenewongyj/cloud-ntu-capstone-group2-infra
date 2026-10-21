@@ -255,7 +255,6 @@ These are planned objectives, not completed monitoring capabilities.
 
 - The locally authenticated AWS identity returned no EKS clusters in `ap-southeast-1`; confirm the actual deployment account and region.
 - Confirm AWS provider version consistency.
-- Clarify ECR image retention behaviour.
 - Review OIDC trust restrictions and Terraform state protection.
 
 ---
@@ -273,7 +272,6 @@ These are planned objectives, not completed monitoring capabilities.
 ### Priority 2 — Review Configuration
 
 - [ ] Resolve Terraform provider version discrepancy.
-- [ ] Clarify ECR lifecycle retention policy.
 - [ ] Review OIDC trust policies and deployment access.
 - [ ] Verify Terraform state protection.
 - [ ] Review single-NAT resilience trade-off.
