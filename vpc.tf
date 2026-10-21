@@ -1,8 +1,3 @@
-# Data source to fetch AZs in current region
-data "aws_availability_zones" "aws_az" {
-  state = "available"
-}
-
 # 1. Create VPC
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
