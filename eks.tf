@@ -35,6 +35,10 @@ module "eks" {
       policy_associations = {
         retail_edit = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
+
+          access_scope = {
+            type = "cluster"
+          }
         }
       }
     }
