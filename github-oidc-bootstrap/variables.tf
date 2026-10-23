@@ -6,7 +6,7 @@ variable "aws_region" {
 }
 variable "prefix" {
   type        = string
-  default     = "group2-project"
+  default     = "group2-capstone"
   description = "Prefix for all resources"
 }
 # variable "name" {

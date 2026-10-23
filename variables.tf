@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "project_name" {
   type        = string
   description = "Prefix for tagging resources"
-  default     = "group2-project"
+  default     = "group2-capstone"
 }
 
 variable "vpc_cidr" {
