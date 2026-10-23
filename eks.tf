@@ -28,6 +28,19 @@ module "eks" {
   # Enable IRSA (IAM Roles for Service Accounts)
   enable_irsa = true
 
+  access_entries = {
+    github_app_deployer = {
+      principal_arn = "arn:aws:iam::255945442255:role/group2-project-app-deployer-role"
+
+      policy_associations = {
+        retail_edit = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
+        }
+      }
+    }
+  }
+
+
   tags = {
     Environment = "staging"
     Project     = var.project_name
