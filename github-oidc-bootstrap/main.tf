@@ -242,7 +242,9 @@ resource "aws_iam_policy" "infra_scoped_policy" {
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/${var.prefix}-*",
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/capstone-*",
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*eks*",
-          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/*"
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/group2-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/group2-*"
         ]
       },
       # PassRole specifically for EKS and EC2 Worker Nodes
@@ -279,7 +281,8 @@ resource "aws_iam_policy" "infra_scoped_policy" {
           "kms:UntagResource",
           "kms:CreateAlias",
           "kms:DeleteAlias",
-          "kms:UpdateAlias"
+          "kms:UpdateAlias",
+          "kms:UpdateKeyDescription"
         ]
         Resource = "*"
       },
