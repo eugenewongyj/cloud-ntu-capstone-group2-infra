@@ -110,7 +110,12 @@ resource "aws_iam_policy" "infra_scoped_policy" {
           "eks:DeleteAccessEntry",
           "eks:DescribeAccessEntry",
           "eks:AssociateAccessPolicy",
-          "eks:DisassociateAccessPolicy"
+          "eks:DisassociateAccessPolicy",
+          # Pod Identity permissions
+          "eks:CreatePodIdentityAssociation",
+          "eks:DeletePodIdentityAssociation",
+          "eks:DescribePodIdentityAssociation",
+          "eks:ListPodIdentityAssociations"
         ]
         Resource = "*"
       },
