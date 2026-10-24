@@ -42,6 +42,70 @@ module "eks" {
         }
       }
     }
+    # 2. Team Member: Eugene Wong
+    eugene = {
+      principal_arn = "arn:aws:iam::255945442255:user/students/ce13/eugenewongyj"
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+
+    # 3. Team Member: JoyLearn
+    joylearn = {
+      principal_arn = "arn:aws:iam::255945442255:user/students/ce13/JoyLearn"
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+
+    # 4. Team Member: TK / Peh
+    peh3 = {
+      principal_arn = "arn:aws:iam::255945442255:user/students/ce13/peh3"
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+
+    # 5. Team Member: tagitables
+    tagitables = {
+      principal_arn = "arn:aws:iam::255945442255:user/students/ce13/tagitables"
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+
+    # 6. Team Member: Zeyaul Haq
+    zeyaulhaq = {
+      principal_arn = "arn:aws:iam::255945442255:user/students/ce13/zeyaulhaq"
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
   }
 
 
