@@ -175,6 +175,48 @@ resource "aws_iam_policy" "infra_scoped_policy" {
         ]
         Resource = "*"
       },
+      # RDS: Full Aurora MySQL & DB Subnet Group Lifecycle Management
+      {
+        Sid    = "RDSClusterAndSubnetGroupManagement"
+        Effect = "Allow"
+        Action = [
+          "rds:CreateDBSubnetGroup",
+          "rds:DeleteDBSubnetGroup",
+          "rds:DescribeDBSubnetGroups",
+          "rds:ModifyDBSubnetGroup",
+          "rds:CreateDBCluster",
+          "rds:DeleteDBCluster",
+          "rds:DescribeDBClusters",
+          "rds:DescribeGlobalClusters", # <--- ADD THIS
+          "rds:ModifyDBCluster",
+          "rds:CreateDBInstance",
+          "rds:DeleteDBInstance",
+          "rds:DescribeDBInstances",
+          "rds:ModifyDBInstance",
+          "rds:ListTagsForResource",
+          "rds:AddTagsToResource",
+          "rds:RemoveTagsFromResource",
+          "rds:DescribeDBClusterSnapshots",
+          "rds:DescribeDBClusterEndpoints"
+        ]
+        Resource = "*"
+      },
+      # Secrets Manager: Auto-managed master password for Aurora Serverless v2
+      {
+        Sid    = "SecretsManagerAuroraPasswordManagement"
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:CreateSecret",
+          "secretsmanager:DeleteSecret",
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:PutSecretValue",
+          "secretsmanager:TagResource",
+          "secretsmanager:UntagResource",
+          "secretsmanager:ListSecrets"
+        ]
+        Resource = "*"
+      },
       # CloudWatch Logs Management
       {
         Sid    = "LogsDescribeAction"
