@@ -1,3 +1,8 @@
+# 0. Look up available AZs in the region
+data "aws_availability_zones" "aws_az" {
+  state = "available"
+}
+
 # 1. Create VPC
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
@@ -5,7 +10,9 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
 
   tags = {
-    Name = "${var.project_name}-vpc"
+    Name        = "${var.project_name}-vpc"
+    environment = "common"
+    component   = "infra"
   }
 }
 
@@ -14,7 +21,9 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.project_name}-igw"
+    Name        = "${var.project_name}-igw"
+    environment = "common"
+    component   = "infra"
   }
 }
 
@@ -29,6 +38,8 @@ resource "aws_subnet" "public" {
   tags = {
     Name                     = "${var.project_name}-public-subnet-${count.index + 1}"
     "kubernetes.io/role/elb" = "1" # Required by AWS Load Balancer Controller for public internet-facing ALBs
+    environment              = "common"
+    component                = "infra"
   }
 }
 
@@ -42,6 +53,8 @@ resource "aws_subnet" "private" {
   tags = {
     Name                              = "${var.project_name}-private-subnet-${count.index + 1}"
     "kubernetes.io/role/internal-elb" = "1" # Required by AWS Load Balancer Controller for internal NLBs/ALBs
+    environment                       = "common"
+    component                         = "infra"
   }
 }
 
@@ -55,7 +68,9 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "${var.project_name}-public-rt"
+    Name        = "${var.project_name}-public-rt"
+    environment = "common"
+    component   = "infra"
   }
 }
 
@@ -71,7 +86,9 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 
   tags = {
-    Name = "${var.project_name}-nat-eip"
+    Name        = "${var.project_name}-nat-eip"
+    environment = "common"
+    component   = "infra"
   }
 }
 
@@ -81,7 +98,9 @@ resource "aws_nat_gateway" "main" {
   subnet_id     = aws_subnet.public[0].id # Placed in public subnet 1
 
   tags = {
-    Name = "${var.project_name}-nat-gw"
+    Name        = "${var.project_name}-nat-gw"
+    environment = "common"
+    component   = "infra"
   }
 
   # Ensure IGW exists before creating NAT GW to avoid provisioning errors
@@ -98,7 +117,9 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "${var.project_name}-private-rt"
+    Name        = "${var.project_name}-private-rt"
+    environment = "common"
+    component   = "infra"
   }
 }
 
@@ -107,4 +128,36 @@ resource "aws_route_table_association" "private" {
   count          = length(aws_subnet.private)
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
+}
+
+# 5. Database Subnets (Dynamically mapped across available AZs, isolated from internet)
+resource "aws_subnet" "database" {
+  count             = length(var.database_subnet_cidrs)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.database_subnet_cidrs[count.index]
+  availability_zone = data.aws_availability_zones.aws_az.names[count.index]
+
+  tags = {
+    Name        = "${var.project_name}-database-subnet-${count.index + 1}"
+    environment = "common"
+    component   = "infra"
+  }
+}
+
+# 6. Database Route Table (no 0.0.0.0/0 route: VPC-local traffic only)
+resource "aws_route_table" "database" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name        = "${var.project_name}-database-rt"
+    environment = "common"
+    component   = "infra"
+  }
+}
+
+# 7. Associate Database Subnets with the Database Route Table
+resource "aws_route_table_association" "database" {
+  count          = length(aws_subnet.database)
+  subnet_id      = aws_subnet.database[count.index].id
+  route_table_id = aws_route_table.database.id
 }
