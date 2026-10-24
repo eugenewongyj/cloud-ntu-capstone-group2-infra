@@ -8,6 +8,12 @@ on:
   #   branches:
   #     - main
   workflow_dispatch:
+      inputs:
+          target_branch:
+            description: "Branch to checkout and run Terraform on"
+            required: true
+            default: "main"
+            type: string
 
 permissions:
   id-token: write         # For short-lived OIDC token generation
@@ -31,6 +37,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref }}
           fetch-depth: 0 # Required for Gitleaks to inspect the full PR commit range
 
       # -------------------------------------------------------------
