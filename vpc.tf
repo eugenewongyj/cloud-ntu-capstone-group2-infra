@@ -1,7 +1,7 @@
 # 0. Look up available AZs in the region
-data "aws_availability_zones" "aws_az" {
-  state = "available"
-}
+# data "aws_availability_zones" "aws_az" {
+#   state = "available"
+# }
 
 # 1. Create VPC
 resource "aws_vpc" "main" {
