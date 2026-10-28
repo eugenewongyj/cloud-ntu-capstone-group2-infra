@@ -2,8 +2,8 @@ apiVersion: v1
 data:
   capstone-health.json: |
     {
-      "title": "SwiftKart \u2014 SRE Health Dashboard",
-      "uid": "swiftkart-sre-health",
+      "title": "Capstone \u2014 SRE Health Dashboard",
+      "uid": "capstone-sre-health",
       "schemaVersion": 39,
       "version": 1,
       "refresh": "30s",
@@ -131,5 +131,5 @@ kind: ConfigMap
 metadata:
   labels:
     grafana_dashboard: "1"
-  name: swiftkart-sre-dashboard
+  name: capstone-sre-dashboard
   namespace: capstone-monitoring

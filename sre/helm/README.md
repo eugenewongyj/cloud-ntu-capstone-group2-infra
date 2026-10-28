@@ -1,6 +1,6 @@
-# SwiftKart SRE — Helm Configuration
+# Capstone SRE — Helm Configuration
 
-This directory contains Helm values and Grafana dashboard definitions for the SwiftKart observability stack.
+This directory contains Helm values and Grafana dashboard definitions for the Capstone observability stack.
 
 ## Components
 
@@ -13,7 +13,7 @@ This directory contains Helm values and Grafana dashboard definitions for the Sw
 
 ## Deployment
 
-The configurations are prepared for future deployment to the SwiftKart AWS EKS Auto Mode environment.
+The configurations are prepared for future deployment to the Capstone AWS EKS Auto Mode environment.
 
 All Helm templates and configuration files should be validated before deployment. Kubernetes resource manifests are maintained separately under `sre/kubernetes/`.
 

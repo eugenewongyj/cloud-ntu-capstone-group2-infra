@@ -1,5 +1,5 @@
 
-# Grafana Alloy Helm values for SwiftKart SRE logging.
+# Grafana Alloy Helm values for Capstone SRE logging.
 
 controller:                         # Defines how Alloy runs in Kubernetes.
   type: deployment                  # Uses one Deployment instead of a node-level DaemonSet.
@@ -16,15 +16,15 @@ alloy:                              # Configures the Alloy application.
     create: true                    # Helm creates the configuration ConfigMap.
     content: |-                     # Alloy configuration uses River syntax, not YAML.
 
-      discovery.kubernetes "swiftkart_pods" {
+      discovery.kubernetes "capstone_pods" {
         role = "pod"                // Discovers Kubernetes Pods.
         namespaces {
           names = ["default"]       // Restricts discovery to the expected application namespace.
         }
       }
 
-      discovery.relabel "swiftkart_pods" {
-        targets = discovery.kubernetes.swiftkart_pods.targets
+      discovery.relabel "capstone_pods" {
+        targets = discovery.kubernetes.capstone_pods.targets
 
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_owner"]
@@ -48,12 +48,12 @@ alloy:                              # Configures the Alloy application.
         }
       }
 
-      loki.source.kubernetes "swiftkart_logs" {
-        targets    = discovery.relabel.swiftkart_pods.output
-        forward_to = [loki.write.swiftkart.receiver]
+      loki.source.kubernetes "capstone_logs" {
+        targets    = discovery.relabel.capstone_pods.output
+        forward_to = [loki.write.capstone.receiver]
       }
 
-      loki.write "swiftkart" {
+      loki.write "capstone" {
         endpoint {
           url = "http://capstone-loki-gateway.capstone-monitoring.svc.cluster.local/loki/api/v1/push"
         }

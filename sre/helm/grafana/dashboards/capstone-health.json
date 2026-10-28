@@ -1,6 +1,6 @@
 {
-  "title": "SwiftKart \u2014 SRE Health Dashboard",
-  "uid": "swiftkart-sre-health",
+  "title": "Capstone \u2014 SRE Health Dashboard",
+  "uid": "capstone-sre-health",
   "schemaVersion": 39,
   "version": 1,
   "refresh": "30s",
