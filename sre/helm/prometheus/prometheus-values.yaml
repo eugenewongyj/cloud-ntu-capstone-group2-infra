@@ -1,0 +1,35 @@
+# Helm values for prometheus-community/kube-prometheus-stack; review against the pinned chart version before deployment.
+grafana:                                           # Configures the Grafana instance bundled with the monitoring chart.
+  enabled: true                                    # Enables Grafana without installing a separate Grafana release.grafana:                                             # Configures Grafana bundled with kube-prometheus-stack.
+  enabled: true                                      # Enables the existing Grafana instance.
+  additionalDataSources:                             # Adds datasources alongside the chart-provisioned Prometheus datasource.
+    - name: Loki                                     # Displays this datasource as Loki in Grafana.
+      type: loki                                     # Uses Grafana's Loki datasource plugin.
+      uid: loki                                      # Assigns a stable identifier for dashboards.
+      access: proxy                                  # Grafana's backend sends queries to Loki.
+      url: http://capstone-loki-gateway.capstone-monitoring.svc.cluster.local # Uses the internal Loki gateway Service.
+      isDefault: false                               # Keeps Prometheus as the default datasource.
+      editable: false                                # Prevents accidental edits through the Grafana UI.alertmanager:                                      # Configures alert processing and notification delivery.
+  enabled: true                                    # Enables Alertmanager; notification receivers still need configuration.
+kubeStateMetrics:                                  # Configures Kubernetes object-state metrics collection.
+  enabled: true                                    # Enables metrics for Pods, Deployments, ReplicaSets, and other objects.
+kubeApiServer:                                     # Controls Kubernetes API server monitoring.
+  enabled: false                                   # Excludes control-plane scraping from the current SRE scope.
+kubeControllerManager:                             # Controls controller-manager monitoring.
+  enabled: false                                   # Avoids scraping the managed controller manager.
+kubeScheduler:                                     # Controls Kubernetes scheduler monitoring.
+  enabled: false                                   # Avoids scraping the managed scheduler.
+kubeEtcd:                                          # Controls etcd monitoring.
+  enabled: false                                   # Avoids scraping the managed control-plane datastore.
+nodeExporter:                                      # Configures the chart's node-exporter component.
+  enabled: false                                   # Leaves host-level exporter disabled pending EKS Auto Mode review.
+prometheus:                                        # Configures the Prometheus metrics server.
+  enabled: true                                    # Enables Prometheus collection and time-series storage.
+  prometheusSpec:                                  # Defines the Prometheus custom resource managed by the Operator.
+    retention: 7d                                  # Retains metrics for seven days, subject to available storage.
+    serviceMonitorSelectorNilUsesHelmValues: false # Allows ServiceMonitor discovery without the chart's release-label default.
+    ruleSelectorNilUsesHelmValues: false           # Allows PrometheusRule discovery without the chart's release-label default.
+    resources:                                     # Defines scheduling requirements for Prometheus.
+      requests:                                    # Reserves baseline resources; these are not hard limits.
+        cpu: 200m                                  # Requests 200 millicores of CPU.
+        memory: 512Mi                              # Requests 512 MiB of memory.

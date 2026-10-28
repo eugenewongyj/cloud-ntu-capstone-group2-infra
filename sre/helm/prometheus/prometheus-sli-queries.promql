@@ -1,0 +1,23 @@
+# CAPSTONE SRE — PROMETHEUS HEALTH QUERIES
+# These queries provide an initial Kubernetes monitoring baseline.
+# HTTP request metrics and P95 latency queries will be added after verifying exported metric names.
+
+# 1. SCRAPE TARGET AVAILABILITY
+# Returns 1 when Prometheus successfully scrapes a target and 0 when scraping fails.
+up{namespace="default"}
+
+# 2. AVAILABLE APPLICATION REPLICAS
+# Shows available replicas reported by Kubernetes Deployments.
+kube_deployment_status_replicas_available{namespace="default"}
+
+# 3. DESIRED APPLICATION REPLICAS
+# Shows the desired replica count configured for each Deployment.
+kube_deployment_spec_replicas{namespace="default"}
+
+# 4. POD RESTARTS
+# Shows the total container restart count reported by kube-state-metrics.
+kube_pod_container_status_restarts_total{namespace="default"}
+
+# 5. POD READINESS
+# Shows whether individual Pods are ready.
+kube_pod_status_ready{namespace="default",condition="true"}
