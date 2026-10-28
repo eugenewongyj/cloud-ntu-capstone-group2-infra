@@ -1,0 +1,34 @@
+# Helm values for grafana/loki (single-binary learning configuration); confirm chart version and storage class.
+deploymentMode: SingleBinary                        # Runs Loki as one workload rather than a distributed deployment.
+loki:                                                # Defines Loki's internal storage and query settings.
+  auth_enabled: false                                 # Disables tenant authentication; restrict network access accordingly.
+  commonConfig:                                       # Sets configuration shared by Loki's internal components.
+    replication_factor: 1                             # Stores one copy of data; not highly available.
+  schemaConfig:                                       # Describes the log index and object storage schema.
+    configs:                                          # Lists schema periods for Loki data.
+      - from: "2024-01-01"                           # Applies this schema to logs from this date onward.
+        store: tsdb                                   # Uses the TSDB indexing format.
+        object_store: filesystem                      # Uses local filesystem storage for this starter setup.
+        schema: v13                                   # Uses Loki schema version 13.
+        index:                                        # Sets index prefix and rotation period.
+          prefix: index_                              # Prefixes stored index entries.
+          period: 24h                                 # Creates daily index periods.
+  storage:                                            # Selects Loki's underlying storage backend.
+    type: filesystem                                  # Stores logs on a mounted volume, not S3.
+singleBinary:                                         # Configures the single-binary Loki workload.
+  replicas: 1                                         # Runs one Loki Pod; a restart can interrupt ingestion.
+  persistence:                                        # Configures persistent storage for Loki data.
+    enabled: true                                     # Requests a persistent volume; verify EKS Auto Mode CSI support.
+    size: 10Gi                                        # Requests a 10 GiB volume; adjust for traffic and retention.
+read:                                                # Configures the separate read component.
+  replicas: 0                                         # Disables it in single-binary mode.
+write:                                               # Configures the separate write component.
+  replicas: 0                                         # Disables it in single-binary mode.
+backend:                                             # Configures the separate backend component.
+  replicas: 0                                         # Disables it in single-binary mode.
+chunksCache:                                         # Controls Loki's chunk cache.
+  enabled: false                                    # Avoids deploying a separate Memcached workload.
+
+resultsCache:                                        # Controls Loki's query results cache.
+  enabled: false                                    # Avoids deploying another Memcached workload.
+# No retention policy is asserted here; configure and validate retention before deployment.

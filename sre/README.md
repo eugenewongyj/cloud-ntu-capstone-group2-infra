@@ -1,6 +1,6 @@
 # Site Reliability Engineering (SRE)
 
-This directory contains the Site Reliability Engineering workstream for Group 2's SwiftKart e-commerce capstone on Amazon EKS.
+This directory contains the Site Reliability Engineering workstream for Group 2's Capstone e-commerce capstone on Amazon EKS.
 
 ## Objective
 
@@ -22,7 +22,7 @@ Establish application reliability through observability, performance monitoring,
 
 ## Key Reliability Requirements
 
-- Monitor SwiftKart's five microservices: UI, Catalog, Carts, Orders, and Checkout.
+- Monitor Capstone's five microservices: UI, Catalog, Carts, Orders, and Checkout.
 - Measure product listing p95 latency against the 500 ms flash-sale requirement.
 - Observe automatic scaling during increased traffic.
 - Define at least two measurable SLIs/SLOs.
