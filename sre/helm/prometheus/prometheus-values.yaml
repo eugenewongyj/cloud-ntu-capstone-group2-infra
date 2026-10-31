@@ -1,6 +1,5 @@
 # Helm values for prometheus-community/kube-prometheus-stack; review against the pinned chart version before deployment.
 grafana:                                           # Configures the Grafana instance bundled with the monitoring chart.
-  enabled: true                                    # Enables Grafana without installing a separate Grafana release.grafana:                                             # Configures Grafana bundled with kube-prometheus-stack.
   enabled: true                                      # Enables the existing Grafana instance.
   additionalDataSources:                             # Adds datasources alongside the chart-provisioned Prometheus datasource.
     - name: Loki                                     # Displays this datasource as Loki in Grafana.
@@ -9,7 +8,8 @@ grafana:                                           # Configures the Grafana inst
       access: proxy                                  # Grafana's backend sends queries to Loki.
       url: http://capstone-loki-gateway.capstone-monitoring.svc.cluster.local # Uses the internal Loki gateway Service.
       isDefault: false                               # Keeps Prometheus as the default datasource.
-      editable: false                                # Prevents accidental edits through the Grafana UI.alertmanager:                                      # Configures alert processing and notification delivery.
+      editable: false                                # Prevents accidental edits through the Grafana UI.
+alertmanager:                                      # Configures alert processing and notification delivery.
   enabled: true                                    # Enables Alertmanager; notification receivers still need configuration.
 kubeStateMetrics:                                  # Configures Kubernetes object-state metrics collection.
   enabled: true                                    # Enables metrics for Pods, Deployments, ReplicaSets, and other objects.
