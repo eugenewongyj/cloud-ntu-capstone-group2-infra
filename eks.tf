@@ -30,7 +30,7 @@ module "eks" {
 
   access_entries = {
     github_app_deployer = {
-      principal_arn = "arn:aws:iam::255945442255:role/group2-capstone-app-deployer-role"
+      principal_arn = "arn:aws:iam::255945442255:role/group2-tk-app-deployer-role"
 
       policy_associations = {
         retail_edit = {

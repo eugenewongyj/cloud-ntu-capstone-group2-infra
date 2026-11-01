@@ -40,13 +40,13 @@ jobs:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref }}
           fetch-depth: 0 # Required for Gitleaks to inspect the full PR commit range
 
-      # -------------------------------------------------------------
-      # Gate 1: Secret Leak Prevention
-      # -------------------------------------------------------------
-      # - name: Secret Leak Detection (Gitleaks)
-      #   uses: gitleaks/gitleaks-action@v2
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.APP_ACCESS_TOKEN }}
+    #-------------------------------------------------------------
+    #Gate 1: Secret Leak Prevention
+    #-------------------------------------------------------------
+    - name: Secret Leak Detection (Gitleaks)
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.APP_ACCESS_TOKEN }}
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v6
