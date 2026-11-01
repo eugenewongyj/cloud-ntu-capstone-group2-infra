@@ -5,7 +5,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin-group2-capstone@sctp-sandbox.com
+    email: admin@sctp-sandbox.com
     privateKeySecretRef:
       name: letsencrypt-prod-account-key
     solvers:
