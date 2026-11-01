@@ -16,7 +16,7 @@ zoneIdFilters:
 
 policy: sync
 registry: txt
-txtOwnerId: group2-capstone-cluster
+txtOwnerId: group2-tk-cluster
 
 sources:
   - ingress

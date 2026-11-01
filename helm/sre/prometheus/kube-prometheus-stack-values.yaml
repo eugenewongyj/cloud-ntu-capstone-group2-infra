@@ -14,8 +14,12 @@ prometheus:
   prometheusSpec:
     replicas: 1
     retention: 14d
+    # Allows Prometheus to discover ServiceMonitors across ANY namespace
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
+    # Optional: Match all labels without restriction
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
     storageSpec:
       volumeClaimTemplate:
         spec:
