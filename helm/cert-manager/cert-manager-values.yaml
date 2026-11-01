@@ -1,0 +1,13 @@
+# Automatically installs required CustomResourceDefinitions (Certificate, Issuer, etc.)
+installCRDs: true
+
+replicaCount: 1
+
+prometheus:
+  enabled: false # Keep false until kube-prometheus-stack is up
+
+webhook:
+  replicaCount: 1
+
+cainjector:
+  replicaCount: 1
