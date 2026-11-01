@@ -87,11 +87,3 @@ resource "aws_iam_role_policy" "loki_s3_policy" {
     ]
   })
 }
-
-# Bind role to the Loki ServiceAccount
-resource "aws_eks_pod_identity_association" "loki" {
-  cluster_name    = module.eks.cluster_name
-  namespace       = kubernetes_namespace.loki.metadata[0].name
-  service_account = "loki"
-  role_arn        = aws_iam_role.loki_s3_role.arn
-}
