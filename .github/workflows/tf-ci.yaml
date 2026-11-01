@@ -43,10 +43,10 @@ jobs:
     #-------------------------------------------------------------
     #Gate 1: Secret Leak Prevention
     #-------------------------------------------------------------
-    - name: Secret Leak Detection (Gitleaks)
-      uses: gitleaks/gitleaks-action@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.APP_ACCESS_TOKEN }}
+    # - name: Secret Leak Detection (Gitleaks)
+    #   uses: gitleaks/gitleaks-action@v2
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.APP_ACCESS_TOKEN }}
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v6

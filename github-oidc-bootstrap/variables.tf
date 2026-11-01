@@ -6,7 +6,7 @@ variable "aws_region" {
 }
 variable "prefix" {
   type        = string
-  default     = "group2-tk"
+  default     = "group2-capstone"
   description = "Prefix for all resources"
 }
 
@@ -16,19 +16,19 @@ variable "prefix" {
 variable "github_repository_username" {
   description = "GitHub repository username"
   type        = string
-  default     = "peh3"
+  default     = "eugenewongyj"
 }
 
 variable "github_app_repository_name" {
   description = "GitHub repository name for application"
   type        = string
-  default     = "group2-tk-app"
+  default     = "cloud-ntu-capstone-group2-app"
 }
 
 variable "github_infra_repository_name" {
   description = "GitHub repository name for Terraform infra"
   type        = string
-  default     = "group2-tk-infra"
+  default     = "cloud-ntu-capstone-group2-infra"
 }
 
 variable "tfstate_bucket_name" {
