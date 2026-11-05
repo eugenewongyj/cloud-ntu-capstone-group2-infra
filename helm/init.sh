@@ -1,5 +1,5 @@
 ##
-aws eks update-kubeconfig --region ap-southeast-1 --name group2-tk-cluster
+aws eks update-kubeconfig --region ap-southeast-1 --name group2-capstone-cluster
 
 ##Deploy Ingress-NGINX::
 helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \

@@ -1,5 +1,5 @@
 ##
-aws eks update-kubeconfig --region ap-southeast-1 --name group2-tk-cluster
+aws eks update-kubeconfig --region ap-southeast-1 --name group2-capstone-cluster
 
 kubectl delete ingress -n monitoring --all --ignore-not-found
 kubectl delete ingress -n default --all --ignore-not-found
@@ -14,4 +14,4 @@ helm uninstall ingress-nginx -n ingress-nginx
 kubectl delete pvc -n monitoring --all
 
 kubectl delete clusterissuer letsencrypt-prod --ignore-not-found
-kubectl delete secret -n monitoring grafana-tls-cert group2-tk-grafana-tls --ignore-not-found
+kubectl delete secret -n monitoring grafana-tls-cert group2-capstone-grafana-tls --ignore-not-found
