@@ -1,28 +1,24 @@
-# Re-register the Target into AWS NLB Target Groups
+## Accessing Platform Dashboards
 
-TG_32008="arn:aws:elasticloadbalancing:ap-southeast-1:255945442255:targetgroup/k8s-kubesyst-ciliumin-1fb597fa15/23aaf07d591e9f01"
-TG_30138="arn:aws:elasticloadbalancing:ap-southeast-1:255945442255:targetgroup/k8s-kubesyst-ciliumin-117af638ff/2f743dd89bd8889d"
+After successfully running `./init.sh`, the core platform UI dashboards will be provisioned. Use the commands below to retrieve your initial admin passwords.
 
-# Register to HTTP target group (port 32008)
-aws elbv2 register-targets --region ap-southeast-1 \
-  --target-group-arn "$TG_32008" \
-  --targets Id=i-0ed271a2a116e1ae5,Port=32008
+### 1. Argo CD
+Argo CD orchestrates our GitOps deployments and provides a UI to monitor application health and sync status.
 
-# Register to HTTPS target group (port 30138)
-aws elbv2 register-targets --region ap-southeast-1 \
-  --target-group-arn "$TG_30138" \
-  --targets Id=i-0ed271a2a116e1ae5,Port=30138
+* **URL:** [https://group2-capstore-argocd.sctp-sandbox.com](https://group2-capstone-argocd.sctp-sandbox.com)
+* **Username:** `admin`
+* **Retrieve Password:**
+  Run the following command to decode the initial admin password from the Kubernetes secret:
+  ```bash
+  kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d && echo
 
 
-# Verify Target Health
-echo "=== HTTP (Port 32008) Target Group Health ==="
-aws elbv2 describe-target-health --region ap-southeast-1 \
-  --target-group-arn "$TG_32008" \
-  --query "TargetHealthDescriptions[*].[Target.Id,Target.Port,TargetHealth.State]" \
-  --output table
+### 2. Grafana (Prometheus Monitoring Stack)
+Grafana provides cluster observability, metrics, and alerting dashboards, deployed via the kube-prometheus-stack.
 
-echo "=== HTTPS (Port 30138) Target Group Health ==="
-aws elbv2 describe-target-health --region ap-southeast-1 \
-  --target-group-arn "$TG_30138" \
-  --query "TargetHealthDescriptions[*].[Target.Id,Target.Port,TargetHealth.State]" \
-  --output table
+* **URL:** [https://group2-capstore-grafana.sctp-sandbox.com](https://group2-capstone-grafana.sctp-sandbox.com)
+* **Username:** `admin`
+* **Retrieve Password:**
+  Run the following command to decode the initial admin password from the Kubernetes secret:
+  ```bash
+  kubectl -n monitoring get secret kube-prometheus-stack-grafana -o jsonpath="{.data.admin-password}" | base64 -d && echo
