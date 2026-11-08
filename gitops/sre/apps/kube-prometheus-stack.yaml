@@ -1,0 +1,85 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: sre-project
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 65.5.0
+    helm:
+      valuesObject:
+        crds:
+          enabled: true
+
+        # Disable EKS-managed control plane components
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeEtcd:
+          enabled: false
+        kubeProxy:
+          enabled: false
+
+        # Keep CoreDNS and Kubelet (these run on your worker nodes)
+        coreDns:
+          enabled: true
+        kubelet:
+          enabled: true
+
+        # 1. Grafana configuration + Ingress
+        grafana:
+          enabled: true
+          ingress:
+            enabled: true
+            ingressClassName: cilium
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            hosts:
+              - group2-tk-grafana.sctp-sandbox.com
+            tls:
+              - secretName: grafana-tls
+                hosts:
+                  - group2-tk-grafana.sctp-sandbox.com
+
+        # 2. Prometheus configuration, persistent storage + Ingress
+        prometheus:
+          enabled: true
+          ingress:
+            enabled: true
+            ingressClassName: cilium
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            hosts:
+              - group2-tk-prometheus.sctp-sandbox.com
+            tls:
+              - secretName: prometheus-tls
+                hosts:
+                  - group2-tk-prometheus.sctp-sandbox.com
+          prometheusSpec:
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: gp3
+                  accessModes: ["ReadWriteOnce"]
+                  resources:
+                    requests:
+                      storage: 20Gi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

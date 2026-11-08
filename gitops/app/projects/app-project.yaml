@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: app-project
+  namespace: argocd
+spec:
+  description: Workload microservices
+  sourceRepos:
+    - '*'
+  destinations:
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+    - namespace: retail-store
+      server: https://kubernetes.default.svc
+    - namespace: default
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

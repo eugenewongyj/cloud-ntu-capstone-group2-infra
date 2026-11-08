@@ -10,6 +10,6 @@ controller:
   metrics:
     enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
       additionalLabels:
         release: kube-prometheus-stack

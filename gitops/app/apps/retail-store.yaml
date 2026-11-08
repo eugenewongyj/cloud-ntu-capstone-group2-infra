@@ -1,0 +1,5 @@
+spec:
+  ingressClassName: cilium # Changed from nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Remove any nginx.ingress.kubernetes.io/* annotations

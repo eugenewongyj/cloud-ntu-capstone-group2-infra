@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra-project
+  source:
+    repoURL: https://helm.cilium.io/
+    chart: cilium
+    targetRevision: 1.16.3
+    helm:
+      valuesObject:
+        kubeProxyReplacement: true
+        k8sServiceHost: "172.20.0.1"
+        k8sServicePort: "443"
+        devices: "eth0"
+        nodePort:
+          enabled: true
+        ingressController:
+          enabled: true
+          default: true
+          loadbalancerMode: shared
+          enforceHttps: false
+          service:
+            annotations:
+              service.beta.kubernetes.io/aws-load-balancer-type: "external"
+              service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "instance"
+              service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+              service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: "tcp"
+              service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "traffic-port"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
