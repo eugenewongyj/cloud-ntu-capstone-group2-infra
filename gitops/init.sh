@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CLUSTER_NAME="group2-tk-cluster"
+CLUSTER_NAME="group2-capstone-cluster"
 AWS_REGION="ap-southeast-1"
-REPO_URL="https://github.com/peh3/group2-tk-infra.git"
-AWS_SECRET_ID="group2-tk/argocd/github-pat"
+REPO_URL="https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git"
+#AWS_SECRET_ID="group2-tk/argocd/github-pat"
 VALUES_FILE="bootstrap/common-infra/argocd-values.yaml"
 
 echo "=========================================="

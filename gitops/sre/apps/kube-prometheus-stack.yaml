@@ -43,11 +43,11 @@ spec:
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-prod
             hosts:
-              - group2-tk-grafana.sctp-sandbox.com
+              - group2-capstone-grafana.sctp-sandbox.com
             tls:
               - secretName: grafana-tls
                 hosts:
-                  - group2-tk-grafana.sctp-sandbox.com
+                  - group2-capstone-grafana.sctp-sandbox.com
 
         # 2. Prometheus configuration, persistent storage + Ingress
         prometheus:
@@ -58,11 +58,11 @@ spec:
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-prod
             hosts:
-              - group2-tk-prometheus.sctp-sandbox.com
+              - group2-capstone-prometheus.sctp-sandbox.com
             tls:
               - secretName: prometheus-tls
                 hosts:
-                  - group2-tk-prometheus.sctp-sandbox.com
+                  - group2-capstone-prometheus.sctp-sandbox.com
           prometheusSpec:
             storageSpec:
               volumeClaimTemplate:

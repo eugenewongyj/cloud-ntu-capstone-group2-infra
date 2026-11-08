@@ -10,7 +10,7 @@ metadata:
 spec:
   project: infra-project
   source:
-    repoURL: https://github.com/peh3/group2-tk-infra.git
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
     targetRevision: main
     path: gitops/infra/manifests
   destination:
