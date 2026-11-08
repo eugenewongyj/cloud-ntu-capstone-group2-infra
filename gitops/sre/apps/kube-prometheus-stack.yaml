@@ -4,7 +4,7 @@ metadata:
   name: kube-prometheus-stack
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "3"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -16,7 +16,7 @@ spec:
     helm:
       valuesObject:
         crds:
-          enabled: true
+          enabled: false
 
         # Disable EKS-managed control plane components
         kubeControllerManager:
@@ -39,7 +39,7 @@ spec:
           enabled: true
           ingress:
             enabled: true
-            ingressClassName: cilium
+            ingressClassName: nginx #cilium
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-prod
             hosts:
@@ -54,7 +54,7 @@ spec:
           enabled: true
           ingress:
             enabled: true
-            ingressClassName: cilium
+            ingressClassName: nginx #cilium
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-prod
             hosts:

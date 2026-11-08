@@ -4,7 +4,7 @@ metadata:
   name: cert-manager
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "0"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -15,8 +15,10 @@ spec:
     targetRevision: v1.16.1
     helm:
       valuesObject:
+        #installCRDs: true
         crds:
           enabled: true
+          keep : true
         prometheus:
           enabled: true
           servicemonitor:
@@ -30,3 +32,5 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
