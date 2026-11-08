@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-CLUSTER_NAME="group2-tk-cluster"
+CLUSTER_NAME="group2-capstone-cluster"
 AWS_REGION="ap-southeast-1"
 
 echo "=========================================="

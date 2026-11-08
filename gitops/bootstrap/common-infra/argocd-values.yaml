@@ -16,7 +16,7 @@ server:
     tls:
       - secretName: argocd-server-tls
         hosts:
-          - group2-tk-argocd.sctp-sandbox.com
+          - group2-capstone-argocd.sctp-sandbox.com
 
   metrics:
     enabled: true
