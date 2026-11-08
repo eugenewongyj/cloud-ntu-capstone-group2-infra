@@ -1,0 +1,27 @@
+# argocd-ingress.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-ingress
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"   # Deploy after infra components
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra-project
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    targetRevision: main
+    path: gitops/infra/manifests/argocd   # Directory containing the Ingress manifest
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff: { duration: 5s, factor: 2, maxDuration: 3m }

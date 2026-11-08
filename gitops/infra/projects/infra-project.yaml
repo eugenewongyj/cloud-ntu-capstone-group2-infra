@@ -16,7 +16,7 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: kube-system
       server: https://kubernetes.default.svc
-    - namespace: cilium-secrets # Required for Cilium Ingress
+    - namespace: ingress-nginx
       server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: '*'

@@ -4,7 +4,7 @@ metadata:
   name: external-dns
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -21,6 +21,8 @@ spec:
         sources:
           - service
           - ingress
+        policy: sync
+        txtOwnerId: group2-capstone-cluster
         serviceMonitor:
           enabled: true
   destination:

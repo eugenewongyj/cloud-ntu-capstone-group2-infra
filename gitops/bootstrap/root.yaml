@@ -1,22 +1,20 @@
+# bootstrap/root.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: root-sre
+  name: root
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: sre-project
+  project: infra-project
   source:
     repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
     targetRevision: main
-    path: gitops/sre/apps
+    path: gitops/root
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]

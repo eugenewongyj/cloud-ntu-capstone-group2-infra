@@ -3,28 +3,4 @@ server:
     - --insecure
 
   ingress:
-    enabled: true
-    ingressClassName: cilium
-    annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
-      ingress.cilium.io/force-https: "true"
-      ingress.cilium.io/backend-protocol: "HTTP"
-    hostname: group2-capstone-argocd.sctp-sandbox.com
-    paths:
-      - /
-    pathType: Prefix
-    tls:
-      - secretName: argocd-server-tls
-        hosts:
-          - group2-capstone-argocd.sctp-sandbox.com
-
-  metrics:
-    enabled: true
-
-repoServer:
-  metrics:
-    enabled: true
-
-controller:
-  metrics:
-    enabled: true
+    enabled: false
