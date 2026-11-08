@@ -4,7 +4,7 @@ set -euo pipefail
 CLUSTER_NAME="group2-capstone-cluster"
 AWS_REGION="ap-southeast-1"
 REPO_URL="https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git"
-#AWS_SECRET_ID="group2-tk/argocd/github-pat"
+#AWS_SECRET_ID="group2-capstone/argocd/github-pat"
 VALUES_FILE="bootstrap/common-infra/argocd-values.yaml"
 
 echo "=========================================="
@@ -63,7 +63,7 @@ ADMIN_PWD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath
 echo "=========================================="
 echo " GitOps bootstrap complete!"
 echo " Argo CD is now orchestrating Infra, SRE, and Applications."
-echo " URL:      https://group2-tk-argocd.sctp-sandbox.com"
+echo " URL:      https://group2-capstone-argocd.sctp-sandbox.com"
 echo " Username: admin"
 if [ -n "${ADMIN_PWD}" ]; then
   echo " Password: ${ADMIN_PWD}"
