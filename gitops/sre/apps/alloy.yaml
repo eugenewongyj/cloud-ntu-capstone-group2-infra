@@ -1,0 +1,72 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: sre-project
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: alloy
+    targetRevision: 0.11.0
+    helm:
+      valuesObject:
+        controller:
+          type: daemonset
+        alloy:
+          configMap:
+            create: true
+            content: |
+              // 1. Discover all pods on the local node
+              discovery.kubernetes "pods" {
+                role = "pod"
+              }
+
+              // 2. Extract Kubernetes metadata to use as log labels
+              discovery.relabel "pod_logs" {
+                targets = discovery.kubernetes.pods.targets
+                
+                rule {
+                  source_labels = ["__meta_kubernetes_namespace"]
+                  target_label  = "namespace"
+                }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_name"]
+                  target_label  = "pod"
+                }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_container_name"]
+                  target_label  = "container"
+                }
+              }
+
+              // 3. Scrape the logs from the discovered pods
+              loki.source.kubernetes "local_pods" {
+                targets    = discovery.relabel.pod_logs.output
+                forward_to = [loki.write.external.receiver]
+              }
+
+              // 4. Ship the logs to your external destination (e.g., Grafana Cloud)
+              loki.write "external" {
+                endpoint {
+                  url = "https://logs-prod-us-central1.grafana.net/loki/api/v1/push"
+                  
+                  basic_auth {
+                    username = "YOUR_GRAFANA_CLOUD_USER_ID"
+                    password = "YOUR_GRAFANA_CLOUD_API_TOKEN"
+                  }
+                }
+              }
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

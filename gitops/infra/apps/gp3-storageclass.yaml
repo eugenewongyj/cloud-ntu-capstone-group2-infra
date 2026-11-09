@@ -1,0 +1,15 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.eks.amazonaws.com  # Native Auto Mode driver
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+parameters:
+  type: gp3
+  # Add your sandbox's mandatory tags here to bypass the 403 SCP Explicit Deny
+  tagSpecification_1: "Owner=group2-tk"
+  tagSpecification_2: "Environment=sandbox"
