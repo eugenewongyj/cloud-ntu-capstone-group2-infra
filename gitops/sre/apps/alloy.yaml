@@ -66,7 +66,6 @@ spec:
               // 6. Ship the logs to your internal in-cluster Loki destination
               loki.write "local" {
                 endpoint {
-                  # Updated URL for Loki SimpleScalable gateway
                   url = "http://loki-gateway.logging.svc.cluster.local:80/loki/api/v1/push"
                 }
               }
