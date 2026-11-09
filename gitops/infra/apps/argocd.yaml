@@ -21,6 +21,8 @@ spec:
               additionalLabels:
                 release: kube-prometheus-stack
         server:
+          extraArgs:
+            - --insecure
           metrics:
             enabled: true
             serviceMonitor:
