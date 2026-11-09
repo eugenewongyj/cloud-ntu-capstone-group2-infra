@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
   finalizers:
-    - resources-finalizer.argocd.argoproj.io  # FIXED: Array indentation
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: sre-project
   source:
@@ -66,7 +66,8 @@ spec:
               // 6. Ship the logs to your internal in-cluster Loki destination
               loki.write "local" {
                 endpoint {
-                  url = "http://loki.logging.svc.cluster.local:3100/loki/api/v1/push"
+                  # Updated URL for Loki SimpleScalable gateway
+                  url = "http://loki-gateway.logging.svc.cluster.local:80/loki/api/v1/push"
                 }
               }
   destination:
@@ -77,4 +78,4 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true  # FIXED: Array indentation
+      - CreateNamespace=true
