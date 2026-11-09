@@ -23,7 +23,7 @@ spec:
           enabled: true
           servicemonitor:
             enabled: true
-          additionalLabels:
+            labels: # <-- Change this from additionalLabels to labels
               release: kube-prometheus-stack
   destination:
     server: https://kubernetes.default.svc
