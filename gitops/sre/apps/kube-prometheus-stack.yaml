@@ -71,7 +71,7 @@ spec:
                 hosts:
                   - group2-capstone-prometheus.sctp-sandbox.com
           prometheusSpec:
-            enableRemoteVerificationReceiver: true
+            enableRemoteWriteReceiver: true
             storageSpec:
               volumeClaimTemplate:
                 spec:
