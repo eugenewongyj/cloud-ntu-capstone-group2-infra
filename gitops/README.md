@@ -5,7 +5,7 @@ After successfully running `./init.sh`, the core platform UI dashboards will be 
 ### 1. Argo CD
 Argo CD orchestrates our GitOps deployments and provides a UI to monitor application health and sync status.
 
-* **URL:** [https://group2-capstore-argocd.sctp-sandbox.com](https://group2-capstone-argocd.sctp-sandbox.com)
+* **URL:** [https://group2-capstone-argocd.sctp-sandbox.com](https://group2-capstone-argocd.sctp-sandbox.com)
 * **Username:** `admin`
 * **Retrieve Password:**
   Run the following command to decode the initial admin password from the Kubernetes secret:
@@ -16,7 +16,7 @@ Argo CD orchestrates our GitOps deployments and provides a UI to monitor applica
 ### 2. Grafana (Prometheus Monitoring Stack)
 Grafana provides cluster observability, metrics, and alerting dashboards, deployed via the kube-prometheus-stack.
 
-* **URL:** [https://group2-capstore-grafana.sctp-sandbox.com](https://group2-capstone-grafana.sctp-sandbox.com)
+* **URL:** [https://group2-capstone-grafana.sctp-sandbox.com](https://group2-capstone-grafana.sctp-sandbox.com)
 * **Username:** `admin`
 * **Retrieve Password:**
   Run the following command to decode the initial admin password from the Kubernetes secret:
