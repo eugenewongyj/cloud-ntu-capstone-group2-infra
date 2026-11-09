@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: sre-project
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki
+    targetRevision: 7.5.0
+    helm:
+      valuesObject:
+        deploymentMode: SimpleScalable
+        
+        loki:
+          auth_enabled: false
+          
+          # Configure Loki to use AWS S3 directly
+          storage:
+            bucketNames:
+              chunks: group2-tk-loki-logs-ap-southeast-1
+              ruler: group2-tk-loki-logs-ap-southeast-1
+              admin: group2-tk-loki-logs-ap-southeast-1
+            type: s3
+            s3:
+              region: ap-southeast-1
+              s3ForcePathStyle: false
+
+          schemaConfig:
+            configs:
+              - from: "2024-01-01"
+                store: tsdb
+                object_store: s3
+                schema: v13
+                index:
+                  prefix: index_
+                  period: 24h
+                  
+        # Disable the local MinIO sandbox
+        minio:
+          enabled: false
+          
+        read:
+          replicas: 2
+        write:
+          replicas: 2
+        backend:
+          replicas: 1
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
