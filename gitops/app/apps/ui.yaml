@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ui
+  namespace: argocd
+spec:
+  project: app-project
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app.git
+    targetRevision: main
+    path: src/ui/chart
+    helm:
+      releaseName: ui
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: retail-store
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
