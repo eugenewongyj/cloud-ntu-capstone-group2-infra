@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-sec
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: sec-project # Or create a dedicated 'sec-project'
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git # Use your infra/sec repo URL
+    targetRevision: main
+    # Point this to a new directory containing trivy-operator.yaml, etc.
+    path: gitops/sec/apps 
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

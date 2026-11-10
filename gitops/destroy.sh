@@ -70,7 +70,7 @@ helm list -A --no-headers 2>/dev/null | awk '{print $1 " -n " $2}' | while read 
 done
 
 echo "--> [6/8] Purging Application Namespaces..."
-for ns in monitoring cert-manager external-dns ingress-nginx retail-store argocd; do
+for ns in monitoring cert-manager external-dns ingress-nginx trivy-system kyverno argocd; do
   if kubectl get ns "${ns}" >/dev/null 2>&1; then
     kubectl delete ns "${ns}" --timeout=20s 2>/dev/null || true
     if kubectl get ns "${ns}" >/dev/null 2>&1; then
