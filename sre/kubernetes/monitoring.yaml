@@ -1,71 +1,117 @@
+
 # CAPSTONE SRE — APPLICATION METRICS AND ALERTING
 
-apiVersion: monitoring.coreos.com/v1           # Prometheus Operator API.
-kind: ServiceMonitor                           # Discovers Actuator metrics Services.
-metadata:                                      # Identifies the monitoring resource.
-  name: capstone-actuator-metrics              # Name of the first ServiceMonitor.
-  namespace: capstone-monitoring               # Namespace for monitoring resources.
-spec:                                          # Defines metrics discovery.
-  namespaceSelector:                           # Selects application namespaces.
-    matchNames:                                # Lists allowed namespaces.
-      - default                                # Namespace configured in Helmfile.
-  selector:                                    # Selects matching Kubernetes Services.
-    matchLabels:                               # Requires these Service labels.
-      app.kubernetes.io/owner: retail-store-sample # Restricts to retail Services.
-      app.kubernetes.io/component: service     # Restricts to application Services.
-    matchExpressions:                          # Filters specific Helm releases.
-      - key: app.kubernetes.io/instance        # Uses the Helm release-name label.
-        operator: In                           # Matches one of the following values.
-        values:                                # Lists Actuator-enabled releases.
-          - ui                                 # UI release.
-          - carts                              # Cart release.
-          - orders                             # Orders release.
-  endpoints:                                   # Defines the metrics scrape endpoint.
-    - port: http                               # Uses the named Kubernetes Service port.
-      path: /actuator/prometheus               # Scrapes Spring Actuator metrics.
-      interval: 30s                            # Scrapes every 30 seconds.
+# ============================================================
+# 1. SPRING ACTUATOR METRICS — UI, CARTS, ORDERS
+# ============================================================
 
----                                            # Separates Kubernetes resources.
+apiVersion: monitoring.coreos.com/v1            # Prometheus Operator API.
+kind: ServiceMonitor                            # Discovers Actuator metrics Services.
+metadata:                                       # Identifies the monitoring resource.
+  name: capstone-actuator-metrics               # Name of the first ServiceMonitor.
+  namespace: monitoring                # Namespace for monitoring resources.
+  labels:
+    release: kube-prometheus-stack
+spec:                                           # Defines metrics discovery.
+  namespaceSelector:                            # Selects application namespaces.
+    matchNames:                                 # Lists allowed namespaces.
+      - retail-store                                 # Namespace configured in Helmfile.
+  selector:                                     # Selects matching Kubernetes Services.
+    matchLabels:                                # Requires these Service labels.
+      app.kubernetes.io/owner: retail-store-sample  # Restricts to retail Services.
+      app.kubernetes.io/component: service      # Restricts to application Services.
+    matchExpressions:                           # Filters specific Helm releases.
+      - key: app.kubernetes.io/instance         # Uses the Helm release-name label.
+        operator: In                            # Matches listed values.
+        values:                                 # Lists Actuator-enabled releases.
+          - ui                                  # UI release.
+          - cart                               # Cart release.
+          - orders                              # Orders release.
+  endpoints:                                    # Defines the metrics scrape endpoint.
+    - port: http                                # Named Kubernetes Service port.
+      path: /actuator/prometheus                # Spring Actuator metrics.
+      interval: 30s                             # Scrapes every 30 seconds.
 
-apiVersion: monitoring.coreos.com/v1           # Prometheus Operator API.
-kind: ServiceMonitor                           # Discovers /metrics Services.
-metadata:                                      # Identifies the monitoring resource.
-  name: capstone-http-metrics                  # Name of the second ServiceMonitor.
-  namespace: capstone-monitoring               # Namespace for monitoring resources.
-spec:                                          # Defines metrics discovery.
-  namespaceSelector:                           # Selects application namespaces.
-    matchNames:                                # Lists allowed namespaces.
-      - default                                # Namespace configured in Helmfile.
-  selector:                                    # Selects matching Kubernetes Services.
-    matchLabels:                               # Requires these Service labels.
-      app.kubernetes.io/owner: retail-store-sample # Restricts to retail Services.
-      app.kubernetes.io/component: service     # Restricts to application Services.
-    matchExpressions:                          # Filters specific Helm releases.
-      - key: app.kubernetes.io/instance        # Uses the Helm release-name label.
-        operator: In                           # Matches one of the following values.
-        values:                                # Lists /metrics-enabled releases.
-          - catalog                            # Catalog release.
-          - checkout                           # Checkout release.
-  endpoints:                                   # Defines the metrics scrape endpoint.
-    - port: http                               # Uses the named Kubernetes Service port.
-      path: /metrics                           # Scrapes Prometheus-compatible metrics.
-      interval: 30s                            # Scrapes every 30 seconds.
+---
 
----                                            # Separates Kubernetes resources.
+# ============================================================
+# 2. HTTP METRICS — CATALOG, CHECKOUT
+# ============================================================
 
-apiVersion: monitoring.coreos.com/v1           # Prometheus Operator API.
-kind: PrometheusRule                           # Defines Prometheus alerting rules.
-metadata:                                      # Identifies the alerting resource.
-  name: capstone-alerts                        # Name of the PrometheusRule.
-  namespace: capstone-monitoring               # Namespace for monitoring resources.
-spec:                                          # Defines alert evaluation.
-  groups:                                      # Organizes related rules.
-    - name: capstone.rules                     # Name of the alert group.
-      rules:                                   # Contains individual alerts.
-        - alert: CapstoneTargetDown            # Alert name.
-          expr: up{namespace="default"} == 0   # Detects failed scrapes in the default namespace.
-          for: 2m                              # Requires two minutes of failure.
-          labels:                              # Classifies the alert.
-            severity: warning                  # Warning severity.
-          annotations:                         # Adds incident context.
-            summary: "Capstone metrics target unavailable" # Alert description.
+apiVersion: monitoring.coreos.com/v1            # Prometheus Operator API.
+kind: ServiceMonitor                            # Discovers /metrics Services.
+metadata:                                       # Identifies the monitoring resource.
+  name: capstone-http-metrics                   # Name of the second ServiceMonitor.
+  namespace: monitoring                # Namespace for monitoring resources.
+  labels:
+    release: kube-prometheus-stack
+spec:                                           # Defines metrics discovery.
+  namespaceSelector:                            # Selects application namespaces.
+    matchNames:                                 # Lists allowed namespaces.
+      - retail-store                                 # Application namespace.
+  selector:                                     # Selects matching Services.
+    matchLabels:                                # Requires these Service labels.
+      app.kubernetes.io/owner: retail-store-sample  # Restricts to retail Services.
+      app.kubernetes.io/component: service      # Restricts to application Services.
+    matchExpressions:                           # Filters specific Helm releases.
+      - key: app.kubernetes.io/instance         # Helm release-name label.
+        operator: In                            # Matches listed values.
+        values:                                 # Services using /metrics.
+          - catalog                             # Catalog release.
+          - checkout                            # Checkout release.
+  endpoints:                                    # Defines scrape endpoint.
+    - port: http                                # Named Kubernetes Service port.
+      path: /metrics                            # Prometheus-compatible metrics.
+      interval: 30s                             # Scrapes every 30 seconds.
+
+---
+
+# ============================================================
+# 3. PROMETHEUS ALERTING RULES
+# ============================================================
+
+apiVersion: monitoring.coreos.com/v1            # Prometheus Operator API.
+kind: PrometheusRule                            # Defines Prometheus alerting rules.
+metadata:                                       # Identifies the alerting resource.
+  name: capstone-alerts                         # PrometheusRule resource name.
+  namespace: monitoring                # Monitoring namespace.
+  labels:
+    release: kube-prometheus-stack
+spec:                                           # Defines alert evaluation.
+  groups:                                       # Organises related rules.
+    - name: capstone.rules                      # Alert group name.
+      rules:                                    # Individual alert definitions.
+
+        # ----------------------------------------------------
+        # ALERT 1 — PROMETHEUS TARGET DOWN
+        # ----------------------------------------------------
+
+        - alert: CapstoneTargetDown             # Detects failed metrics scrapes.
+          expr: up{namespace="retail-store"} == 0    # Failed scrapes in default namespace.
+          for: 2m                               # Failure persists for 2 minutes.
+          labels:                               # Alert classification.
+            severity: warning                   # Warning-level incident.
+          annotations:                          # Incident context.
+            summary: "Capstone metrics target unavailable"
+
+        # ----------------------------------------------------
+        # ALERT 2 — UI DEPLOYMENT UNAVAILABLE
+        # ----------------------------------------------------
+
+        - alert: CapstoneDeploymentUnavailable  # Detects reduced UI availability.
+          expr: |                               # Multi-line PromQL expression.
+            kube_deployment_status_replicas_available{
+              namespace="retail-store",
+              deployment="ui"
+            }
+            <
+            kube_deployment_spec_replicas{
+              namespace="retail-store",
+              deployment="ui"
+            }
+          for: 2m                               # Requires 2 minutes of degradation.
+          labels:                               # Alert classification.
+            severity: warning                   # Warning-level incident.
+          annotations:                          # Incident context.
+            summary: "Capstone UI deployment has insufficient available replicas"
+            description: "Available UI replicas are below the desired replica count for at least 2 minutes."
