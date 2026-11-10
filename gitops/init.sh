@@ -17,10 +17,10 @@ echo "--> [1/9] Updating kubeconfig..."
 aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
 
 # 2. Deploy default gp3 StorageClass & Pre-create core namespaces
-echo "--> [2/9] Applying gp3 StorageClass and pre-creating namespaces..."
-kubectl apply -f bootstrap/common-infra/gp3.yaml
+# echo "--> [2/9] Applying gp3 StorageClass and pre-creating namespaces..."
+# kubectl apply -f bootstrap/common-infra/gp3.yaml
 
-for ns in argocd ingress-nginx cert-manager external-dns monitoring retail-store; do
+for ns in argocd ingress-nginx cert-manager external-dns monitoring retail-store logging; do
   kubectl create namespace "${ns}" --dry-run=client -o yaml | kubectl apply -f -
 done
 
