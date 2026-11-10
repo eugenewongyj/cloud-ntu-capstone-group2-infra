@@ -1,6 +1,0 @@
-#spec:
-#  ingressClassName: nginx # Changed from nginx
-#  annotations:
-#    argocd.argoproj.io/sync-wave: "4"
-#    cert-manager.io/cluster-issuer: letsencrypt-prod
-#    # Remove any nginx.ingress.kubernetes.io/* annotations
