@@ -23,6 +23,10 @@ spec:
           enabled: true
           additionalLabels:
             release: kube-prometheus-stack
+        # 'Audit' creates a report. 'Enforce' actively blocks the deployment.
+        validationFailureAction: Enforce 
+        podSecurityStandard: baseline
+        background: true
   destination:
     server: https://kubernetes.default.svc
     namespace: kyverno
