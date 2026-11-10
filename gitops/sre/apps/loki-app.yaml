@@ -23,9 +23,9 @@ spec:
           # Configure Loki to use AWS S3 directly
           storage:
             bucketNames:
-              chunks: group2-tk-loki-logs-ap-southeast-1
-              ruler: group2-tk-loki-logs-ap-southeast-1
-              admin: group2-tk-loki-logs-ap-southeast-1
+              chunks: group2-capstone-loki-logs-ap-southeast-1
+              ruler: group2-capstone-loki-logs-ap-southeast-1
+              admin: group2-capstone-loki-logs-ap-southeast-1
             type: s3
             s3:
               region: ap-southeast-1
