@@ -20,7 +20,7 @@ aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
 # echo "--> [2/9] Applying gp3 StorageClass and pre-creating namespaces..."
 # kubectl apply -f bootstrap/common-infra/gp3.yaml
 
-for ns in argocd ingress-nginx cert-manager external-dns monitoring retail-store logging; do
+for ns in argocd ingress-nginx cert-manager external-dns monitoring logging trivy-system kyverno; do
   kubectl create namespace "${ns}" --dry-run=client -o yaml | kubectl apply -f -
 done
 
@@ -68,6 +68,7 @@ echo "--> [6/9] Applying Argo CD AppProjects..."
 kubectl apply -f infra/projects/infra-project.yaml
 kubectl apply -f sre/projects/sre-project.yaml
 kubectl apply -f app/projects/app-project.yaml
+kubectl apply -f sec/projects/sec-project.yaml 
 
 # 7. GitOps Handoff (App-of-Apps Root Deployments)
 echo "--> [7/9] Applying Root GitOps Applications..."

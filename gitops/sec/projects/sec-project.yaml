@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: sec-project
+  namespace: argocd
+spec:
+  description: Project for cluster security and compliance tools
+  sourceRepos:
+    - '*'
+  destinations:
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+    - namespace: trivy-system
+      server: https://kubernetes.default.svc
+    - namespace: kyverno
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
