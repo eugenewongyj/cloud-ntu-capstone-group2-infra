@@ -2,30 +2,30 @@
 
 **Capstone Group 2 | AWS Retail Store Sample | Amazon EKS Auto Mode**
 
-This directory contains the Site Reliability Engineering (SRE) implementation for **Capstone**, a microservices-based retail application deployed on Amazon Elastic Kubernetes Service (EKS) Auto Mode.
+This directory contains the Site Reliability Engineering (SRE) workstream for **Capstone**, a microservices-based retail application deployed on Amazon Elastic Kubernetes Service (EKS) Auto Mode.
 
-The SRE workstream establishes observability, performance monitoring, reliability measurement, alerting, load testing, and incident response capabilities across the application and its supporting Kubernetes workloads.
+The SRE implementation establishes an observability and reliability engineering framework encompassing application health monitoring, metrics collection, centralised logging, service-level indicators (SLIs), service-level objectives (SLOs), alerting, performance validation, and incident response.
 
-The implementation follows a reliability-first approach, prioritising application health, operational visibility, measurable service performance, and minimal disruption to the shared AWS infrastructure.
+The SRE workstream integrates with the existing Argo CD GitOps architecture while maintaining a clear separation between central deployment orchestration and SRE-owned observability configuration.
 
 ---
 
 ## 1. Objectives
 
-The primary objective is to establish a measurable and operationally useful reliability engineering framework for the Capstone application.
+The primary objective is to establish measurable, reproducible, and operationally useful reliability engineering practices for the Capstone application.
 
-The SRE implementation aims to:
+The SRE workstream aims to:
 
 1. Establish baseline infrastructure, Kubernetes workload, and application health.
-2. Centralise application and container logs for operational investigation.
+2. Centralise application and container logs for investigation.
 3. Collect application and Kubernetes metrics using Prometheus.
-4. Define service-level indicators (SLIs) and service-level objectives (SLOs).
-5. Monitor request latency, availability, error rates, and workload resource utilisation.
-6. Implement actionable alerting through Prometheus and Alertmanager.
-7. Provide Grafana dashboards for health monitoring and troubleshooting.
-8. Validate system behaviour under controlled application load.
-9. Establish incident investigation and recovery procedures.
-10. Preserve existing application functionality and shared infrastructure stability.
+4. Define and evaluate SLIs and SLOs.
+5. Monitor request latency, availability, error rates, and resource utilisation.
+6. Implement actionable alerts using Prometheus and Alertmanager.
+7. Provide Grafana dashboards for operational visibility.
+8. Validate application performance through controlled load testing.
+9. Support incident diagnosis, escalation, and recovery.
+10. Preserve the stability of the shared AWS infrastructure.
 
 ### Engineering Principles
 
@@ -33,11 +33,11 @@ The SRE implementation aims to:
 |---|---|
 | Reliability first | Establish baseline health before performance or security testing |
 | Observability | Combine metrics, logs, dashboards, and alerts |
-| Declarative configuration | Maintain Kubernetes and Argo CD configuration in Git |
-| Separation of concerns | Separate deployment, observability, and validation responsibilities |
+| Declarative configuration | Maintain deployment and monitoring definitions in Git |
+| Separation of concerns | Separate GitOps orchestration, observability, and validation |
 | Minimal disruption | Avoid unnecessary changes to shared infrastructure |
-| Reproducibility | Version-control configuration, test scripts, and validation evidence |
-| Measurable outcomes | Use SLIs, SLOs, and recorded test results |
+| Reproducibility | Version-control configuration, tests, and validation evidence |
+| Measurable outcomes | Evaluate reliability using SLIs, SLOs, and recorded results |
 | Operational readiness | Support investigation, alerting, and incident response |
 
 ---
@@ -48,65 +48,64 @@ The SRE implementation aims to:
 |---|---|---|
 | Cloud infrastructure | Amazon Web Services | Underlying cloud infrastructure |
 | Container orchestration | Amazon EKS Auto Mode | Kubernetes workload orchestration |
-| Infrastructure as Code | Terraform | Provisioning and managing AWS resources |
+| Infrastructure as Code | Terraform | AWS resource provisioning |
 | GitOps | Argo CD | Declarative deployment and reconciliation |
-| Package management | Helm | Installing and configuring observability components |
-| Metrics | Prometheus | Metrics collection, storage, and querying |
+| Package management | Helm | Observability component deployment |
+| Metrics | Prometheus | Time-series metrics collection and querying |
 | Metrics discovery | Prometheus Operator / ServiceMonitor | Kubernetes-native scrape configuration |
-| Alert evaluation | Prometheus / PrometheusRule | Evaluating monitoring and reliability conditions |
-| Alert routing | Alertmanager | Grouping and routing firing alerts |
+| Alert evaluation | Prometheus / PrometheusRule | Reliability condition evaluation |
+| Alert routing | Alertmanager | Alert grouping and notification routing |
 | Log collection | Grafana Alloy | Kubernetes log collection and forwarding |
 | Log aggregation | Grafana Loki | Centralised log storage and querying |
-| Visualisation | Grafana | Metrics, logs, and dashboard visualisation |
-| Load testing | Locust | Generating controlled HTTP application traffic |
-| Automation | GitHub / GitHub Actions | Version control and CI validation |
+| Visualisation | Grafana | Metrics, logs, and dashboards |
+| Load testing | Locust | Controlled HTTP traffic generation |
+| Version control | Git / GitHub | Configuration and change history |
 | Operational tooling | AWS CLI / kubectl | Infrastructure and Kubernetes inspection |
 
-The observability implementation focuses on **application workloads, Kubernetes Pods, nodes, and supporting services**. Direct monitoring of the EKS-managed Kubernetes control plane is outside the initial SRE monitoring scope.
+The initial SRE monitoring scope focuses on application services, Kubernetes workloads, Pods, and supporting infrastructure.
+
+Direct monitoring of the EKS-managed Kubernetes control plane is outside the initial scope.
 
 ---
 
 ## 3. Monitoring and Reliability Approach
 
-The SRE workflow follows a progressive operational lifecycle:
+The reliability engineering lifecycle follows:
 
 **Baseline → Metrics & Logging → SLIs & SLOs → Alerting → Dashboards → Load Validation → Incident Response**
 
-| Stage | Purpose | Expected evidence |
+| Stage | Purpose | Evidence |
 |---|---|---|
-| Baseline | Establish initial application and infrastructure health | Pod readiness, deployment status, service reachability |
-| Metrics | Collect measurable operational data | Prometheus targets and metric series |
-| Logging | Centralise diagnostic information | Searchable application logs in Loki |
-| Reliability | Define measurable performance objectives | SLI queries and SLO definitions |
-| Alerting | Detect actionable failures or degradation | Evaluated alert rules and notification tests |
-| Visualisation | Provide operational visibility | Grafana dashboards with live data |
-| Load validation | Assess system behaviour under traffic | Locust reports and correlated metrics |
-| Incident response | Support recovery and diagnosis | Runbooks, health reports, and incident evidence |
+| Baseline | Establish initial infrastructure and application health | Pod readiness, deployments, service reachability |
+| Metrics | Collect operational measurements | Prometheus targets and metric series |
+| Logging | Centralise diagnostic information | Searchable application logs |
+| Reliability | Define measurable objectives | SLI queries and SLO definitions |
+| Alerting | Detect operational degradation | Alert rules and notification tests |
+| Visualisation | Support operational investigation | Grafana dashboards |
+| Load validation | Assess performance under traffic | Locust results and correlated metrics |
+| Incident response | Support diagnosis and recovery | Health reports and incident evidence |
 
 ### Reliability Measurement
 
-Reliability is evaluated using four principal categories:
+The implementation considers four principal categories:
 
-- **Availability:** Whether application endpoints remain reachable and operational.
-- **Latency:** Whether application requests complete within acceptable performance thresholds.
-- **Errors:** Whether requests fail or return unexpected responses.
-- **Saturation:** Whether CPU, memory, replicas, or other workload resources approach operational limits.
+- **Availability:** Whether eligible application requests complete successfully.
+- **Latency:** How long application requests take to complete.
+- **Errors:** How frequently eligible requests fail.
+- **Saturation:** Whether resource pressure threatens application performance.
 
-These measurements provide the foundation for defining SLIs, establishing SLOs, and investigating performance degradation.
+These measurements provide the foundation for reliability assessment and operational decision-making.
 
 ---
 
 ## 4. Observability Architecture
 
-The Capstone observability architecture separates metrics collection, log aggregation, alerting, and visualisation.
+The Capstone observability architecture separates metrics collection, logging, alert evaluation, and visualisation.
 
 ```mermaid
 flowchart TB
-    subgraph EKS["AWS EKS Auto Mode — Capstone"]
-        direction TB
-
+    subgraph EKS["Amazon EKS Auto Mode — Capstone"]
         subgraph APP["Retail Store Sample Application"]
-            direction LR
             UI["UI"]
             CAT["Catalog"]
             CART["Carts"]
@@ -114,217 +113,191 @@ flowchart TB
             CHECK["Checkout"]
         end
 
-        subgraph METRICS["Metrics Collection and Alerting"]
+        subgraph METRICS["Metrics and Alerting"]
             SVC["Kubernetes Services"]
             SM["ServiceMonitor"]
             PROM["Prometheus"]
             RULE["PrometheusRule"]
             AM["Alertmanager"]
-
-            SVC -->|"Metrics endpoints"| PROM
-            SM -.->|"Scrape configuration"| PROM
-            RULE -.->|"Alert rule definitions"| PROM
-            PROM -->|"Firing alerts"| AM
         end
 
-        subgraph LOGGING["Log Collection"]
+        subgraph LOGS["Logging"]
             ALLOY["Grafana Alloy"]
             LOKI["Grafana Loki"]
-
-            ALLOY -->|"Log forwarding"| LOKI
         end
 
         subgraph VIS["Visualisation"]
             GF["Grafana"]
             DASH["Capstone Health Dashboard"]
-
-            GF --> DASH
         end
     end
 
     UI & CAT & CART & ORD & CHECK --> SVC
+    SVC -->|"Metrics endpoints"| PROM
+    SM -.->|"Scrape configuration"| PROM
+    RULE -.->|"Alert rule definitions"| PROM
+    PROM -->|"Firing alerts"| AM
+
     UI & CAT & CART & ORD & CHECK -.->|"Container logs"| ALLOY
+    ALLOY -->|"Log forwarding"| LOKI
 
     PROM -->|"PromQL"| GF
     LOKI -->|"LogQL"| GF
-
-    classDef app fill:#dbeafe,stroke:#2563eb,color:#1e40af
-    classDef metrics fill:#dcfce7,stroke:#16a34a,color:#166534
-    classDef logs fill:#fef3c7,stroke:#d97706,color:#92400e
-    classDef viz fill:#f3e8ff,stroke:#9333ea,color:#6b21a8
-    classDef alert fill:#fee2e2,stroke:#dc2626,color:#991b1b
-
-    class UI,CAT,CART,ORD,CHECK app
-    class SVC,SM,PROM,RULE metrics
-    class ALLOY,LOKI logs
-    class GF,DASH viz
-    class AM alert
+    GF --> DASH
 ```
 
-**Architecture status:** The observability Applications were previously verified as `Synced / Healthy` through Argo CD on the shared Capstone EKS cluster. End-to-end telemetry collection, dashboard accuracy, alert delivery, and operational resilience remain subject to verification.
+**Architecture status:** The observability Applications were previously reported as `Synced / Healthy` through Argo CD. End-to-end telemetry ingestion, dashboard accuracy, alert delivery, and operational resilience remain pending verification.
 
-The diagram represents the intended logical data flows. It does not independently establish that every application endpoint currently exposes Prometheus-compatible metrics or that all pipelines have passed end-to-end testing.
+The diagram represents intended logical data flows. It does not independently establish that every application currently exposes compatible metrics or that every pipeline is operational.
 
 ### 4.1 Metrics Pipeline
 
 **Application → Kubernetes Service → Prometheus → Grafana**
 
-The metrics pipeline consists of the following components:
-
-1. Application and Kubernetes workloads expose measurable operational information.
-2. Kubernetes Services provide stable endpoints for eligible metrics targets.
-3. ServiceMonitor resources describe which Services Prometheus should discover and scrape.
-4. Prometheus collects and stores time-series metrics.
-5. PrometheusRule resources supply recording or alerting rule definitions.
-6. Prometheus evaluates configured alert expressions.
+1. Application workloads expose metrics through eligible endpoints.
+2. Kubernetes Services provide stable access to those endpoints.
+3. ServiceMonitor resources define scrape discovery and configuration.
+4. Prometheus discovers eligible targets and collects metrics.
+5. PrometheusRule resources supply alerting and recording rules.
+6. Prometheus evaluates those rules against collected metrics.
 7. Firing alerts are forwarded to Alertmanager.
 8. Grafana queries Prometheus using PromQL.
 
-A ServiceMonitor defines scrape discovery and configuration; it does not itself collect or store metrics.
+A ServiceMonitor configures discovery; it does not independently collect or store metrics.
 
-The existence of a ServiceMonitor also does not guarantee a healthy target. Target discovery, endpoint reachability, and successful scraping must be verified independently.
+Successful target discovery and scraping must be verified separately.
 
 ### 4.2 Logging Pipeline
 
 **Application Pods → Grafana Alloy → Loki → Grafana**
 
-The logging pipeline follows these stages:
-
-1. Kubernetes workloads generate application and container logs.
-2. Grafana Alloy discovers eligible Kubernetes Pods and their log sources.
-3. Alloy collects and processes the selected log streams.
+1. Application containers generate logs.
+2. Grafana Alloy discovers selected Kubernetes log sources.
+3. Alloy collects and processes log entries.
 4. Alloy forwards log entries to Loki.
-5. Loki stores log data and indexes associated stream labels.
+5. Loki stores log streams and indexes associated labels.
 6. Grafana queries Loki using LogQL.
-7. Engineers correlate logs with metrics to investigate application failures and performance anomalies.
+7. Engineers correlate log events with metrics to investigate failures.
 
-**Technical decision:** Grafana Alloy was selected instead of legacy Promtail because of its supported collection architecture, Kubernetes integration, and extensibility across observability signals.
+**Technical decision:** Grafana Alloy was selected instead of legacy Promtail because of its supported architecture, Kubernetes integration, and extensibility.
 
-The initial Alloy configuration uses a single-replica Deployment. High availability, collection throughput, buffering, and failure recovery require further evaluation.
+The initial Alloy configuration uses a single replica. Collection resilience and high availability require further evaluation.
 
 ### 4.3 Alerting Pipeline
 
 **PrometheusRule → Prometheus → Alertmanager → Notification Receiver**
 
-Alerting separates detection from notification delivery.
+Prometheus evaluates configured alert rules. When a condition satisfies its threshold and required duration, Prometheus marks the alert as firing.
 
-Prometheus evaluates alert expressions defined through PrometheusRule resources. When a rule's conditions are satisfied for its configured duration, Prometheus transitions the alert into a firing state.
+Alertmanager then handles grouping, routing, silencing, and delivery to configured notification receivers.
 
-Alertmanager then handles alert grouping, routing, silencing, and notification delivery according to its configured receivers.
-
-The presence of a PrometheusRule confirms only that an alert definition exists. Operational validation must confirm rule loading, evaluation, firing behaviour, routing, and receiver delivery.
+Operational validation must confirm rule loading, firing behaviour, routing, notification delivery, and resolution.
 
 ### 4.4 Dashboard Pipeline
 
 **Prometheus / Loki → Grafana → Capstone Health Dashboard**
 
-Grafana provides a unified investigation interface for metrics and logs.
+Grafana provides a unified interface for metrics and log investigation.
 
-The dashboard configuration is maintained in Git and is intended to provide visibility into application health, service performance, and supporting Kubernetes workloads.
+The repository contains:
 
-The dashboard JSON and Kubernetes ConfigMap are retained as separate deployment artifacts:
+- `observe/capstone-health.json` — dashboard definition.
+- `observe/grafana-dashboard.yaml` — Kubernetes ConfigMap used for dashboard provisioning.
 
-- `capstone-health.json` contains the dashboard definition.
-- `grafana-dashboard.yaml` contains the Kubernetes ConfigMap representation used for dashboard provisioning.
+Both files should remain consistent.
 
-These files should remain consistent. Dashboard provisioning and live datasource results require runtime verification.
+The presence of a dashboard ConfigMap does not independently confirm that Grafana has loaded the dashboard or that its queries return valid data.
 
 ---
 
 ## 5. Application Monitoring Scope
 
-The primary monitoring scope consists of the five AWS Retail Store Sample microservices.
+The monitoring scope covers the five Capstone microservices.
 
 | Service | Monitoring focus |
 |---|---|
-| UI | User-facing availability, request latency, and HTTP errors |
-| Catalog | Product retrieval performance, availability, and error rates |
-| Carts | Cart operations, service health, and request failures |
-| Orders | Order-processing availability and transaction failures |
-| Checkout | Checkout request performance, errors, and availability |
+| UI | User-facing availability, latency, and HTTP errors |
+| Catalog | Product retrieval performance and availability |
+| Carts | Cart operations and service failures |
+| Orders | Order processing and transaction failures |
+| Checkout | Checkout performance and availability |
 
 ### Kubernetes Workload Monitoring
 
-The SRE implementation also considers:
+Supporting workload indicators include:
 
 - Pod readiness and availability.
 - Deployment replica status.
-- Container restarts and failure states.
+- Container restarts and failures.
 - CPU and memory utilisation.
+- Resource saturation.
 - Workload scaling behaviour.
-- Service connectivity and endpoint availability.
+- Service connectivity.
 - Persistent storage health where applicable.
-- Resource pressure and operational saturation.
-
-The initial scope does not require modification of the EKS-managed control plane.
 
 ---
 
 ## 6. Service-Level Indicators and Objectives
 
-SLIs provide quantitative measurements of service behaviour. SLOs define the desired reliability level over a specified measurement period.
-
-The following indicators form the intended Capstone reliability framework.
+SLIs provide quantitative measurements of service behaviour. SLOs define the desired reliability level over a specified observation period.
 
 ### 6.1 Availability SLI
 
-Availability measures the proportion of eligible requests that complete successfully.
+Availability measures the proportion of eligible requests completed successfully.
 
-**Availability SLI:**
-
-\[
+$$
 \text{Availability} =
 \frac{\text{Successful eligible requests}}
 {\text{Total eligible requests}}
 \times 100\%
-\]
+$$
 
-A candidate SLO may define a minimum successful-request percentage over an agreed observation window.
+A candidate availability SLO should define a minimum successful-request percentage over an agreed measurement window.
 
-The exact target, request eligibility rules, and measurement period must be established and approved before the SLO can be considered operational.
+The exact target, eligible request population, and measurement period must be defined before the SLO can be considered operational.
 
 ### 6.2 Latency SLI
 
-Latency measures the time required to complete eligible application requests.
+Latency measures the time required to complete eligible requests.
 
 The Capstone performance requirement includes:
 
 **Product listing p95 latency: 500 ms**
 
-The corresponding validation should determine whether the 95th-percentile product-listing latency remains at or below 500 ms under the specified flash-sale workload.
+Validation should determine whether the 95th-percentile product-listing latency remains at or below 500 ms under the specified flash-sale workload.
 
-This is a requirement to test, not a claim that the application currently meets the target.
-
-A production-grade latency SLO must also define the relevant endpoint, request population, measurement window, and acceptable traffic conditions.
+This is a performance requirement to test, not a claim that the application currently meets the target.
 
 ### 6.3 Error Rate SLI
 
 Error rate measures the proportion of eligible requests that fail.
 
-\[
+$$
 \text{Error Rate} =
 \frac{\text{Failed eligible requests}}
 {\text{Total eligible requests}}
 \times 100\%
-\]
+$$
 
 Failure classification should distinguish expected client errors from application or infrastructure failures.
 
+Availability and error rate are complementary only when they use the same request population and success/failure classification.
+
 ### 6.4 Saturation Indicators
 
-Saturation indicators provide supporting evidence of resource pressure and potential service degradation.
+Saturation indicators provide evidence of workload resource pressure.
 
 Relevant measurements include CPU utilisation, memory consumption, replica availability, container restarts, and resource-related throttling.
 
-Saturation indicators support operational diagnosis but are not automatically equivalent to user-facing reliability SLOs.
+These indicators support operational diagnosis but are not automatically equivalent to user-facing SLOs.
 
 ### 6.5 SLO Implementation Status
 
 At least two measurable SLOs are required for the Capstone reliability framework.
 
-Final SLO definitions, measurement windows, metric availability, and achieved compliance remain pending operational validation.
+Final targets, measurement windows, metric availability, and achieved compliance remain pending operational validation.
 
-The repository includes PromQL queries intended to support SLI analysis:
+The repository includes supporting queries:
 
 `observe/prometheus-sli-queries.promql`
 
@@ -334,48 +307,44 @@ The repository includes PromQL queries intended to support SLI analysis:
 
 ### 7.1 Alerting Objectives
 
-Alerting is intended to identify conditions that require operational investigation or intervention.
-
 The initial requirements include implementing and validating at least two actionable, routed alerts.
 
-Candidate alerting categories include:
+Candidate conditions include:
 
 - Application or workload unavailability.
 - Sustained elevated error rates.
 - Request latency degradation.
-- Pod restart or readiness failures.
+- Pod readiness or restart failures.
 - Resource saturation affecting application health.
 
-These are monitoring objectives; the actual implemented rules must be confirmed against the committed `PrometheusRule` manifest.
+The exact implemented rules must be confirmed against the committed PrometheusRule configuration.
 
 ### 7.2 Alert Validation
-
-Each operational alert should be validated against the following criteria:
 
 | Validation | Requirement |
 |---|---|
 | Rule loading | Prometheus recognises the rule |
 | Expression | The query evaluates against available metrics |
-| Threshold | The configured condition represents meaningful degradation |
-| Duration | Transient conditions do not trigger unnecessary notifications |
-| Firing | The rule transitions correctly when conditions are met |
+| Threshold | The condition represents meaningful degradation |
+| Duration | Transient conditions do not cause unnecessary alerts |
+| Firing | The rule transitions correctly |
 | Routing | Alertmanager selects the intended receiver |
-| Delivery | The receiver successfully receives the notification |
-| Recovery | The alert resolves after the underlying condition clears |
+| Delivery | The receiver receives the notification |
+| Recovery | The alert resolves when the condition clears |
 
 ### 7.3 Incident Response Workflow
 
 ```mermaid
 flowchart TD
-    A["Monitoring detects abnormal condition"]
-    B["Prometheus evaluates alert rule"]
+    A["Abnormal condition detected"]
+    B["Prometheus evaluates alert"]
     C["Alertmanager processes firing alert"]
-    D["Engineer investigates Grafana metrics and logs"]
+    D["Investigate Grafana metrics and logs"]
     E{"Application impact confirmed?"}
-    F["Diagnose affected service or workload"]
+    F["Diagnose affected service"]
     G["Apply approved recovery action"]
-    H["Verify service recovery and SLI behaviour"]
-    I["Document incident and follow-up actions"]
+    H["Verify recovery and SLI behaviour"]
+    I["Document findings"]
     J["Continue monitoring"]
 
     A --> B --> C --> D --> E
@@ -383,131 +352,666 @@ flowchart TD
     E -->|"No"| J
 ```
 
-Incident response procedures must respect shared infrastructure ownership and avoid uncontrolled changes to unrelated services.
+Recovery procedures must respect shared infrastructure ownership and avoid uncontrolled changes to unrelated workloads.
 
 ---
 
 ## 8. Load Testing and Reliability Validation
 
-The load-testing workstream uses **Locust** to generate controlled HTTP traffic against the Capstone application.
+The SRE validation workstream uses **Locust** to generate controlled HTTP application traffic.
 
-The purpose is to establish measurable performance behaviour and correlate traffic conditions with observability data.
+The purpose is to establish performance baselines and correlate application behaviour with observability data.
 
 ### 8.1 Test Objectives
 
-- Establish an initial application performance baseline.
-- Generate representative HTTP traffic.
-- Measure response times and failure rates.
-- Observe Kubernetes workload behaviour under load.
-- Assess product-listing latency against the 500 ms p95 requirement.
-- Investigate application errors and resource pressure.
+- Establish initial performance baselines.
+- Generate representative HTTP requests.
+- Measure throughput, latency, and failure rates.
+- Observe Kubernetes workload behaviour.
+- Assess product-listing p95 latency against 500 ms.
+- Investigate application errors.
 - Observe scaling behaviour where supported.
-- Produce reproducible evidence for reliability analysis.
+- Record reproducible reliability evidence.
 
 ### 8.2 Load-Testing Files
 
 | File | Purpose |
 |---|---|
-| `validate/locustfile.py` | Locust user behaviour and HTTP test scenarios |
+| `validate/locustfile.py` | Locust HTTP test scenarios |
 | `validate/requirements.txt` | Python dependencies |
 | `validate/run.sh` | Test execution helper |
-| `validate/.gitignore` | Excludes generated or local test artifacts |
-| `validate/README.md` | Test setup and execution documentation |
-| `validate/health-report.md` | Reliability observations and reporting |
+| `validate/.gitignore` | Local artifact exclusions |
+| `validate/README.md` | Test setup and instructions |
+| `validate/health-report.md` | Reliability findings and evidence |
 
 ### 8.3 Test Execution
 
-Load testing should be performed only against approved endpoints and during agreed test windows.
+Before running a load test:
 
-Before execution:
-
-1. Verify the intended cluster and application endpoint.
-2. Confirm application baseline health.
-3. Establish the approved traffic intensity and duration.
-4. Ensure Prometheus and Grafana are available for observation.
-5. Confirm that the test will not disrupt other teams.
-6. Execute the workload using the documented Locust configuration.
-7. Collect latency, throughput, error, and resource observations.
-8. Compare results with the established baseline.
+1. Verify the target application and Kubernetes cluster.
+2. Confirm baseline application health.
+3. Agree on traffic intensity and duration.
+4. Verify that observability components are available.
+5. Ensure the test will not disrupt other teams.
+6. Execute the documented Locust scenario.
+7. Record throughput, latency, and errors.
+8. Correlate results with Prometheus, Grafana, and Kubernetes observations.
 9. Document findings and limitations.
 
-The existence of Locust scripts does not establish that a load test has been successfully executed against the shared cluster.
+The existence of test scripts does not establish that a test has been successfully executed against the shared environment.
 
-### 8.4 Reliability Validation Evidence
+### 8.4 Validation Evidence
 
-A complete validation record should include:
-
-- Test date and environment.
-- Application version or deployment revision.
-- Test scenario and traffic configuration.
-- Test duration and concurrent-user configuration.
-- Request throughput and failure rate.
-- Response-time distributions, including p95.
-- Prometheus and Grafana observations.
-- Kubernetes workload and scaling observations.
-- Relevant logs and errors.
-- Findings, limitations, and follow-up actions.
+A complete test record should include the test date, environment, application revision, traffic configuration, duration, concurrent users, throughput, failure rate, latency distribution, Kubernetes observations, relevant logs, and follow-up actions.
 
 ---
 
-## 9. GitOps Integration
+## 9. GitOps Integration — Code-Level Relationships
 
-The Capstone repository separates central deployment orchestration from SRE-owned observability configuration.
+The Capstone repository uses a central **Argo CD App-of-Apps architecture**.
 
-### 9.1 Responsibility Boundaries
+The `gitops/` directory contains central deployment integration, while `sre/` contains SRE-owned observability definitions, monitoring resources, dashboards, and validation artifacts.
 
-| Directory | Responsibility |
-|---|---|
-| `gitops/` | Central Argo CD orchestration and shared application deployment |
-| `sre/deploy/` | SRE observability Application and AppProject definitions |
-| `sre/observe/` | Monitoring resources, dashboards, and queries |
-| `sre/validate/` | Reliability testing and operational evidence |
-| `sre/reference/` | Supporting configuration references |
+These directories are complementary rather than separate or competing GitOps implementations.
 
-The SRE workstream integrates with the central GitOps structure through:
+### 9.1 Repository Ownership and Source-of-Truth Boundaries
 
-`gitops/root/root-sre.yaml`
+| Repository path | Responsibility | Relationship |
+|---|---|---|
+| `gitops/root/root-sre.yaml` | Defines the root SRE Argo CD Application | References `sre/deploy/` |
+| `sre/deploy/` | SRE child Applications and AppProject | Read by `root-sre` |
+| `sre/deploy/monitoring-app.yaml` | Defines the monitoring child Application | References `sre/observe/` |
+| `sre/observe/monitoring.yaml` | Kubernetes monitoring manifests | Selected by `capstone-monitoring` |
+| `sre/observe/grafana-dashboard.yaml` | Grafana dashboard ConfigMap | Selected by `capstone-monitoring` |
+| `sre/observe/capstone-health.json` | Dashboard source JSON | Supporting artifact |
+| `sre/observe/prometheus-sli-queries.promql` | Reliability queries | Supporting artifact |
+| `sre/validate/` | Load testing and reliability evidence | Not automatically deployed |
+| `sre/reference/helm/` | Standalone Helm values | Reference unless explicitly linked |
 
-### 9.2 Intended Application Hierarchy
+The central GitOps workstream remains responsible for root orchestration. The SRE workstream maintains the observability configuration integrated into that architecture.
+
+### 9.2 SRE Deployment Hierarchy
 
 ```mermaid
 flowchart TD
-    A["Argo CD Root Application"]
-    B["root-sre"]
-    C["sre/deploy/"]
-    D["Prometheus Operator CRDs"]
-    E["Prometheus + Grafana"]
-    F["Loki"]
-    G["Grafana Alloy"]
-    H["capstone-monitoring"]
-    I["sre/observe/"]
+    ROOT["Central Argo CD Root"]
+    ROOTSRE["gitops/root/root-sre.yaml"]
+    DEPLOY["sre/deploy/"]
 
-    A --> B
-    B --> C
-    C --> D
-    C --> E
-    C --> F
-    C --> G
-    C --> H
-    H --> I
+    CRDS["prometheus-crds.yaml"]
+    STACK["prometheus-stack.yaml"]
+    LOKI["loki.yaml"]
+    ALLOY["alloy.yaml"]
+    MON["monitoring-app.yaml"]
+
+    OBS["sre/observe/"]
+    VALIDATE["sre/validate/"]
+    REFERENCE["sre/reference/"]
+
+    ROOT --> ROOTSRE
+    ROOTSRE -->|"spec.source.path: sre/deploy"| DEPLOY
+
+    DEPLOY --> CRDS
+    DEPLOY --> STACK
+    DEPLOY --> LOKI
+    DEPLOY --> ALLOY
+    DEPLOY --> MON
+
+    MON -->|"spec.source.path: sre/observe"| OBS
+
+    VALIDATE -.->|"Testing and evidence only"| OBS
+    REFERENCE -.->|"Reference configuration only"| DEPLOY
 ```
 
-This represents the intended repository and Application relationship after the directory migration. It does not imply that the new paths have already been reconciled by the live cluster.
+These arrows describe deployment configuration relationships, not metrics or log traffic.
 
-### 9.3 Deployment Definitions
+The actual observability data pipelines are documented in Section 4.
 
-| File | Role |
+### 9.3 First Code Relationship: GitOps Root to SRE Deployment
+
+**Source file:** `gitops/root/root-sre.yaml`
+
+The relevant configuration follows this pattern:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: root-sre
+  namespace: argocd
+
+spec:
+  project: sre-project
+
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    targetRevision: main
+    path: sre/deploy
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+This is an explanatory excerpt, not a replacement for the complete committed Application.
+
+#### YAML Syntax Explained
+
+| YAML field | Meaning | Operational effect |
+|---|---|---|
+| `apiVersion` | Argo CD API version | Identifies the custom resource API |
+| `kind: Application` | Resource type | Defines an Argo CD Application |
+| `metadata.name` | Application name | Identifies `root-sre` |
+| `metadata.namespace` | Resource namespace | Stores the Application in `argocd` |
+| `spec.project` | AppProject association | Applies project permissions |
+| `source.repoURL` | Git repository | Defines where Argo CD reads configuration |
+| `source.targetRevision` | Git revision | Tracks the configured branch or revision |
+| `source.path` | Repository directory | Selects `sre/deploy/` |
+| `destination.server` | Kubernetes destination | Selects the target cluster |
+| `destination.namespace` | Default resource namespace | Applies to namespaced resources without an explicit namespace |
+| `automated.prune` | Automated pruning | Allows removal of resources absent from desired state |
+| `automated.selfHeal` | Drift correction | Reconciles changes against Git |
+
+#### Key Relationship
+
+```text
+gitops/root/root-sre.yaml
+        │
+        │ spec.source.repoURL
+        │ spec.source.targetRevision: main
+        │ spec.source.path: sre/deploy
+        ▼
+sre/deploy/
+        │
+        ├── prometheus-crds.yaml
+        ├── prometheus-stack.yaml
+        ├── loki.yaml
+        ├── alloy.yaml
+        ├── monitoring-app.yaml
+        └── sre-project.yaml
+```
+
+The `root-sre` Application reads the selected directory from the configured Git revision.
+
+The YAML files in that directory define the SRE child Applications and associated AppProject configuration.
+
+### 9.4 Second Code Relationship: SRE Deployment to Monitoring Resources
+
+**Source file:** `sre/deploy/monitoring-app.yaml`
+
+The monitoring child Application uses the following relevant source-selection pattern:
+
+```yaml
+spec:
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    targetRevision: main
+    path: sre/observe
+
+    directory:
+      recurse: false
+      include: '*.yaml'
+```
+
+This is a source-selection excerpt rather than the complete Application definition.
+
+#### YAML Syntax Explained
+
+| YAML field | Meaning |
 |---|---|
-| `deploy/alloy.yaml` | Argo CD Application for Grafana Alloy |
-| `deploy/loki.yaml` | Argo CD Application for Loki |
-| `deploy/prometheus-crds.yaml` | Argo CD Application for Prometheus Operator CRDs |
-| `deploy/prometheus-stack.yaml` | Argo CD Application for kube-prometheus-stack |
-| `deploy/monitoring-app.yaml` | Argo CD Application for monitoring manifests |
-| `deploy/sre-project.yaml` | Argo CD AppProject definition |
+| `repoURL` | Repository containing monitoring configuration |
+| `targetRevision: main` | Git revision being monitored |
+| `path: sre/observe` | Directory containing monitoring resources |
+| `directory.recurse: false` | Do not traverse nested directories |
+| `directory.include: '*.yaml'` | Select matching YAML files |
 
-The deployed observability Application definitions use Helm chart sources and inline `valuesObject` configuration.
+The selection means that the monitoring Application can load:
 
-Standalone Helm values are preserved under `reference/helm/`. These reference files should not be assumed to be the authoritative live configuration unless explicitly connected to the Argo CD deployment.
+```text
+sre/observe/
+├── monitoring.yaml              # Selected Kubernetes YAML
+├── grafana-dashboard.yaml       # Selected Kubernetes YAML
+├── capstone-health.json         # Not directly applied
+└── prometheus-sli-queries.promql # Not directly applied
+```
+
+The `.json` and `.promql` files are supporting artifacts rather than standalone Kubernetes manifests.
+
+The resulting relationship is:
+
+```text
+root-sre
+   │
+   ▼
+sre/deploy/monitoring-app.yaml
+   │
+   │ spec.source.path: sre/observe
+   │ directory.include: '*.yaml'
+   ▼
+sre/observe/
+   │
+   ├── monitoring.yaml
+   └── grafana-dashboard.yaml
+           │
+           ▼
+      Kubernetes resources
+```
+
+A successfully applied ConfigMap does not independently prove that Grafana has provisioned the corresponding dashboard.
+
+### 9.5 Helm-Based Observability Applications
+
+The Capstone SRE deployment integrates four Helm-based observability components into the existing Argo CD App-of-Apps architecture.
+
+Rather than manually installing each Helm chart, the SRE workstream defines Argo CD Applications that instruct Argo CD which Helm charts to retrieve, which values to apply, and where to reconcile the rendered Kubernetes resources.
+
+#### 9.5.1 Capstone Helm Deployment Components
+
+| Capstone source file | Helm component | Primary responsibility |
+|---|---|---|
+| `sre/deploy/prometheus-crds.yaml` | Prometheus Operator CRDs | Registers monitoring-related Kubernetes resource types |
+| `sre/deploy/prometheus-stack.yaml` | kube-prometheus-stack | Deploys Prometheus, Grafana, and supporting monitoring components |
+| `sre/deploy/loki.yaml` | Grafana Loki | Deploys centralised log storage |
+| `sre/deploy/alloy.yaml` | Grafana Alloy | Deploys Kubernetes log collection and forwarding |
+
+Two additional SRE deployment files support these components:
+
+| File | Responsibility |
+|---|---|
+| `sre/deploy/monitoring-app.yaml` | Deploys selected monitoring YAML manifests from `sre/observe/` |
+| `sre/deploy/sre-project.yaml` | Defines SRE Argo CD AppProject permissions |
+
+The first four files are Helm-backed Argo CD Applications. The monitoring Application reads Kubernetes manifests directly from Git.
+
+#### 9.5.2 GitOps-to-Helm Deployment Architecture
+
+```mermaid
+flowchart TD
+    ROOT["Central Argo CD Root"]
+    RS["gitops/root/root-sre.yaml"]
+    DEP["sre/deploy/"]
+
+    CRD["prometheus-crds.yaml"]
+    PROM["prometheus-stack.yaml"]
+    LOKI["loki.yaml"]
+    ALLOY["alloy.yaml"]
+    MON["monitoring-app.yaml"]
+
+    CRDCH["Prometheus Operator CRDs"]
+    PROMCH["kube-prometheus-stack"]
+    LOKICH["Loki Helm chart"]
+    ALLOYCH["Alloy Helm chart"]
+
+    OBS["sre/observe/ YAML manifests"]
+    K8S["Kubernetes resources in Capstone EKS"]
+
+    ROOT --> RS
+    RS -->|"Git source path"| DEP
+
+    DEP --> CRD
+    DEP --> PROM
+    DEP --> LOKI
+    DEP --> ALLOY
+    DEP --> MON
+
+    CRD --> CRDCH
+    PROM --> PROMCH
+    LOKI --> LOKICH
+    ALLOY --> ALLOYCH
+
+    CRDCH --> K8S
+    PROMCH --> K8S
+    LOKICH --> K8S
+    ALLOYCH --> K8S
+
+    MON -->|"Git directory source"| OBS
+    OBS --> K8S
+```
+
+The central GitOps hierarchy selects the SRE deployment definitions. The SRE Applications specify which observability components and monitoring resources Argo CD manages.
+
+#### 9.5.3 Prometheus and Grafana — `prometheus-stack.yaml`
+
+**Source file:** `sre/deploy/prometheus-stack.yaml`
+
+The Prometheus stack Application uses the kube-prometheus-stack Helm chart.
+
+The relevant chart-source structure is:
+
+```yaml
+spec:
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: CHART_VERSION_FROM_COMMITTED_FILE
+
+    helm:
+      valuesObject:
+        # Capstone-specific chart values
+```
+
+The exact chart version and inline values must be read from the committed Capstone Application.
+
+| YAML field | Capstone significance |
+|---|---|
+| `repoURL` | Prometheus Community Helm repository |
+| `chart` | Selects kube-prometheus-stack |
+| `targetRevision` | Pins the Helm chart version |
+| `helm.valuesObject` | Supplies Capstone-specific configuration |
+
+Depending on the actual enabled values, the chart can manage Prometheus, Grafana, Alertmanager, Prometheus Operator, Services, and supporting resources.
+
+**Relationship to `sre/observe/`:**
+
+```text
+sre/deploy/prometheus-stack.yaml
+    │
+    └── Deploys kube-prometheus-stack
+            │
+            ├── Prometheus
+            ├── Grafana
+            ├── Prometheus Operator
+            └── Other enabled components
+
+sre/deploy/monitoring-app.yaml
+    │
+    └── Reads sre/observe/
+            │
+            ├── monitoring.yaml
+            └── grafana-dashboard.yaml
+```
+
+The Helm chart provides the monitoring platform, while the monitoring Application supplies additional SRE-managed Kubernetes resources.
+
+These resources must use compatible API versions, labels, selectors, namespaces, and provisioning settings.
+
+#### 9.5.4 Loki — `loki.yaml`
+
+**Source file:** `sre/deploy/loki.yaml`
+
+The Loki Application defines the log aggregation platform.
+
+The relevant Helm source structure is:
+
+```yaml
+spec:
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki
+    targetRevision: CHART_VERSION_FROM_COMMITTED_FILE
+
+    helm:
+      valuesObject:
+        # Capstone Loki chart configuration
+```
+
+The exact chart version and inline values must be confirmed from the committed file.
+
+Loki receives log streams from Alloy and makes them available through LogQL.
+
+```text
+Application Pods
+    │
+    │ Container logs
+    ▼
+Grafana Alloy
+    │
+    │ Log forwarding
+    ▼
+Grafana Loki
+    │
+    │ LogQL queries
+    ▼
+Grafana
+```
+
+Relevant Helm values may affect:
+
+- Deployment mode.
+- Storage backend and persistence.
+- Resource requests and limits.
+- Service exposure.
+- Replication and availability.
+- Log retention.
+
+The active Capstone deployment mode and storage configuration must be verified before being described as operational.
+
+#### 9.5.5 Grafana Alloy — `alloy.yaml`
+
+**Source file:** `sre/deploy/alloy.yaml`
+
+Grafana Alloy provides Kubernetes-aware log discovery, collection, processing, and forwarding.
+
+The relevant Helm source structure is:
+
+```yaml
+spec:
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: alloy
+    targetRevision: CHART_VERSION_FROM_COMMITTED_FILE
+
+    helm:
+      valuesObject:
+        # Capstone Alloy chart configuration
+```
+
+The exact chart version and inline values must be confirmed from the committed file.
+
+Alloy configuration determines:
+
+- Controller type and replica count.
+- Kubernetes discovery behaviour.
+- Log collection configuration.
+- Kubernetes access permissions.
+- Resource requests and limits.
+- Log forwarding destinations.
+- Collection availability and resilience.
+
+The initial Capstone Alloy configuration uses a single replica. High availability and recovery behaviour require further validation.
+
+#### 9.5.6 Prometheus Operator CRDs — `prometheus-crds.yaml`
+
+**Source file:** `sre/deploy/prometheus-crds.yaml`
+
+Prometheus Operator CustomResourceDefinitions extend the Kubernetes API with monitoring-related resource types.
+
+These include:
+
+- `ServiceMonitor`
+- `PodMonitor`
+- `PrometheusRule`
+- `Prometheus`
+- `Alertmanager`
+
+CRDs must be available before Kubernetes can accept corresponding custom resources.
+
+```text
+Prometheus Operator CRDs
+    │
+    │ Register Kubernetes API types
+    ▼
+ServiceMonitor / PrometheusRule
+    │
+    │ Define scrape discovery and alert rules
+    ▼
+Prometheus Operator / Prometheus
+```
+
+The dedicated CRD Application separates this prerequisite from the remaining monitoring resources.
+
+The exact Helm chart repository, chart name, and version must be read from `sre/deploy/prometheus-crds.yaml`.
+
+#### 9.5.7 Understanding `helm.valuesObject`
+
+The `helm.valuesObject` field supplies inline Helm configuration values to Argo CD.
+
+The following is a conceptual example of kube-prometheus-stack values, not a copy of the committed Capstone configuration:
+
+```yaml
+helm:
+  valuesObject:
+    grafana:
+      enabled: true
+
+    prometheus:
+      prometheusSpec:
+        retention: 7d
+```
+
+| Configuration | Meaning | Potential effect |
+|---|---|---|
+| `grafana.enabled: true` | Enables chart-managed Grafana | Grafana resources are rendered |
+| `grafana.enabled: false` | Disables chart-managed Grafana | Existing chart-managed resources may be removed during reconciliation |
+| `prometheus.prometheusSpec.retention: 7d` | Sets Prometheus retention duration | Retains eligible metrics according to the configured duration |
+| Changing `targetRevision` | Changes Helm chart version | May change templates, defaults, or compatibility |
+| Changing resource requests | Changes workload resource allocation | May affect scheduling and performance |
+| Changing persistence settings | Changes storage behaviour | May affect data retention and resource lifecycle |
+
+The actual supported settings depend on the selected Helm chart and version.
+
+Changes must be reviewed against the shared Capstone cluster's resource constraints and operational requirements.
+
+#### 9.5.8 Inline Helm Values vs. Reference Files
+
+The repository also contains:
+
+```text
+sre/reference/helm/
+├── alloy-values.yaml
+├── loki-values.yaml
+├── prometheus-values.yaml
+└── README.md
+```
+
+These files provide supporting configuration references.
+
+They are not automatically applied merely because they exist in the repository.
+
+The actual values supplied to Helm depend on the Argo CD Application's configured source, `helm.valuesObject`, and any explicitly referenced values files.
+
+```text
+sre/deploy/prometheus-stack.yaml
+    │
+    └── spec.source.helm.valuesObject
+            │
+            └── Values supplied to Helm
+
+sre/reference/helm/prometheus-values.yaml
+    │
+    └── Supporting reference configuration
+        (not automatically deployed)
+```
+
+#### 9.5.9 End-to-End Deployment Relationship
+
+```text
+1. Capstone Git repository
+   │
+   ▼
+2. gitops/root/root-sre.yaml
+   │
+   │ Reads sre/deploy/
+   ▼
+3. SRE child Argo CD Applications
+   │
+   ├── Prometheus Operator CRDs
+   ├── kube-prometheus-stack
+   ├── Loki
+   ├── Alloy
+   └── capstone-monitoring
+           │
+           │ Reads selected YAML files
+           ▼
+4. sre/observe/
+   │
+   ├── monitoring.yaml
+   └── grafana-dashboard.yaml
+           │
+           ▼
+5. Kubernetes resources in Capstone EKS
+   │
+   ▼
+6. Runtime observability
+   │
+   ├── Prometheus → Metrics and alerts
+   ├── Alloy → Loki → Logs
+   └── Grafana → Dashboards
+```
+
+This is a logical deployment and dependency relationship. Actual reconciliation order depends on the committed Argo CD configuration, including any sync waves or dependency controls.
+
+#### 9.5.10 Verify the Exact Capstone Helm Configuration
+
+From the repository root:
+
+```bash
+git fetch origin
+
+git show origin/main:sre/deploy/prometheus-crds.yaml
+git show origin/main:sre/deploy/prometheus-stack.yaml
+git show origin/main:sre/deploy/loki.yaml
+git show origin/main:sre/deploy/alloy.yaml
+```
+
+To inspect chart sources and inline values:
+
+```bash
+git grep -n -E \
+  'repoURL:|chart:|targetRevision:|valuesObject:|path:' \
+  origin/main -- sre/deploy/
+```
+
+These commands inspect committed configuration without modifying the EKS cluster.
+
+Chart versions, namespaces, and deployed values should be verified against the committed files before being represented as exact live configuration.
+
+### 9.6 GitOps Deployment vs. SRE Observability
+
+GitOps and observability operate at different layers.
+
+| GitOps deployment relationship | Observability runtime relationship |
+|---|---|
+| Argo CD reads Git configuration | Prometheus collects metrics |
+| `root-sre` reads `sre/deploy/` | Grafana queries Prometheus |
+| Child Applications deploy Helm charts | Alloy collects container logs |
+| `capstone-monitoring` reads YAML from `sre/observe/` | Loki stores log streams |
+| Git defines desired configuration | Prometheus evaluates alert rules |
+| Argo CD reconciles Kubernetes resources | Alertmanager routes firing alerts |
+
+**GitOps manages what should be deployed. SRE observability measures how the deployed application behaves.**
+
+A `Synced / Healthy` Argo CD status confirms reported reconciliation and health at the time of inspection. It does not independently confirm successful metrics scraping, log ingestion, alert delivery, or SLO compliance.
+
+### 9.7 Read-Only Git Verification
+
+The following commands inspect repository configuration without changing the Kubernetes cluster.
+
+```bash
+git fetch origin
+
+git show origin/main:gitops/root/root-sre.yaml
+
+git show origin/main:sre/deploy/monitoring-app.yaml
+
+git ls-tree -r --name-only origin/main gitops/ sre/
+```
+
+To locate repository source-path references:
+
+```bash
+git grep -n -E \
+  'path: (sre/deploy|sre/observe|gitops/sre/apps|sre/kubernetes)' \
+  origin/main -- gitops/ sre/
+```
+
+These commands inspect Git only. They do not apply Kubernetes manifests or manually synchronize Argo CD.
 
 ---
 
@@ -515,13 +1019,13 @@ Standalone Helm values are preserved under `reference/helm/`. These reference fi
 
 ### Phase 1 — SRE Workspace: Completed
 
-Established the SRE workstream, monitoring requirements, reliability objectives, repository documentation, and initial operational architecture.
+Established the SRE workstream, monitoring requirements, reliability objectives, documentation, and initial architecture.
 
 ### Phase 2 — Observability Configuration: Locally Validated
 
-Prepared and locally validated Helm configurations, monitoring manifests, Grafana dashboards, Loki, and Grafana Alloy.
+Prepared and locally validated Helm configuration references, monitoring manifests, Grafana dashboards, Loki, and Grafana Alloy.
 
-The standalone reference configuration and live Argo CD `valuesObject` definitions may differ and must be assessed separately.
+Standalone reference configuration and deployed Argo CD `valuesObject` definitions may differ.
 
 ### Phase 3 — Argo CD Integration: Previously Reconciled
 
@@ -534,43 +1038,41 @@ The following Applications were previously verified as `Synced / Healthy` on the
 - `alloy`
 - `capstone-monitoring`
 
-These observations establish that Argo CD reported successful synchronization and health at the time of inspection.
+These observations describe the state at the time of inspection, before confirmation of live reconciliation against the updated repository paths.
 
-They do not independently confirm complete metrics ingestion, application-level SLO compliance, log delivery, or Alertmanager notification routing.
+They do not establish complete end-to-end observability readiness.
 
-### Phase 4 — Repository Consolidation: Completed Locally
+### Phase 4 — Repository Consolidation: Completed
 
-The SRE repository has been reorganized into four functional directories:
+The SRE repository was consolidated into four functional directories:
 
 - `deploy/`
 - `observe/`
 - `validate/`
 - `reference/`
 
-The restructuring was committed as:
+The restructuring is recorded in commit:
 
 `228e1f5 — refactor(sre): consolidate observability into deploy observe validate`
 
-The commit primarily relocates existing files and updates the intended Argo CD source paths.
-
-**The new repository paths require a coordinated GitOps migration before they can be treated as the live deployment source.**
+The repository paths have been updated on `main`; live Argo CD reconciliation against those paths remains unverified.
 
 ### Phase 5 — Operational Validation: Pending Verification
 
 | Validation area | Outstanding verification |
 |---|---|
-| Application metrics | Confirm actual endpoint availability and successful scraping |
-| Prometheus | Verify active targets and expected metric series |
-| SLIs and SLOs | Validate query correctness, measurement windows, and compliance |
-| Loki | Confirm end-to-end application log ingestion |
-| Grafana | Verify dashboards against live telemetry |
-| Alertmanager | Confirm alert routing and receiver delivery |
-| Load testing | Execute approved scenarios and capture results |
-| Scaling | Observe workload behaviour under controlled load |
-| Storage | Verify persistence, retention, and capacity |
-| Incident response | Validate diagnosis, escalation, and recovery procedures |
+| Application metrics | Confirm endpoints and successful scraping |
+| Prometheus | Verify targets and metric series |
+| SLIs and SLOs | Validate queries and compliance |
+| Loki | Confirm log ingestion |
+| Grafana | Verify dashboards using live data |
+| Alertmanager | Confirm notification delivery |
+| Load testing | Execute approved scenarios |
+| Scaling | Observe workload behaviour |
+| Storage | Verify persistence and retention |
+| Incident response | Validate investigation and recovery |
 
-No unverified operational capability should be represented as production-ready.
+No unverified capability should be represented as production-ready.
 
 ---
 
@@ -615,74 +1117,112 @@ sre/
 
 | Directory | Responsibility | Primary artifacts |
 |---|---|---|
-| `deploy/` | Declarative deployment configuration | Argo CD Applications and AppProject |
-| `observe/` | Monitoring and visualisation | Prometheus manifests, Grafana dashboard, PromQL |
-| `validate/` | Reliability testing and evidence | Locust scripts, documentation, health report |
-| `reference/` | Supporting configuration history | Standalone Helm values and reference documentation |
+| `deploy/` | Declarative observability deployment | Argo CD Applications and AppProject |
+| `observe/` | Monitoring and visualisation | Kubernetes YAML, dashboard JSON, PromQL |
+| `validate/` | Reliability testing | Locust scripts, reports, documentation |
+| `reference/` | Supporting technical configuration | Helm values and reference documentation |
 
-The central `gitops/` directory remains separate from the SRE workstream and provides the shared deployment orchestration layer.
+The central `gitops/` directory remains separate from the SRE workstream and provides shared deployment orchestration.
 
 ---
 
 ## 12. Operational Verification
 
-The following commands provide read-only inspection of the Capstone environment.
+The following commands are intended for read-only verification of the Capstone environment.
 
-They require an appropriately configured kubeconfig and Kubernetes context.
+### 12.1 Verify the Correct Cluster Context
 
-### 12.1 Verify Cluster Context
+Use the dedicated Capstone kubeconfig rather than assuming the default Kubernetes context points to the correct cluster.
 
 ```bash
-kubectl config current-context
-kubectl cluster-info
+kubectl \
+  --kubeconfig "$HOME/.kube/capstone-group2-config" \
+  --context capstone-group2 \
+  cluster-info
 ```
 
-Confirm that the selected context is the intended Capstone EKS cluster before performing further operations.
+If the context does not exist, inspect the available contexts:
+
+```bash
+kubectl \
+  --kubeconfig "$HOME/.kube/capstone-group2-config" \
+  config get-contexts
+```
 
 ### 12.2 Verify Argo CD Applications
 
 ```bash
-kubectl get applications.argoproj.io -n argocd
+kubectl \
+  --kubeconfig "$HOME/.kube/capstone-group2-config" \
+  --context capstone-group2 \
+  get applications.argoproj.io -n argocd
 ```
 
-Inspect the synchronization and health states of the SRE Applications.
+Inspect the SRE Applications for synchronization and health status.
 
-### 12.3 Verify Monitoring Workloads
+### 12.3 Verify Application Source Paths
 
 ```bash
-kubectl get pods -n monitoring
-kubectl get deployments,statefulsets -n monitoring
+kubectl \
+  --kubeconfig "$HOME/.kube/capstone-group2-config" \
+  --context capstone-group2 \
+  get applications.argoproj.io -n argocd \
+  root-sre capstone-monitoring \
+  -o custom-columns='NAME:.metadata.name,PATH:.spec.source.path,SYNC:.status.sync.status,HEALTH:.status.health.status'
 ```
 
-Check workload readiness, restarts, and unexpected failures.
+The intended paths are:
 
-### 12.4 Verify Logging Workloads
+| Application | Expected path |
+|---|---|
+| `root-sre` | `sre/deploy` |
+| `capstone-monitoring` | `sre/observe` |
+
+These are expected configuration values, not independently verified live results.
+
+### 12.4 Verify Monitoring Workloads
 
 ```bash
-kubectl get pods -n logging
-kubectl get deployments,statefulsets -n logging
+kubectl \
+  --kubeconfig "$HOME/.kube/capstone-group2-config" \
+  --context capstone-group2 \
+  get pods -n monitoring
 ```
 
-Confirm the availability of Alloy and Loki workloads.
+Check Pod readiness, restart counts, and unexpected failures.
 
-### 12.5 Inspect Monitoring Resources
+### 12.5 Verify Logging Workloads
 
 ```bash
-kubectl get servicemonitors -n monitoring
-kubectl get prometheusrules -n monitoring
-kubectl get configmaps -n monitoring
+kubectl \
+  --kubeconfig "$HOME/.kube/capstone-group2-config" \
+  --context capstone-group2 \
+  get pods -n logging
 ```
 
-The presence of these resources does not guarantee successful metrics collection or dashboard provisioning. Their operational behaviour must be verified through the corresponding monitoring components.
+Confirm the availability of logging workloads.
 
-### 12.6 Inspect Persistent Storage
+### 12.6 Inspect Monitoring Resources
 
 ```bash
-kubectl get pvc -n monitoring
-kubectl get pvc -n logging
+kubectl \
+  --kubeconfig "$HOME/.kube/capstone-group2-config" \
+  --context capstone-group2 \
+  get servicemonitors,prometheusrules -n monitoring
 ```
 
-Verify claim status and investigate unexpected storage conditions before making any changes.
+Resource existence does not independently establish successful metrics collection or alert delivery.
+
+### 12.7 Inspect Persistent Storage
+
+```bash
+kubectl \
+  --kubeconfig "$HOME/.kube/capstone-group2-config" \
+  --context capstone-group2 \
+  get pvc -n monitoring
+```
+
+Verify persistent volume claim status and investigate unexpected storage conditions.
 
 ---
 
@@ -690,52 +1230,39 @@ Verify claim status and investigate unexpected storage conditions before making 
 
 All SRE changes must preserve application availability, respect shared EKS resource constraints, and avoid disrupting unrelated workloads.
 
-### Change Management
+Changes to deployment paths, Application ownership, Helm configuration, persistent storage, and shared Kubernetes resources require appropriate coordination and review.
 
-Changes involving any of the following require coordinated review:
-
-- Argo CD Application source paths.
-- App-of-Apps ownership relationships.
-- Automated synchronization and pruning.
-- Application deletion finalizers.
-- AppProject permissions.
-- Helm chart versions and deployed values.
-- Persistent storage and retention settings.
-- Shared Kubernetes namespaces or resources.
-- Load-test intensity and duration.
-
-### Operational Safety
-
-The SRE implementation must:
+Operational safeguards include:
 
 1. Avoid uncontrolled changes to shared infrastructure.
-2. Preserve the existing observability stack during GitOps migrations.
-3. Validate intended changes before deployment.
-4. Use approved infrastructure and Kubernetes access.
-5. Maintain clear rollback and recovery procedures.
-6. Coordinate high-impact testing with the relevant teams.
+2. Validate configuration before deployment.
+3. Use approved infrastructure and Kubernetes access.
+4. Preserve observability availability during changes.
+5. Maintain clear recovery procedures.
+6. Coordinate load testing with the relevant teams.
 7. Record deployment and validation outcomes.
-8. Avoid treating successful GitOps synchronization as proof of application reliability.
+8. Distinguish successful GitOps synchronization from demonstrated application reliability.
 
 ---
 
 ## 14. Future Improvements
 
-The following enhancements may be considered after the initial operational validation is complete:
+Potential future enhancements include:
 
-- Formalised availability and latency SLOs with defined measurement windows.
-- Error-budget monitoring and burn-rate alerting.
-- Validated Alertmanager notification receivers.
-- Automated dashboard and PrometheusRule validation in CI.
-- Improved observability configuration ownership and reduced duplication.
+- Formalised availability and latency SLOs.
+- Error-budget monitoring.
+- Burn-rate alerting.
+- Validated notification receivers.
+- Automated monitoring configuration checks.
+- Improved observability configuration consistency.
 - Log retention and storage capacity policies.
-- Additional reliability test scenarios.
-- Continuous load-test reporting and baseline comparisons.
-- High-availability assessment for logging and monitoring components.
-- Incident runbooks and post-incident review templates.
-- Additional application instrumentation where existing metrics are insufficient.
+- Additional reliability testing scenarios.
+- Automated performance baseline comparisons.
+- High-availability assessment for observability components.
+- Incident runbooks and post-incident reviews.
+- Additional application instrumentation where required.
 
-These are future improvements, not claims of currently implemented functionality.
+These are proposed improvements, not claims of current implementation.
 
 ---
 
@@ -745,10 +1272,10 @@ These are future improvements, not claims of currently implemented functionality
 
 **Argo CD deployment:** Observability Applications previously verified as `Synced / Healthy`.
 
-**Repository organization:** Consolidated into `deploy/`, `observe/`, `validate/`, and `reference/`.
+**Repository organisation:** Consolidated into `deploy/`, `observe/`, `validate/`, and `reference/`.
 
-**GitOps path migration:** Requires coordinated review and reconciliation.
+**GitOps integration:** SRE deployment definitions are connected to the existing Capstone Argo CD architecture through repository source paths. Live reconciliation against the updated paths remains unverified.
 
 **Operational readiness:** End-to-end metrics, logs, alerts, SLO compliance, and reliability testing remain pending verification.
 
-The SRE workstream continues to prioritise measurable application reliability, reproducible engineering practices, and safe integration with the shared Capstone infrastructure.
+The SRE workstream prioritises measurable application reliability, reproducible engineering practices, and safe integration with the shared Capstone infrastructure.
