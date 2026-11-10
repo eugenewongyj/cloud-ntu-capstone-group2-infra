@@ -15,6 +15,6 @@ This directory contains Helm values and Grafana dashboard definitions for the Ca
 
 The configurations are prepared for future deployment to the Capstone AWS EKS Auto Mode environment.
 
-All Helm templates and configuration files should be validated before deployment. Kubernetes resource manifests are maintained separately under `sre/kubernetes/`.
+All Helm templates and configuration files should be validated before deployment. Kubernetes resource manifests are maintained separately under `sre/observe/`.
 
 **Status:** Locally validated; not yet deployed to the capstone EKS cluster.

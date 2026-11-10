@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
     targetRevision: main
-    path: sre/kubernetes
+    path: sre/observe
     directory:
       recurse: false
       include: '*.yaml'
