@@ -6,7 +6,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: infra-project # Or whatever project root-infra uses
+  project: infra-project
   source:
     repoURL: https://argoproj.github.io/argo-helm
     chart: argo-cd
