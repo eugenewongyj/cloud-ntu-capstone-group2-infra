@@ -26,7 +26,7 @@ To bootstrap the entire cluster from scratch, run the initialization script:
 ```bash
 chmod +x init.sh
 ./init.sh
-
+```
 ## Accessing Platform Dashboards
 
 After successfully running `./init.sh`, the core platform UI dashboards will be provisioned. Use the commands below to retrieve your initial admin passwords.
