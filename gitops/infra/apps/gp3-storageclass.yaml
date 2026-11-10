@@ -11,5 +11,5 @@ allowVolumeExpansion: true
 parameters:
   type: gp3
   # Add your sandbox's mandatory tags here to bypass the 403 SCP Explicit Deny
-  tagSpecification_1: "Owner=group2-tk"
+  tagSpecification_1: "Owner=group2-capstone-cluster"
   tagSpecification_2: "Environment=sandbox"
