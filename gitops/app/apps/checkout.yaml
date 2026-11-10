@@ -12,6 +12,10 @@ spec:
     helm:
       releaseName: checkout
       valuesObject:
+      # Our own image from ECR (built + scanned by CI), not the public upstream image
+        image:
+          repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-checkout
+          tag: "54ccf4e2592237c87e77e6725e06318abb8a9ce5"
         # Add this block to enable Prometheus scraping
         metrics:
           enabled: true
