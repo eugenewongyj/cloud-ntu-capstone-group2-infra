@@ -1,8 +1,14 @@
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: capstone-sre-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
 data:
   capstone-health.json: |
     {
-      "title": "Capstone \u2014 SRE Health Dashboard",
+      "title": "Capstone — SRE Health Dashboard",
       "uid": "capstone-sre-health",
       "schemaVersion": 39,
       "version": 1,
@@ -25,7 +31,7 @@ data:
           },
           "targets": [
             {
-              "expr": "up{namespace=\"default\"}",
+              "expr": "up{namespace=\"retail-store\"}",
               "refId": "A",
               "legendFormat": "{{namespace}} / {{pod}} / {{deployment}} / {{instance}}"
             }
@@ -47,7 +53,7 @@ data:
           },
           "targets": [
             {
-              "expr": "kube_deployment_status_replicas_available{namespace=\"default\"}",
+              "expr": "kube_deployment_status_replicas_available{namespace=\"retail-store\"}",
               "refId": "A",
               "legendFormat": "{{namespace}} / {{pod}} / {{deployment}} / {{instance}}"
             }
@@ -69,7 +75,7 @@ data:
           },
           "targets": [
             {
-              "expr": "kube_deployment_spec_replicas{namespace=\"default\"}",
+              "expr": "kube_deployment_spec_replicas{namespace=\"retail-store\"}",
               "refId": "A",
               "legendFormat": "{{namespace}} / {{pod}} / {{deployment}} / {{instance}}"
             }
@@ -91,7 +97,7 @@ data:
           },
           "targets": [
             {
-              "expr": "kube_pod_container_status_restarts_total{namespace=\"default\"}",
+              "expr": "kube_pod_container_status_restarts_total{namespace=\"retail-store\"}",
               "refId": "A",
               "legendFormat": "{{namespace}} / {{pod}} / {{deployment}} / {{instance}}"
             }
@@ -113,7 +119,7 @@ data:
           },
           "targets": [
             {
-              "expr": "kube_pod_status_ready{namespace=\"default\",condition=\"true\"}",
+              "expr": "kube_pod_status_ready{namespace=\"retail-store\",condition=\"true\"}",
               "refId": "A",
               "legendFormat": "{{namespace}} / {{pod}} / {{deployment}} / {{instance}}"
             }
@@ -127,9 +133,3 @@ data:
         }
       ]
     }
-kind: ConfigMap
-metadata:
-  labels:
-    grafana_dashboard: "1"
-  name: capstone-sre-dashboard
-  namespace: capstone-monitoring
