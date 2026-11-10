@@ -15,6 +15,15 @@ spec:
       parameters:
         - name: fullnameOverride
           value: carts
+      valuesObject:
+        # Add this block to enable Prometheus scraping
+        metrics:
+          enabled: true
+        serviceMonitor:
+          enabled: true
+          # This label is critical: it tells Prometheus to pick up this monitor
+          additionalLabels:
+            release: kube-prometheus-stack
 
   destination:
     server: https://kubernetes.default.svc
