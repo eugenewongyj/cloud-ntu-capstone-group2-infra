@@ -4,7 +4,8 @@ metadata:
   name: swiftkart-collector
   namespace: opentelemetry-system
 spec:
-  config:
+  # Notice the pipe character here, making the entire config block a string
+  config: |
     receivers:
       otlp:
         protocols:
@@ -15,7 +16,6 @@ spec:
     processors:
       batch: {}
     exporters:
-      # Ship traces directly to your new monolithic Tempo service
       otlp:
         endpoint: "tempo.logging.svc.cluster.local:4317"
         tls:
