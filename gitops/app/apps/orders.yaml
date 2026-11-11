@@ -12,7 +12,7 @@ spec:
     helm:
       releaseName: orders
       valuesObject:
-    
+
         # Our own image from ECR (built + scanned by CI), not the public upstream image
         image:
           repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-orders

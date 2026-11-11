@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 CLUSTER_NAME="group2-capstone-cluster"
 AWS_REGION="ap-southeast-1"
 REPO_URL="https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git"

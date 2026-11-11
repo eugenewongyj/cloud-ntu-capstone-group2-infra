@@ -418,15 +418,15 @@ These directories are complementary rather than separate or competing GitOps imp
 
 | Repository path | Responsibility | Relationship |
 |---|---|---|
-| `gitops/root/root-sre.yaml` | Defines the root SRE Argo CD Application | References `sre/deploy/` |
-| `sre/deploy/` | SRE child Applications and AppProject | Read by `root-sre` |
-| `sre/deploy/monitoring-app.yaml` | Defines the monitoring child Application | References `sre/observe/` |
-| `sre/observe/monitoring.yaml` | Kubernetes monitoring manifests | Selected by `capstone-monitoring` |
-| `sre/observe/grafana-dashboard.yaml` | Grafana dashboard ConfigMap | Selected by `capstone-monitoring` |
-| `sre/observe/capstone-health.json` | Dashboard source JSON | Supporting artifact |
-| `sre/observe/prometheus-sli-queries.promql` | Reliability queries | Supporting artifact |
-| `sre/validate/` | Load testing and reliability evidence | Not automatically deployed |
-| `sre/reference/helm/` | Standalone Helm values | Reference unless explicitly linked |
+| `gitops/root/root-sre.yaml` | Defines the root SRE Argo CD Application | References `gitops/sre/apps/` |
+| `gitops/sre/apps/` | SRE child Applications | Read by `root-sre` |
+| `gitops/sre/apps/monitoring-app.yaml` | Defines the monitoring child Application | References `gitops/sre/observe/` |
+| `gitops/sre/observe/monitoring.yaml` | Kubernetes monitoring manifests | Selected by `capstone-monitoring` |
+| `gitops/sre/observe/grafana-dashboard.yaml` | Grafana dashboard ConfigMap | Selected by `capstone-monitoring` |
+| `gitops/sre/observe/capstone-health.json` | Dashboard source JSON | Supporting artifact |
+| `gitops/sre/observe/prometheus-sli-queries.promql` | Reliability queries | Supporting artifact |
+| `gitops/sre/validate/` | Load testing and reliability evidence | Not automatically deployed |
+| `gitops/sre/reference/helm/` | Standalone Helm values | Reference unless explicitly linked |
 
 The central GitOps workstream remains responsible for root orchestration. The SRE workstream maintains the observability configuration integrated into that architecture.
 
@@ -436,7 +436,7 @@ The central GitOps workstream remains responsible for root orchestration. The SR
 flowchart TD
     ROOT["Central Argo CD Root"]
     ROOTSRE["gitops/root/root-sre.yaml"]
-    DEPLOY["sre/deploy/"]
+    DEPLOY["gitops/sre/apps/"]
 
     CRDS["prometheus-crds.yaml"]
     STACK["prometheus-stack.yaml"]
@@ -444,12 +444,12 @@ flowchart TD
     ALLOY["alloy.yaml"]
     MON["monitoring-app.yaml"]
 
-    OBS["sre/observe/"]
-    VALIDATE["sre/validate/"]
-    REFERENCE["sre/reference/"]
+    OBS["gitops/sre/observe/"]
+    VALIDATE["gitops/sre/validate/"]
+    REFERENCE["gitops/sre/reference/"]
 
     ROOT --> ROOTSRE
-    ROOTSRE -->|"spec.source.path: sre/deploy"| DEPLOY
+    ROOTSRE -->|"spec.source.path: gitops/sre/apps"| DEPLOY
 
     DEPLOY --> CRDS
     DEPLOY --> STACK
@@ -457,7 +457,7 @@ flowchart TD
     DEPLOY --> ALLOY
     DEPLOY --> MON
 
-    MON -->|"spec.source.path: sre/observe"| OBS
+    MON -->|"spec.source.path: gitops/sre/observe"| OBS
 
     VALIDATE -.->|"Testing and evidence only"| OBS
     REFERENCE -.->|"Reference configuration only"| DEPLOY
@@ -487,7 +487,7 @@ spec:
   source:
     repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
     targetRevision: main
-    path: sre/deploy
+    path: gitops/sre/apps
 
   destination:
     server: https://kubernetes.default.svc
@@ -512,7 +512,7 @@ This is an explanatory excerpt, not a replacement for the complete committed App
 | `spec.project` | AppProject association | Applies project permissions |
 | `source.repoURL` | Git repository | Defines where Argo CD reads configuration |
 | `source.targetRevision` | Git revision | Tracks the configured branch or revision |
-| `source.path` | Repository directory | Selects `sre/deploy/` |
+| `source.path` | Repository directory | Selects `gitops/sre/apps/` |
 | `destination.server` | Kubernetes destination | Selects the target cluster |
 | `destination.namespace` | Default resource namespace | Applies to namespaced resources without an explicit namespace |
 | `automated.prune` | Automated pruning | Allows removal of resources absent from desired state |
@@ -525,9 +525,9 @@ gitops/root/root-sre.yaml
         │
         │ spec.source.repoURL
         │ spec.source.targetRevision: main
-        │ spec.source.path: sre/deploy
+        │ spec.source.path: gitops/sre/apps
         ▼
-sre/deploy/
+gitops/sre/apps/
         │
         ├── prometheus-crds.yaml
         ├── prometheus-stack.yaml
@@ -543,7 +543,7 @@ The YAML files in that directory define the SRE child Applications and associate
 
 ### 9.4 Second Code Relationship: SRE Deployment to Monitoring Resources
 
-**Source file:** `sre/deploy/monitoring-app.yaml`
+**Source file:** `gitops/sre/apps/monitoring-app.yaml`
 
 The monitoring child Application uses the following relevant source-selection pattern:
 
@@ -552,7 +552,7 @@ spec:
   source:
     repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
     targetRevision: main
-    path: sre/observe
+    path: gitops/sre/observe
 
     directory:
       recurse: false
@@ -567,14 +567,14 @@ This is a source-selection excerpt rather than the complete Application definiti
 |---|---|
 | `repoURL` | Repository containing monitoring configuration |
 | `targetRevision: main` | Git revision being monitored |
-| `path: sre/observe` | Directory containing monitoring resources |
+| `path: gitops/sre/observe` | Directory containing monitoring resources |
 | `directory.recurse: false` | Do not traverse nested directories |
 | `directory.include: '*.yaml'` | Select matching YAML files |
 
 The selection means that the monitoring Application can load:
 
 ```text
-sre/observe/
+gitops/sre/observe/
 ├── monitoring.yaml              # Selected Kubernetes YAML
 ├── grafana-dashboard.yaml       # Selected Kubernetes YAML
 ├── capstone-health.json         # Not directly applied
@@ -589,12 +589,12 @@ The resulting relationship is:
 root-sre
    │
    ▼
-sre/deploy/monitoring-app.yaml
+gitops/sre/apps/monitoring-app.yaml
    │
-   │ spec.source.path: sre/observe
+   │ spec.source.path: gitops/sre/observe
    │ directory.include: '*.yaml'
    ▼
-sre/observe/
+gitops/sre/observe/
    │
    ├── monitoring.yaml
    └── grafana-dashboard.yaml
@@ -615,17 +615,17 @@ Rather than manually installing each Helm chart, the SRE workstream defines Argo
 
 | Capstone source file | Helm component | Primary responsibility |
 |---|---|---|
-| `sre/deploy/prometheus-crds.yaml` | Prometheus Operator CRDs | Registers monitoring-related Kubernetes resource types |
-| `sre/deploy/prometheus-stack.yaml` | kube-prometheus-stack | Deploys Prometheus, Grafana, and supporting monitoring components |
-| `sre/deploy/loki.yaml` | Grafana Loki | Deploys centralised log storage |
-| `sre/deploy/alloy.yaml` | Grafana Alloy | Deploys Kubernetes log collection and forwarding |
+| `gitops/sre/apps/prometheus-crds.yaml` | Prometheus Operator CRDs | Registers monitoring-related Kubernetes resource types |
+| `gitops/sre/apps/prometheus-stack.yaml` | kube-prometheus-stack | Deploys Prometheus, Grafana, and supporting monitoring components |
+| `gitops/sre/apps/loki.yaml` | Grafana Loki | Deploys centralised log storage |
+| `gitops/sre/apps/alloy.yaml` | Grafana Alloy | Deploys Kubernetes log collection and forwarding |
 
 Two additional SRE deployment files support these components:
 
 | File | Responsibility |
 |---|---|
-| `sre/deploy/monitoring-app.yaml` | Deploys selected monitoring YAML manifests from `sre/observe/` |
-| `sre/deploy/sre-project.yaml` | Defines SRE Argo CD AppProject permissions |
+| `gitops/sre/apps/monitoring-app.yaml` | Deploys selected monitoring YAML manifests from `gitops/sre/observe/` |
+| `gitops/sre/projects/sre-project.yaml` | Defines SRE Argo CD AppProject permissions |
 
 The first four files are Helm-backed Argo CD Applications. The monitoring Application reads Kubernetes manifests directly from Git.
 
@@ -635,7 +635,7 @@ The first four files are Helm-backed Argo CD Applications. The monitoring Applic
 flowchart TD
     ROOT["Central Argo CD Root"]
     RS["gitops/root/root-sre.yaml"]
-    DEP["sre/deploy/"]
+    DEP["gitops/sre/apps/"]
 
     CRD["prometheus-crds.yaml"]
     PROM["prometheus-stack.yaml"]
@@ -648,7 +648,7 @@ flowchart TD
     LOKICH["Loki Helm chart"]
     ALLOYCH["Alloy Helm chart"]
 
-    OBS["sre/observe/ YAML manifests"]
+    OBS["gitops/sre/observe/ YAML manifests"]
     K8S["Kubernetes resources in Capstone EKS"]
 
     ROOT --> RS
@@ -678,7 +678,7 @@ The central GitOps hierarchy selects the SRE deployment definitions. The SRE App
 
 #### 9.5.3 Prometheus and Grafana — `prometheus-stack.yaml`
 
-**Source file:** `sre/deploy/prometheus-stack.yaml`
+**Source file:** `gitops/sre/apps/prometheus-stack.yaml`
 
 The Prometheus stack Application uses the kube-prometheus-stack Helm chart.
 
@@ -707,10 +707,10 @@ The exact chart version and inline values must be read from the committed Capsto
 
 Depending on the actual enabled values, the chart can manage Prometheus, Grafana, Alertmanager, Prometheus Operator, Services, and supporting resources.
 
-**Relationship to `sre/observe/`:**
+**Relationship to `gitops/sre/observe/`:**
 
 ```text
-sre/deploy/prometheus-stack.yaml
+gitops/sre/apps/prometheus-stack.yaml
     │
     └── Deploys kube-prometheus-stack
             │
@@ -719,9 +719,9 @@ sre/deploy/prometheus-stack.yaml
             ├── Prometheus Operator
             └── Other enabled components
 
-sre/deploy/monitoring-app.yaml
+gitops/sre/apps/monitoring-app.yaml
     │
-    └── Reads sre/observe/
+    └── Reads gitops/sre/observe/
             │
             ├── monitoring.yaml
             └── grafana-dashboard.yaml
@@ -733,7 +733,7 @@ These resources must use compatible API versions, labels, selectors, namespaces,
 
 #### 9.5.4 Loki — `loki.yaml`
 
-**Source file:** `sre/deploy/loki.yaml`
+**Source file:** `gitops/sre/apps/loki.yaml`
 
 The Loki Application defines the log aggregation platform.
 
@@ -784,7 +784,7 @@ The active Capstone deployment mode and storage configuration must be verified b
 
 #### 9.5.5 Grafana Alloy — `alloy.yaml`
 
-**Source file:** `sre/deploy/alloy.yaml`
+**Source file:** `gitops/sre/apps/alloy.yaml`
 
 Grafana Alloy provides Kubernetes-aware log discovery, collection, processing, and forwarding.
 
@@ -818,7 +818,7 @@ The initial Capstone Alloy configuration uses a single replica. High availabilit
 
 #### 9.5.6 Prometheus Operator CRDs — `prometheus-crds.yaml`
 
-**Source file:** `sre/deploy/prometheus-crds.yaml`
+**Source file:** `gitops/sre/apps/prometheus-crds.yaml`
 
 Prometheus Operator CustomResourceDefinitions extend the Kubernetes API with monitoring-related resource types.
 
@@ -846,7 +846,7 @@ Prometheus Operator / Prometheus
 
 The dedicated CRD Application separates this prerequisite from the remaining monitoring resources.
 
-The exact Helm chart repository, chart name, and version must be read from `sre/deploy/prometheus-crds.yaml`.
+The exact Helm chart repository, chart name, and version must be read from `gitops/sre/apps/prometheus-crds.yaml`.
 
 #### 9.5.7 Understanding `helm.valuesObject`
 
@@ -883,7 +883,7 @@ Changes must be reviewed against the shared Capstone cluster's resource constrai
 The repository also contains:
 
 ```text
-sre/reference/helm/
+gitops/sre/reference/helm/
 ├── alloy-values.yaml
 ├── loki-values.yaml
 ├── prometheus-values.yaml
@@ -897,13 +897,13 @@ They are not automatically applied merely because they exist in the repository.
 The actual values supplied to Helm depend on the Argo CD Application's configured source, `helm.valuesObject`, and any explicitly referenced values files.
 
 ```text
-sre/deploy/prometheus-stack.yaml
+gitops/sre/apps/prometheus-stack.yaml
     │
     └── spec.source.helm.valuesObject
             │
             └── Values supplied to Helm
 
-sre/reference/helm/prometheus-values.yaml
+gitops/sre/reference/helm/prometheus-values.yaml
     │
     └── Supporting reference configuration
         (not automatically deployed)
@@ -917,7 +917,7 @@ sre/reference/helm/prometheus-values.yaml
    ▼
 2. gitops/root/root-sre.yaml
    │
-   │ Reads sre/deploy/
+   │ Reads gitops/sre/apps/
    ▼
 3. SRE child Argo CD Applications
    │
@@ -929,7 +929,7 @@ sre/reference/helm/prometheus-values.yaml
            │
            │ Reads selected YAML files
            ▼
-4. sre/observe/
+4. gitops/sre/observe/
    │
    ├── monitoring.yaml
    └── grafana-dashboard.yaml
@@ -954,10 +954,10 @@ From the repository root:
 ```bash
 git fetch origin
 
-git show origin/main:sre/deploy/prometheus-crds.yaml
-git show origin/main:sre/deploy/prometheus-stack.yaml
-git show origin/main:sre/deploy/loki.yaml
-git show origin/main:sre/deploy/alloy.yaml
+git show origin/main:gitops/sre/apps/prometheus-crds.yaml
+git show origin/main:gitops/sre/apps/prometheus-stack.yaml
+git show origin/main:gitops/sre/apps/loki.yaml
+git show origin/main:gitops/sre/apps/alloy.yaml
 ```
 
 To inspect chart sources and inline values:
@@ -965,7 +965,7 @@ To inspect chart sources and inline values:
 ```bash
 git grep -n -E \
   'repoURL:|chart:|targetRevision:|valuesObject:|path:' \
-  origin/main -- sre/deploy/
+  origin/main -- gitops/sre/apps/
 ```
 
 These commands inspect committed configuration without modifying the EKS cluster.
@@ -979,9 +979,9 @@ GitOps and observability operate at different layers.
 | GitOps deployment relationship | Observability runtime relationship |
 |---|---|
 | Argo CD reads Git configuration | Prometheus collects metrics |
-| `root-sre` reads `sre/deploy/` | Grafana queries Prometheus |
+| `root-sre` reads `gitops/sre/apps/` | Grafana queries Prometheus |
 | Child Applications deploy Helm charts | Alloy collects container logs |
-| `capstone-monitoring` reads YAML from `sre/observe/` | Loki stores log streams |
+| `capstone-monitoring` reads YAML from `gitops/sre/observe/` | Loki stores log streams |
 | Git defines desired configuration | Prometheus evaluates alert rules |
 | Argo CD reconciles Kubernetes resources | Alertmanager routes firing alerts |
 
@@ -998,7 +998,7 @@ git fetch origin
 
 git show origin/main:gitops/root/root-sre.yaml
 
-git show origin/main:sre/deploy/monitoring-app.yaml
+git show origin/main:gitops/sre/apps/monitoring-app.yaml
 
 git ls-tree -r --name-only origin/main gitops/ sre/
 ```
@@ -1007,7 +1007,7 @@ To locate repository source-path references:
 
 ```bash
 git grep -n -E \
-  'path: (sre/deploy|sre/observe|gitops/sre/apps|sre/kubernetes)' \
+  'path: (gitops/sre/apps|gitops/sre/observe|gitops/sre/apps|sre/kubernetes)' \
   origin/main -- gitops/ sre/
 ```
 
@@ -1175,8 +1175,8 @@ The intended paths are:
 
 | Application | Expected path |
 |---|---|
-| `root-sre` | `sre/deploy` |
-| `capstone-monitoring` | `sre/observe` |
+| `root-sre` | `gitops/sre/apps` |
+| `capstone-monitoring` | `gitops/sre/observe` |
 
 These are expected configuration values, not independently verified live results.
 
