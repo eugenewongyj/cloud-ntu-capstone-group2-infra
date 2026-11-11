@@ -23,3 +23,15 @@ spec:
         serviceAccount:
           create: true
           # If using traditional IRSA, add the annotations block here like you did for Loki
+         # REQUIRED: This tells Argo CD where to install Tempo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+    
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true 
