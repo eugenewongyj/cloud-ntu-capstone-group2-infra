@@ -17,6 +17,21 @@ spec:
             enabled: false
           autoGenerateCert:
             enabled: true
+            
+        # ADDED: Increase CPU limits and probe timeouts to prevent "context deadline exceeded"
+        manager:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            timeoutSeconds: 3
+          readinessProbe:
+            timeoutSeconds: 3
+
   destination:
     server: https://kubernetes.default.svc
     namespace: opentelemetry-system
