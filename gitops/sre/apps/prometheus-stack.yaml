@@ -44,6 +44,21 @@ spec:
               url: http://loki-gateway.logging.svc.cluster.local:80
               jsonData:
                 maxLines: 1000
+            # NEW: Tempo Data Source added here
+            - name: Tempo
+              type: tempo
+              access: proxy
+              # Use tempo-distributed-query-frontend if you used the tempo-distributed chart
+              url: http://tempo-distributed-query-frontend.logging.svc.cluster.local:3100
+              jsonData:
+                tracesToLogsV2:
+                  datasourceUid: 'Loki' # Matches your Loki name above
+                  spanStartTimeShift: '1h'
+                  spanEndTimeShift: '1h'
+                  filterByTraceID: false
+                  filterBySpanID: false
+                  customQuery: true
+                  query: '{app="%s"} |= "%s"'
           ingress:
             enabled: true
             ingressClassName: nginx
