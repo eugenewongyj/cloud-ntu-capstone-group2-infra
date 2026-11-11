@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
     targetRevision: main
-    path: sre/deploy
+    path: gitops/sre/apps
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
