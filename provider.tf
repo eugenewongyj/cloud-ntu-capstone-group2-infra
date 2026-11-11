@@ -32,4 +32,9 @@ terraform {
 # Configure the AWS Provider
 provider "aws" {
   region = var.aws_region
+  default_tags {
+    tags = {
+      Project = "capstone-project-group-02"
+    }
+  }
 }
