@@ -22,6 +22,7 @@ spec:
               s3:
                 bucket: "group2-capstone-tempo-traces-ap-southeast-1" 
                 region: "ap-southeast-1"
+                endpoint: "s3.ap-southeast-1.amazonaws.com" # ADD THIS LINE
   destination:
     server: https://kubernetes.default.svc
     namespace: logging
