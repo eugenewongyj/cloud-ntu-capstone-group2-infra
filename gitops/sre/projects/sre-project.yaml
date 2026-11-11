@@ -18,6 +18,8 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: opentelemetry-system
       server: https://kubernetes.default.svc
+    - namespace: retail-store
+      server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: '*'
       kind: '*'
