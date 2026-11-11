@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tempo
+  namespace: argocd
+spec:
+  project: sre-project # Or your configured Argo CD project
+  source:
+    repoURL: https://grafana-community.github.io/helm-charts
+    chart: tempo-distributed
+    targetRevision: 1.24.4 # Update to the latest stable chart version
+    helm:
+      valuesObject:
+        # AWS S3 Storage Configuration
+        storage:
+          trace:
+            backend: s3
+            s3:
+              bucket: "group2-capstone-tempo-traces" # Replace with your new S3 bucket name
+              region: "ap-southeast-1"
+        
+        # Enable EKS Pod Identity / IRSA so Tempo can access S3 without static keys
+        serviceAccount:
+          create: true
+          # If using traditional IRSA, add the annotations block here like you did for Loki
