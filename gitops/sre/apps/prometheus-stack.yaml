@@ -48,8 +48,7 @@ spec:
             - name: Tempo
               type: tempo
               access: proxy
-              # Use tempo-distributed-query-frontend if you used the tempo-distributed chart
-              url: http://tempo-distributed-query-frontend.logging.svc.cluster.local:3100
+              url: http://tempo.logging.svc.cluster.local:3100
               jsonData:
                 tracesToLogsV2:
                   datasourceUid: 'Loki' # Matches your Loki name above
