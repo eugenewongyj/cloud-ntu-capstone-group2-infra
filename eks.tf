@@ -112,6 +112,6 @@ module "eks" {
   tags = {
     Environment = "staging"
     #Project     = var.project_name
-    ManagedBy   = "Terraform"
+    ManagedBy = "Terraform"
   }
 }
