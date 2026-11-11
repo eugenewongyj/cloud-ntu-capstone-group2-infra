@@ -4,34 +4,31 @@ metadata:
   name: tempo
   namespace: argocd
 spec:
-  project: sre-project # Or your configured Argo CD project
+  project: sre-project 
   source:
     repoURL: https://grafana-community.github.io/helm-charts
-    chart: tempo-distributed
-    targetRevision: 3.28.0 # Update to the latest stable chart version
+    chart: tempo # Changed from tempo-distributed
+    targetRevision: 1.10.3 # Latest stable monolithic chart
     helm:
       valuesObject:
-        # AWS S3 Storage Configuration
-        storage:
-          trace:
-            backend: s3
-            s3:
-              bucket: "group2-capstone-tempo-traces" # Replace with your new S3 bucket name
-              region: "ap-southeast-1"
-        
-        # Enable EKS Pod Identity / IRSA so Tempo can access S3 without static keys
         serviceAccount:
           create: true
-          # If using traditional IRSA, add the annotations block here like you did for Loki
-         # REQUIRED: This tells Argo CD where to install Tempo
+          name: tempo 
+        # In the monolithic chart, storage must be nested under the tempo key
+        tempo:
+          storage:
+            trace:
+              backend: s3
+              s3:
+                bucket: "group2-capstone-tempo-traces-ap-southeast-1" 
+                region: "ap-southeast-1"
   destination:
     server: https://kubernetes.default.svc
     namespace: logging
-    
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true 
+      - ServerSideApply=true
