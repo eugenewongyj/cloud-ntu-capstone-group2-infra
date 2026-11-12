@@ -889,12 +889,24 @@ flowchart LR
 ```yaml
 controller:
   type: daemonset
+
 alloy:
+  extraEnv:
+    - name: HOST_NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+
   configMap:
     create: true
     content: |
       discovery.kubernetes "pods" {
         role = "pod"
+
+        selectors {
+          role  = "pod"
+          field = "spec.nodeName=" + sys.env("HOST_NODE_NAME")
+        }
       }
 
       discovery.relabel "pod_logs" {
