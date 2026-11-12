@@ -334,23 +334,23 @@ resource "aws_iam_policy" "infra_scoped_policy" {
         Resource = "*"
       },
       {
-        "Sid": "AllowKMSListAliases",
-        "Effect": "Allow",
-        "Action": [
+        "Sid" : "AllowKMSListAliases",
+        "Effect" : "Allow",
+        "Action" : [
           "kms:ListAliases",
           "kms:DescribeKey"
         ],
-        "Resource": "*"
+        "Resource" : "*"
       },
       {
-        "Sid": "AllowEKSAccessPolicyRead",
-        "Effect": "Allow",
-        "Action": [
+        "Sid" : "AllowEKSAccessPolicyRead",
+        "Effect" : "Allow",
+        "Action" : [
           "eks:ListAssociatedAccessPolicies",
           "eks:DescribeAccessEntry",
           "eks:ListAccessEntries"
         ],
-        "Resource": "*"
+        "Resource" : "*"
       }
     ]
   })
