@@ -877,11 +877,15 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  K[Kubernetes Pods] -->|pod log API| A[Alloy DaemonSet]
-  A -->|discovery and relabel: namespace / pod / container| LS[loki.source.kubernetes]
-  LS -->|loki.write.local| LG[Loki gateway]
-  LG -->|S3 configured; access unverified| S3[(S3 object storage)]
-  LG -->|LogQL datasource| G[Grafana]
+    N["HOST_NODE_NAME from spec.nodeName"] --> A["Alloy DaemonSet"]
+    A --> D["Node-local Pod Discovery"]
+    D -->|"Selects pods on assigned node"| K["Kubernetes Pods"]
+    K -->|"Pod log streaming via Kubernetes API"| LS["loki.source.kubernetes"]
+    LS --> LW["loki.write"]
+    LW -->|"HTTP POST /loki/api/v1/push"| LG["Loki Gateway"]
+    LG --> L["Loki Storage Components"]
+    L --> S3[("Amazon S3")]
+    G["Grafana Loki Datasource"] -->|"LogQL queries"| LG
 ```
 
 **Relevant Alloy configuration (retained conceptual blocks from the local log-only revision):**
