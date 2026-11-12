@@ -14,9 +14,9 @@ spec:
       releaseName: catalog
       valuesObject:
         # Add the OTel instrumentation annotation here
-        podAnnotations:
-          # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
-          instrumentation.opentelemetry.io/inject-java: "true"
+        # podAnnotations:
+        #   # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
+        #   instrumentation.opentelemetry.io/inject-java: "true"
         # Set the Pod Size (Requests and Limits)
         resources:
           requests:
