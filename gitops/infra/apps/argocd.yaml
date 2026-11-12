@@ -30,6 +30,14 @@ spec:
               additionalLabels:
                 release: kube-prometheus-stack
         repoServer:
+          # ADDED: Resource requests and limits to prevent CPU starvation and health check timeouts
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
           metrics:
             enabled: true
             serviceMonitor:
