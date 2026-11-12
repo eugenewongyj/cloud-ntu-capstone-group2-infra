@@ -880,34 +880,22 @@ Changes must be reviewed against the shared Capstone cluster's resource constrai
 
 #### 9.5.8 Inline Helm Values vs. Reference Files
 
-The repository also contains:
+Active observability Helm configurations are maintained in the Argo CD
+Application manifests under `gitops/sre/apps/`.
 
-```text
-gitops/sre/reference/helm/
-├── alloy-values.yaml
-├── loki-values.yaml
-├── prometheus-values.yaml
-└── README.md
-```
+| Component | Active configuration |
+|---|---|
+| Prometheus and Grafana | `gitops/sre/apps/prometheus-stack.yaml` |
+| Loki | `gitops/sre/apps/loki.yaml` |
+| Grafana Alloy | `gitops/sre/apps/alloy.yaml` |
 
-These files provide supporting configuration references.
+Each Application supplies its deployment configuration through
+`spec.source.helm.valuesObject`.
 
-They are not automatically applied merely because they exist in the repository.
+The former standalone Helm values examples have been retired to avoid
+duplicated configuration sources.
 
-The actual values supplied to Helm depend on the Argo CD Application's configured source, `helm.valuesObject`, and any explicitly referenced values files.
-
-```text
-gitops/sre/apps/prometheus-stack.yaml
-    │
-    └── spec.source.helm.valuesObject
-            │
-            └── Values supplied to Helm
-
-gitops/sre/reference/helm/prometheus-values.yaml
-    │
-    └── Supporting reference configuration
-        (not automatically deployed)
-```
+The `gitops/sre/reference/helm/` directory retains supporting documentation.
 
 #### 9.5.9 End-to-End Deployment Relationship
 

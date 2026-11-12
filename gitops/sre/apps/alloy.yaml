@@ -18,26 +18,25 @@ spec:
         controller:
           type: daemonset
         alloy:
+          extraEnv:
+            - name: HOST_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           configMap:
             create: true
             content: |
-              // 1. Discover all pods on the local node
+              // 1. Discover pods scheduled on this Alloy instance's node
               discovery.kubernetes "pods" {
                 role = "pod"
-              }
-
-              // 2. SCRAPE METRICS: Scrape Prometheus metrics from discovered pods
-              prometheus.scrape "pod_metrics" {
-                targets    = discovery.kubernetes.pods.targets
-                forward_to = [prometheus.remote_write.local.receiver]
-              }
-
-              // 3. EXPORT METRICS: Send metrics to your in-cluster Prometheus service
-              prometheus.remote_write "local" {
-                endpoint {
-                  url = "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
+                selectors {
+                  role  = "pod"
+                  field = "spec.nodeName=" + sys.env("HOST_NODE_NAME")
                 }
               }
+
+              // Application metrics are scraped by Prometheus via ServiceMonitors.
+              // Avoid broad, duplicate Alloy metrics scraping.
 
               // 4. COLLECT LOGS: Extract Kubernetes metadata to use as log labels
               discovery.relabel "pod_logs" {
