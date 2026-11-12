@@ -1117,7 +1117,7 @@ sre/
 | `deploy/` | Declarative observability deployment | Argo CD Applications and AppProject |
 | `observe/` | Monitoring and visualisation | Kubernetes YAML, dashboard JSON, PromQL |
 | `validate/` | Reliability testing | Locust scripts, reports, documentation |
-| `reference/` | Supporting technical configuration | Helm values and reference documentation |
+| `reference/` | Supporting technical documentation | Monitoring references and Helm configuration guidance |
 
 The central `gitops/` directory remains separate from the SRE workstream and provides shared deployment orchestration.
 
