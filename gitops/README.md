@@ -111,7 +111,7 @@ syncPolicy:
 
 # Part II — Capstone: Verified End-to-End Code Traceability
 
-> **Source snapshot:** `2c38f631246c2cf9361fd1784c8b14b85b76f0ba`. The code excerpts below are taken from the uploaded `capstone-code-review.zip`, not hypothetical templates. Line links are pinned to this commit. **They establish what Git declares, not what the live cluster is running.** This section does not modify TK's Part I.
+> **Evidence and revision scope:** The original code review is pinned to commit `2c38f631246c2cf9361fd1784c8b14b85b76f0ba` and its line links remain historical evidence. The Alloy subsection and architecture diagrams below describe the **subsequent proposed Alloy log-only consolidation** from the local `refactor/sre-alloy-consolidation` working tree; that change has **not been confirmed merged to `main` or deployed**. All other pinned excerpts describe the historical snapshot unless explicitly marked otherwise. **Source declarations are not proof of live cluster health.** TK's Part I is preserved unchanged.
 
 ## 1. Source-anchored execution map
 
@@ -173,10 +173,10 @@ flowchart TB
     RETAIL["Retail Services / Pods<br/>namespace: retail-store<br/>actual service labels require app repo validation"]
     SM1["observe/monitoring.yaml<br/>capstone-actuator-metrics<br/>instance: ui, cart, orders<br/>port: http; path: /actuator/prometheus; 30s"]
     SM2["observe/monitoring.yaml<br/>capstone-http-metrics<br/>instance: catalog, checkout<br/>port: http; path: /metrics; 30s"]
-    P["Prometheus<br/>prometheus-stack.yaml:73<br/>enableRemoteWriteReceiver: true"]
+    P["Prometheus<br/>Operator-managed ServiceMonitor scraping<br/>20Gi gp3 storage requested"]
     A["Alloy DaemonSet<br/>alloy.yaml:17–23<br/>controller.type: daemonset"]
-    D["discovery.kubernetes.pods.targets<br/>alloy.yaml:25–32"]
-    LOG["loki.source.kubernetes.local_pods<br/>alloy.yaml:60–64"]
+    D["discovery.kubernetes.pods.targets<br/>pod discovery for log collection"]
+    LOG["loki.source.kubernetes.local_pods<br/>pod log streaming"]
     L["Loki gateway<br/>logging.svc.cluster.local:80"]
     G["Grafana<br/>prometheus-stack.yaml:37–45<br/>Loki additionalDataSources"]
   end
@@ -190,8 +190,8 @@ flowchart TB
   SM2 -->|"same labels; instance in catalog/checkout"| RETAIL
   RETAIL -->|"Prometheus scrapes selected Service endpoints"| P
   A -->|"discovery.kubernetes role=pod"| D
-  D -->|"prometheus.scrape pod_metrics; forward_to=prometheus.remote_write.local.receiver"| P
-  A -->|"discovery.relabel pod_logs; namespace/pod/container labels"| LOG
+  D -->|"discovery.relabel pod_logs"| LOG
+  A -->|"Kubernetes pod log discovery and labels"| D
   RETAIL -.->|"container logs available through Kubernetes pod log API"| LOG
   LOG -->|"forward_to=loki.write.local.receiver; POST /loki/api/v1/push"| L
   P -->|"Grafana Prometheus datasource / PromQL"| G
@@ -248,9 +248,9 @@ flowchart TB
 | `gitops/root/root-sre.yaml:11–15` | `project: sre-project`, `path: gitops/sre/apps` | Argo CD checks `sre-project` and reads SRE child Applications |
 | `gitops/sre/apps/prometheus-crds.yaml:13–15` | `chart: prometheus-operator-crds`, `targetRevision: 33.0.1` | CRDs required before Prometheus custom resources can be accepted |
 | `gitops/sre/apps/prometheus-stack.yaml:13–15` | `chart: kube-prometheus-stack`, `targetRevision: 93.1.1` | Helm renders Prometheus, Alertmanager, Grafana and related resources |
-| `gitops/sre/apps/prometheus-stack.yaml:73` | `enableRemoteWriteReceiver: true` | Enables the receiver used by Alloy's `/api/v1/write` endpoint |
-| `gitops/sre/apps/alloy.yaml:30–39` | `forward_to = [prometheus.remote_write.local.receiver]` | Scrape pipeline forwards to the in-cluster Prometheus remote-write URL |
-| `gitops/sre/apps/alloy.yaml:61–69` | `forward_to = [loki.write.local.receiver]` | Kubernetes pod log pipeline forwards to Loki's `/loki/api/v1/push` |
+| `gitops/sre/apps/prometheus-stack.yaml:73` | `enableRemoteWriteReceiver: true` in the pinned snapshot | Receiver is configured historically, but the consolidated Alloy log-only flow does **not** use it |
+| `gitops/sre/apps/alloy.yaml` (proposed local revision) | `discovery.kubernetes` → `discovery.relabel` → `loki.source.kubernetes` → `loki.write` | Alloy collects pod logs only; no Alloy Prometheus scrape or remote-write path |
+| `gitops/sre/apps/alloy.yaml` (proposed local revision) | `forward_to = [loki.write.local.receiver]` | Kubernetes pod log pipeline forwards to Loki's `/loki/api/v1/push`; line numbers must be refreshed after merge |
 | `gitops/sre/apps/prometheus-stack.yaml:76–82` | `storageClassName: gp3`, `storage: 20Gi` | Requires matching StorageClass `metadata.name: gp3` |
 | `gitops/infra/apps/gp3-storageclass.yaml` | `provisioner: ebs.csi.eks.amazonaws.com`, `reclaimPolicy: Retain` | EKS Auto Mode EBS CSI provisions persistent volume; retained PV may outlive PVC |
 | `gitops/sre/apps/loki.yaml:23–42` | `storage.type: s3`, `schema: v13` | Declares Loki TSDB object storage in the configured S3 bucket |
@@ -277,8 +277,8 @@ flowchart TB
 | [`gitops/sre/apps/prometheus-stack.yaml:13–19`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/prometheus-stack.yaml#L13-L19) | chart `kube-prometheus-stack`, version `93.1.1`, `crds.enabled: false` | Helm deploys monitoring stack, relying on separate CRDs | Chart/CRD incompatibility can break reconciliation |
 | [`gitops/sre/apps/prometheus-stack.yaml:73–82`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/prometheus-stack.yaml#L73-L82) | `enableRemoteWriteReceiver`, `storageClassName: gp3`, `storage: 20Gi` | Prometheus storage and remote write receiver | Missing class / disabled receiver affects PVC or Alloy write |
 | [`gitops/infra/apps/gp3-storageclass.yaml:4–15`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/infra/apps/gp3-storageclass.yaml#L4-L15) | `gp3`, `ebs.csi.eks.amazonaws.com`, `Retain` | EKS Auto Mode EBS CSI provisions PV | Retained PV may survive claim deletion |
-| [`gitops/sre/apps/alloy.yaml:29–39`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/alloy.yaml#L29-L39) | `prometheus.scrape` → `prometheus.remote_write` | Alloy attempts to push metrics to Prometheus | Endpoint / receiver / discovery mismatch breaks write |
-| [`gitops/sre/apps/alloy.yaml:60–70`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/alloy.yaml#L60-L70) | `loki.source.kubernetes` → `loki.write.local` | Pod logs forwarded to Loki gateway | Wrong DNS/port prevents log delivery |
+| [`gitops/sre/apps/alloy.yaml` (historical version)](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/alloy.yaml#L29-L39) | `prometheus.scrape` → `prometheus.remote_write` **(removed in proposed revision)** | Historical Alloy metrics path, **not** part of the consolidated design | Do not restore broad pod scraping; use Operator-managed ServiceMonitors |
+| [`gitops/sre/apps/alloy.yaml` (historical log pipeline)](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/alloy.yaml#L60-L70) | `loki.source.kubernetes` → `loki.write.local` **(retained in proposed revision)** | Pod logs forwarded to Loki gateway | Wrong DNS/port prevents log delivery |
 | [`gitops/sre/apps/loki.yaml:18–42`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/loki.yaml#L18-L42) | `SimpleScalable`, `storage.type: s3`, `schema: v13` | Loki uses configured S3 backend | Missing IAM/bucket access prevents storage |
 | [`gitops/sre/apps/prometheus-stack.yaml:38–45`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/prometheus-stack.yaml#L38-L45) | Grafana `additionalDataSources` Loki URL | Grafana queries Loki gateway | Incorrect Service address breaks logs UI |
 | [`gitops/sre/apps/monitoring-app.yaml:10–19`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/monitoring-app.yaml#L10-L19) | `path: gitops/sre/observe`, `include: '*.yaml'` | Argo CD loads monitoring YAML only | JSON/PromQL files are **not** directly deployed by this Application |
@@ -858,74 +858,75 @@ data:
 **Critical two-sided match:** The `ServiceMonitor.spec.selector.matchLabels` at `monitoring.yaml:19–22` selects **Service** labels, and `matchExpressions` at lines 23–29 selects release instances. The `endpoints.port: http` at line 31 must match the **Service port name**, not merely a container port. The application charts are in a **different repository** (`cloud-ntu-capstone-group2-app`), so their rendered Services and labels are **not present in this ZIP**; do not mark the match verified. The UI Application declares `serviceMonitor.enabled: true` and `release: kube-prometheus-stack`, but the actual chart template and resulting ServiceMonitor must be inspected for duplication or label mismatch. `monitoring-app.yaml:14–16` includes only YAML files, not `capstone-health.json` or `.promql` directly.
 
 
-## 8. Alloy metrics and logs → Prometheus / Loki → Grafana
+## 8. Consolidated telemetry: Prometheus metrics; Alloy logs → Loki → Grafana
 
+**Revision note:** The pinned historical Alloy manifest includes a `prometheus.scrape` / `prometheus.remote_write` path. The proposed local consolidation removes both components to avoid redundant broad pod scraping. This section describes the **intended local change**, not a verified merge or deployment. The pinned historical links in earlier sections remain valid as historical references, not evidence of the updated file.
 
-**Source:** [`gitops/sre/apps/alloy.yaml:L17–L40`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/alloy.yaml#L17-L40)
+### Metrics — Prometheus Operator, not Alloy
 
-```yaml
-      valuesObject:
-        controller:
-          type: daemonset
-        alloy:
-          configMap:
-            create: true
-            content: |
-              // 1. Discover all pods on the local node
-              discovery.kubernetes "pods" {
-                role = "pod"
-              }
-
-              // 2. SCRAPE METRICS: Scrape Prometheus metrics from discovered pods
-              prometheus.scrape "pod_metrics" {
-                targets    = discovery.kubernetes.pods.targets
-                forward_to = [prometheus.remote_write.local.receiver]
-              }
-
-              // 3. EXPORT METRICS: Send metrics to your in-cluster Prometheus service
-              prometheus.remote_write "local" {
-                endpoint {
-                  url = "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
-                }
-              }
+```mermaid
+flowchart LR
+  S[Retail Kubernetes Services] -->|ServiceMonitor selectors and named ports| O[Prometheus Operator]
+  O -->|scrape configuration| P[Prometheus]
+  P -->|PromQL| G[Grafana]
 ```
 
+`gitops/sre/observe/monitoring.yaml` defines `ServiceMonitor` objects for `/actuator/prometheus` and `/metrics`. Prometheus discovers matching Service endpoints through the Operator. This requires correct Service labels, named ports, namespace selection, network reachability and a functioning metrics endpoint; these are **not yet verified** from the source snapshot. `enableRemoteWriteReceiver: true` is present in the pinned `prometheus-stack.yaml`, but the proposed Alloy configuration does **not** send data to it. Disabling that receiver would be a separate configuration change and is **not** asserted here.
 
-**Source:** [`gitops/sre/apps/alloy.yaml:L42–L71`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/alloy.yaml#L42-L71)
+### Logs — Alloy DaemonSet to Loki
 
-```yaml
-              // 4. COLLECT LOGS: Extract Kubernetes metadata to use as log labels
-              discovery.relabel "pod_logs" {
-                targets = discovery.kubernetes.pods.targets
-
-                rule {
-                  source_labels = ["__meta_kubernetes_namespace"]
-                  target_label  = "namespace"
-                }
-                rule {
-                  source_labels = ["__meta_kubernetes_pod_name"]
-                  target_label  = "pod"
-                }
-                rule {
-                  source_labels = ["__meta_kubernetes_pod_container_name"]
-                  target_label  = "container"
-                }
-              }
-
-              // 5. Scrape the logs from the discovered pods
-              loki.source.kubernetes "local_pods" {
-                targets    = discovery.relabel.pod_logs.output
-                forward_to = [loki.write.local.receiver]
-              }
-
-              // 6. Ship the logs to your internal in-cluster Loki destination
-              loki.write "local" {
-                endpoint {
-                  url = "http://loki-gateway.logging.svc.cluster.local:80/loki/api/v1/push"
-                }
-              }
+```mermaid
+flowchart LR
+  K[Kubernetes Pods] -->|pod log API| A[Alloy DaemonSet]
+  A -->|discovery and relabel: namespace / pod / container| LS[loki.source.kubernetes]
+  LS -->|loki.write.local| LG[Loki gateway]
+  LG -->|S3 configured; access unverified| S3[(S3 object storage)]
+  LG -->|LogQL datasource| G[Grafana]
 ```
 
+**Relevant Alloy configuration (retained conceptual blocks from the local log-only revision):**
+
+```yaml
+controller:
+  type: daemonset
+alloy:
+  configMap:
+    create: true
+    content: |
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      discovery.relabel "pod_logs" {
+        targets = discovery.kubernetes.pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+      }
+
+      loki.source.kubernetes "local_pods" {
+        targets    = discovery.relabel.pod_logs.output
+        forward_to = [loki.write.local.receiver]
+      }
+
+      loki.write "local" {
+        endpoint {
+          url = "http://loki-gateway.logging.svc.cluster.local:80/loki/api/v1/push"
+        }
+      }
+```
+
+This is a documentation excerpt of the intended retained pipeline, **not a byte-for-byte assertion of the uncommitted local YAML**. Confirm the actual `gitops/sre/apps/alloy.yaml` diff before merging. No `prometheus.scrape "pod_metrics"` or `prometheus.remote_write "local"` is included in the proposed Alloy design.
 
 **Source:** [`gitops/sre/apps/loki.yaml:L17–L42`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/loki.yaml#L17-L42)
 
@@ -986,9 +987,9 @@ data:
 ```
 
 
-**Metrics:** Alloy declares `prometheus.scrape "pod_metrics"` and forwards to `prometheus.remote_write.local.receiver`; the URL points at `...prometheus...:9090/api/v1/write`. Prometheus values explicitly set `enableRemoteWriteReceiver: true` (`prometheus-stack.yaml:74`). This is **additional** to Prometheus Operator ServiceMonitor scraping; it does not establish that all discovered pods expose compatible metrics endpoints.
+**Metrics (proposed revision):** Prometheus Operator-managed ServiceMonitors handle application metrics scraping. The Alloy `prometheus.scrape` and `prometheus.remote_write` blocks were removed in the local consolidation. The historical Prometheus `enableRemoteWriteReceiver: true` setting is not evidence that Alloy still uses remote write.
 
-**Logs:** Alloy `discovery.kubernetes "pods"` → `discovery.relabel "pod_logs"` → `loki.source.kubernetes "local_pods"` → `loki.write "local"` → Loki gateway `/loki/api/v1/push`. Loki is configured for S3 (`loki.yaml:23–42`), but this ZIP does not demonstrate that the pod IAM permissions, S3 bucket and actual ingestion work. Grafana adds Loki datasource at `prometheus-stack.yaml:40–45`.
+**Logs:** Alloy `discovery.kubernetes "pods"` → `discovery.relabel "pod_logs"` → `loki.source.kubernetes "local_pods"` → `loki.write "local"` → Loki gateway `/loki/api/v1/push`. Loki is configured for S3 (`loki.yaml:23–42`), but source alone does not demonstrate pod IAM permissions, bucket existence or successful ingestion. Grafana adds a Loki datasource at `prometheus-stack.yaml:40–45`.
 
 
 ## 9. Load testing: actual command and Python control flow
@@ -1094,6 +1095,7 @@ class FlashSaleShape(LoadTestShape):
 | Is Loki configured for S3? | `loki.yaml:23–42` declares S3 backend | Bucket exists, IAM access and successful writes |
 | Are all five retail Services scrapeable? | `monitoring.yaml:8–65` declares selectors and endpoints | External app repo templates and live target status |
 | Are alerts delivered? | `monitoring.yaml` declares rules | Alertmanager route/receiver and delivery test |
+| Is the proposed Alloy log-only change deployed? | The local working-tree change removes Alloy metrics scraping and remote write | Merged commit, rendered Argo CD Application and Alloy runtime configuration |
 | Is Grafana dashboard auto-loaded? | `grafana-dashboard.yaml:1–9` declares labelled ConfigMap | Grafana sidecar/chart settings and UI dashboard presence |
 | Are sync waves sufficient? | Waves exist on Applications | Child Application readiness and CRD establishment |
 | Does Locust test the real product listing? | `locustfile.py` validates configured path | Approved host and verified application route |
@@ -1112,4 +1114,4 @@ kubectl get storageclass,pv,pvc -A
 kubectl get servicemonitors,prometheusrules -A
 ```
 
-**Review rule:** When changing a reference, review *both ends* of the dependency: for example, a ServiceMonitor selector and the actual Service labels in the separate application repository. All source links above are pinned to the exported commit, so they remain stable as `main` evolves.
+**Review rule:** Historical commit links remain intentionally pinned; proposed revision references should be checked against the final merged commit. When changing a reference, review *both ends* of the dependency: for example, a ServiceMonitor selector and the actual Service labels in the separate application repository. All source links above are pinned to the exported commit, so they remain stable as `main` evolves.
