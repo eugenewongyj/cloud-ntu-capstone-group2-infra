@@ -1107,9 +1107,6 @@ sre/
 └── reference/
     ├── helm/
     │   ├── README.md
-    │   ├── alloy-values.yaml
-    │   ├── loki-values.yaml
-    │   └── prometheus-values.yaml
     └── monitoring-README.md
 ```
 
