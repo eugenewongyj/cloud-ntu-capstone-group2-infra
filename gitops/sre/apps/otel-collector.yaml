@@ -31,12 +31,3 @@ spec:
           receivers: [otlp]
           processors: [batch]
           exporters: [otlp]
-    ignoreDifferences:
-    - group: opentelemetry.io
-      kind: OpenTelemetryCollector
-      jsonPointers:
-        - /spec/config
-    - group: ""
-      kind: ServiceAccount
-      jsonPointers:
-        - /metadata/annotations/argocd.argoproj.io~1tracking-id

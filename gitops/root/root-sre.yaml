@@ -22,3 +22,13 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+  # ADD IT HERE, directly under spec
+  ignoreDifferences:
+    - group: opentelemetry.io
+      kind: OpenTelemetryCollector
+      jsonPointers:
+        - /spec/config
+    - group: ""
+      kind: ServiceAccount
+      jsonPointers:
+        - /metadata/annotations/argocd.argoproj.io~1tracking-id
