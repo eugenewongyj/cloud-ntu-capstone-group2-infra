@@ -1279,3 +1279,26 @@ These are proposed improvements, not claims of current implementation.
 **Operational readiness:** End-to-end metrics, logs, alerts, SLO compliance, and reliability testing remain pending verification.
 
 The SRE workstream prioritises measurable application reliability, reproducible engineering practices, and safe integration with the shared Capstone infrastructure.
+
+
+# SOP: OpenTelemetry Webhook x509 Certificate Mismatch
+
+## Overview
+This SOP details the resolution for a recurring race condition between `cert-manager`, Argo CD, and the `opentelemetry-operator`. 
+
+### Symptom
+Argo CD reports an `OutOfSync` or `SyncFailed` status for `OpenTelemetryCollector` or `Instrumentation` resources. The Argo CD UI or controller logs display the following error:
+> `tls: failed to verify certificate: x509: certificate signed by unknown authority (possibly because of "crypto/rsa: verification error" while trying to verify candidate authority certificate "opentelemetry-operator-operator-ca")`
+
+### Root Cause
+A "split-brain" certificate mismatch involving cluster-scoped resources. 
+If `cert-manager` is uninstalled, upgraded, or its pods cycle, the previous Certificate Authority (CA) bundle is invalidated. However, the `MutatingWebhookConfiguration` and `ValidatingWebhookConfiguration` for OpenTelemetry are **cluster-scoped** and retain the dead `caBundle` string. When the API Server attempts to validate new OpenTelemetry manifests, it checks the Operator's fresh TLS certificate against the stale CA bundle in the webhook configuration, resulting in a rejected connection.
+
+---
+
+## Resolution Steps
+
+### 1. Identify the Stale Webhooks
+List the cluster-scoped webhooks belonging to the OpenTelemetry Operator:
+```bash
+kubectl get mutatingwebhookconfigurations,validatingwebhookconfigurations | grep opentelemetry
