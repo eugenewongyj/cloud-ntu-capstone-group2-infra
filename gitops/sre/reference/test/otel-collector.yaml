@@ -3,12 +3,16 @@ kind: ServiceAccount
 metadata:
   name: swiftkart-collector-collector
   namespace: opentelemetry-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 ---
 apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
 metadata:
   name: swiftkart-collector
   namespace: opentelemetry-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   config: |
     receivers:
