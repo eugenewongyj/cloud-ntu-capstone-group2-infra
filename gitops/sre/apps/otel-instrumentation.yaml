@@ -5,7 +5,7 @@ metadata:
   namespace: retail-store # Must match where your SwiftKart apps live
 spec:
   exporter:
-    endpoint: "http://swiftkart-collector-collector.opentelemetry-system.svc.cluster.local:4317"
+    endpoint: "http://swiftkart-collector-collector.opentelemetry-system.svc.cluster.local:4318"
   sampler:
     type: parentbased_traceidratio
     argument: "1.0" # Sample 100% of traces for the capstone demo
