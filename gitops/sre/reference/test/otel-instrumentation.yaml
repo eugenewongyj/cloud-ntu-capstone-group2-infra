@@ -3,6 +3,8 @@ kind: Instrumentation
 metadata:
   name: swiftkart-instrumentation
   namespace: retail-store # Must match where your SwiftKart apps live
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   exporter:
     endpoint: "http://swiftkart-collector-collector.opentelemetry-system.svc.cluster.local:4318"
