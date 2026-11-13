@@ -1,10 +1,15 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: swiftkart-collector-collector
+  namespace: opentelemetry-system
+---
 apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
 metadata:
   name: swiftkart-collector
   namespace: opentelemetry-system
 spec:
-  # Notice the pipe character here, making the entire config block a string
   config: |
     receivers:
       otlp:
@@ -26,3 +31,12 @@ spec:
           receivers: [otlp]
           processors: [batch]
           exporters: [otlp]
+    ignoreDifferences:
+    - group: opentelemetry.io
+      kind: OpenTelemetryCollector
+      jsonPointers:
+        - /spec/config
+    - group: ""
+      kind: ServiceAccount
+      jsonPointers:
+        - /metadata/annotations/argocd.argoproj.io~1tracking-id
