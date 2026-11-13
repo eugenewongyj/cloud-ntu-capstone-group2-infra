@@ -32,3 +32,14 @@ spec:
       kind: ServiceAccount
       jsonPointers:
         - /metadata/annotations/argocd.argoproj.io~1tracking-id
+  # ADD THESE TWO NEW BLOCKS
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      name: opentelemetry-operator-mutation
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: opentelemetry-operator-validation
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
