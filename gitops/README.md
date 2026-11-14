@@ -59,6 +59,14 @@ Grafana provides cluster observability, metrics, and alerting dashboards, deploy
 kubectl -n monitoring get secret kube-prometheus-stack-grafana -o jsonpath="{.data.admin-password}" | base64 -d && echo
 ```
 
+### 3. Application UI
+
+To access UI:
+```bash
+kubectl get ingress -n retail-store
+```
+
+
 ### The Core Philosophy: GitOps
 
 **Git is the single source of truth** for your cluster's desired state. You do not run `kubectl apply` or `helm install` manually to deploy applications. Instead, you update files in this Git repository, and Argo CD ensures the Kubernetes cluster exactly matches what is in Git.
