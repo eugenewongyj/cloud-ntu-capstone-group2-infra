@@ -1,0 +1,101 @@
+crds:
+  enabled: false
+
+# Disable EKS-managed control plane components
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+# Keep CoreDNS and Kubelet (these run on your worker nodes)
+coreDns:
+  enabled: true
+kubelet:
+  enabled: true
+
+# Alertmanager config fix for internal TLS
+alertmanager:
+  alertmanagerSpec:
+    webConfig:
+      tlsConfig: null
+
+# 1. Grafana configuration + Ingress
+grafana:
+  enabled: true
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki-gateway.logging.svc.cluster.local:80
+      jsonData:
+        maxLines: 1000
+    - name: Tempo
+      type: tempo
+      access: proxy
+      url: http://tempo.logging.svc.cluster.local:3100
+      jsonData:
+        tracesToLogsV2:
+          datasourceUid: 'Loki'
+          spanStartTimeShift: '1h'
+          spanEndTimeShift: '1h'
+          filterByTraceID: false
+          filterBySpanID: false
+          customQuery: true
+          query: '{app="%s"} |= "%s"'
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-southeast-1:255945442255:certificate/743ad498-ca28-4f99-b483-7e233badca1d"
+      alb.ingress.kubernetes.io/backend-protocol: HTTP
+    hosts:
+      - group2-capstone-grafana.sctp-sandbox.com
+
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: 'favourite'
+          orgId: 1
+          folder: 'favourite'
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/favourite
+
+# 2. Prometheus configuration, persistent storage + Ingress
+prometheus:
+  enabled: true
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-southeast-1:255945442255:certificate/743ad498-ca28-4f99-b483-7e233badca1d"
+      alb.ingress.kubernetes.io/backend-protocol: HTTP
+    hosts:
+      - group2-capstone-prometheus.sctp-sandbox.com
+  prometheusSpec:
+    webConfig:
+      tlsConfig: null
+    enableRemoteWriteReceiver: true
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi

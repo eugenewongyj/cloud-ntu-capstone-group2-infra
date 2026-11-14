@@ -43,14 +43,14 @@ resource "aws_iam_role" "infra_deployer_role" {
 }
 
 # Scoped Terraform permissions replacing *FullAccess
-resource "aws_iam_policy" "infra_scoped_policy" {
-  name        = "${var.prefix}-infra-deployer-least-privilege"
-  description = "Scoped permissions for Terraform EKS infrastructure deployment"
+# Policy Part 1: Core Storage, Compute, Networking, and Database permissions
+resource "aws_iam_policy" "infra_scoped_policy_part1" {
+  name        = "${var.prefix}-infra-deployer-policy-part1"
+  description = "Core EKS, EC2, S3, RDS, and ECR permissions for Terraform"
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      # DynamoDB: State locking for Terraform backends
       {
         Sid    = "DynamoDBTerraformStateLocking"
         Effect = "Allow"
@@ -65,13 +65,10 @@ resource "aws_iam_policy" "infra_scoped_policy" {
           "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.prefix}-tflocks-*"
         ]
       },
-      # S3: Scoped to project prefix and backend state bucket
       {
         Sid    = "S3ScopedAccess"
         Effect = "Allow"
-        Action = [
-          "s3:*"
-        ]
+        Action = ["s3:*"]
         Resource = [
           "arn:aws:s3:::${var.prefix}-*",
           "arn:aws:s3:::${var.prefix}-*/*",
@@ -81,207 +78,131 @@ resource "aws_iam_policy" "infra_scoped_policy" {
           "arn:aws:s3:::${var.tfstate_bucket_name}/*"
         ]
       },
-      # EKS Cluster & Node Group Lifecycle Management
       {
         Sid    = "EKSClusterAndNodeGroupManagement"
         Effect = "Allow"
         Action = [
-          "eks:CreateCluster",
-          "eks:DeleteCluster",
-          "eks:DescribeCluster",
-          "eks:UpdateClusterConfig",
-          "eks:UpdateClusterVersion",
-          "eks:CreateNodegroup",
-          "eks:DeleteNodegroup",
-          "eks:DescribeNodegroup",
-          "eks:UpdateNodegroupConfig",
-          "eks:UpdateNodegroupVersion",
-          "eks:DescribeUpdate",
-          "eks:TagResource",
-          "eks:UntagResource",
-          "eks:ListTagsForResource",
-          "eks:ListClusters",
-          "eks:ListNodegroups",
-          "eks:CreateAddon",
-          "eks:DeleteAddon",
-          "eks:DescribeAddon",
-          "eks:UpdateAddon",
-          "eks:CreateAccessEntry",
-          "eks:DeleteAccessEntry",
-          "eks:DescribeAccessEntry",
-          "eks:AssociateAccessPolicy",
-          "eks:DisassociateAccessPolicy",
-          # Pod Identity permissions
-          "eks:CreatePodIdentityAssociation",
-          "eks:DeletePodIdentityAssociation",
-          "eks:DescribePodIdentityAssociation",
-          "eks:ListPodIdentityAssociations"
+          "eks:CreateCluster", "eks:DeleteCluster", "eks:DescribeCluster", "eks:UpdateClusterConfig",
+          "eks:UpdateClusterVersion", "eks:CreateNodegroup", "eks:DeleteNodegroup", "eks:DescribeNodegroup",
+          "eks:UpdateNodegroupConfig", "eks:UpdateNodegroupVersion", "eks:DescribeUpdate", "eks:TagResource",
+          "eks:UntagResource", "eks:ListTagsForResource", "eks:ListClusters", "eks:ListNodegroups",
+          "eks:CreateAddon", "eks:DeleteAddon", "eks:DescribeAddon", "eks:UpdateAddon", "eks:CreateAccessEntry",
+          "eks:DeleteAccessEntry", "eks:DescribeAccessEntry", "eks:AssociateAccessPolicy", "eks:DisassociateAccessPolicy",
+          "eks:CreatePodIdentityAssociation", "eks:DeletePodIdentityAssociation", "eks:DescribePodIdentityAssociation",
+          "eks:ListPodIdentityAssociations", "eks:ListAssociatedAccessPolicies", "eks:ListAccessEntries"
         ]
         Resource = "*"
       },
-      # ECR: Repository Management for Container Images
       {
         Sid    = "ECRRepoManagement"
         Effect = "Allow"
         Action = [
-          "ecr:CreateRepository",
-          "ecr:DeleteRepository",
-          "ecr:DescribeRepositories",
-          "ecr:GetRepositoryPolicy",
-          "ecr:SetRepositoryPolicy",
-          "ecr:DeleteRepositoryPolicy",
-          "ecr:PutLifecyclePolicy",
-          "ecr:GetLifecyclePolicy",
-          "ecr:DeleteLifecyclePolicy",
-          "ecr:TagResource",
-          "ecr:UntagResource",
-          "ecr:ListTagsForResource"
+          "ecr:CreateRepository", "ecr:DeleteRepository", "ecr:DescribeRepositories", "ecr:GetRepositoryPolicy",
+          "ecr:SetRepositoryPolicy", "ecr:DeleteRepositoryPolicy", "ecr:PutLifecyclePolicy", "ecr:GetLifecyclePolicy",
+          "ecr:DeleteLifecyclePolicy", "ecr:TagResource", "ecr:UntagResource", "ecr:ListTagsForResource"
         ]
         Resource = "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/*"
       },
-      # SQS: application messaging queues, scoped to project prefix
-      # EC2/VPC Full Networking Access
       {
         Sid    = "EC2NetworkingAccess"
         Effect = "Allow"
         Action = [
-          "ec2:Describe*",
-          "ec2:CreateVpc",
-          "ec2:DeleteVpc",
-          "ec2:ModifyVpcAttribute",
-          "ec2:CreateSubnet",
-          "ec2:DeleteSubnet",
-          "ec2:ModifySubnetAttribute",
-          "ec2:CreateRouteTable",
-          "ec2:DeleteRouteTable",
-          "ec2:CreateRoute",
-          "ec2:DeleteRoute",
-          "ec2:AssociateRouteTable",
-          "ec2:DisassociateRouteTable",
-          "ec2:CreateInternetGateway",
-          "ec2:DeleteInternetGateway",
-          "ec2:AttachInternetGateway",
-          "ec2:DetachInternetGateway",
-          "ec2:CreateNatGateway",
-          "ec2:DeleteNatGateway",
-          "ec2:AllocateAddress",
-          "ec2:ReleaseAddress",
-          "ec2:AssociateAddress",
-          "ec2:DisassociateAddress",
-          "ec2:CreateSecurityGroup",
-          "ec2:DeleteSecurityGroup",
-          "ec2:AuthorizeSecurityGroupIngress",
-          "ec2:AuthorizeSecurityGroupEgress",
-          "ec2:RevokeSecurityGroupIngress",
-          "ec2:RevokeSecurityGroupEgress",
-          "ec2:CreateTags",
-          "ec2:DeleteTags",
-          "ec2:RunInstances",
-          "ec2:TerminateInstances"
+          "ec2:Describe*", "ec2:CreateVpc", "ec2:DeleteVpc", "ec2:ModifyVpcAttribute", "ec2:CreateSubnet",
+          "ec2:DeleteSubnet", "ec2:ModifySubnetAttribute", "ec2:CreateRouteTable", "ec2:DeleteRouteTable",
+          "ec2:CreateRoute", "ec2:DeleteRoute", "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable",
+          "ec2:CreateInternetGateway", "ec2:DeleteInternetGateway", "ec2:AttachInternetGateway", "ec2:DetachInternetGateway",
+          "ec2:CreateNatGateway", "ec2:DeleteNatGateway", "ec2:AllocateAddress", "ec2:ReleaseAddress",
+          "ec2:AssociateAddress", "ec2:DisassociateAddress", "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
+          "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress", "ec2:RevokeSecurityGroupIngress",
+          "ec2:RevokeSecurityGroupEgress", "ec2:CreateTags", "ec2:DeleteTags", "ec2:RunInstances", "ec2:TerminateInstances"
         ]
         Resource = "*"
       },
-      # RDS: Full Aurora MySQL & DB Subnet Group Lifecycle Management
       {
         Sid    = "RDSClusterAndSubnetGroupManagement"
         Effect = "Allow"
         Action = [
-          "rds:CreateDBSubnetGroup",
-          "rds:DeleteDBSubnetGroup",
-          "rds:DescribeDBSubnetGroups",
-          "rds:ModifyDBSubnetGroup",
-          "rds:CreateDBCluster",
-          "rds:DeleteDBCluster",
-          "rds:DescribeDBClusters",
-          "rds:DescribeGlobalClusters", # <--- ADD THIS
-          "rds:ModifyDBCluster",
-          "rds:CreateDBInstance",
-          "rds:DeleteDBInstance",
-          "rds:DescribeDBInstances",
-          "rds:ModifyDBInstance",
-          "rds:ListTagsForResource",
-          "rds:AddTagsToResource",
-          "rds:RemoveTagsFromResource",
-          "rds:DescribeDBClusterSnapshots",
-          "rds:DescribeDBClusterEndpoints"
+          "rds:CreateDBSubnetGroup", "rds:DeleteDBSubnetGroup", "rds:DescribeDBSubnetGroups", "rds:ModifyDBSubnetGroup",
+          "rds:CreateDBCluster", "rds:DeleteDBCluster", "rds:DescribeDBClusters", "rds:DescribeGlobalClusters",
+          "rds:ModifyDBCluster", "rds:CreateDBInstance", "rds:DeleteDBInstance", "rds:DescribeDBInstances",
+          "rds:ModifyDBInstance", "rds:ListTagsForResource", "rds:AddTagsToResource", "rds:RemoveTagsFromResource",
+          "rds:DescribeDBClusterSnapshots", "rds:DescribeDBClusterEndpoints"
         ]
         Resource = "*"
-      },
-      # Secrets Manager: Auto-managed master password for Aurora Serverless v2
+      }
+    ]
+  })
+}
+
+# Policy Part 2: IAM, Route53, KMS, Secrets Manager, and Logging permissions
+resource "aws_iam_policy" "infra_scoped_policy_part2" {
+  name        = "${var.prefix}-infra-deployer-policy-part2"
+  description = "IAM, Route53, KMS, Secrets, and Logging permissions for Terraform"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
       {
-        Sid    = "SecretsManagerAuroraPasswordManagement"
+        Sid    = "ACMCertificateManagement"
         Effect = "Allow"
         Action = [
-          "secretsmanager:CreateSecret",
-          "secretsmanager:DeleteSecret",
-          "secretsmanager:DescribeSecret",
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:PutSecretValue",
-          "secretsmanager:TagResource",
-          "secretsmanager:UntagResource",
-          "secretsmanager:ListSecrets"
-        ]
-        Resource = "*"
-      },
-      # CloudWatch Logs Management
-      {
-        Sid    = "LogsDescribeAction"
-        Effect = "Allow"
-        Action = [
-          "logs:DescribeLogGroups"
+          "acm:RequestCertificate",
+          "acm:DescribeCertificate",
+          "acm:DeleteCertificate",
+          "acm:ListCertificates",
+          "acm:AddTagsToCertificate",
+          "acm:RemoveTagsFromCertificate",
+          "acm:ListTagsForCertificate",
+          "acm:AddTagsToResource",
+          "acm:RemoveTagsFromResource",
+          "acm:ListTagsForResource"
         ]
         Resource = "*"
       },
       {
-        Sid    = "LogsScopedAccess"
+        Sid    = "Route53CertificateValidation"
         Effect = "Allow"
         Action = [
-          "logs:CreateLogGroup",
-          "logs:DeleteLogGroup",
-          "logs:PutRetentionPolicy",
-          "logs:ListTagsForResource",
-          "logs:TagResource",
-          "logs:UntagResource"
+          "route53:ListHostedZones",
+          "route53:GetHostedZone",
+          "route53:ChangeResourceRecordSets",
+          "route53:GetChange",
+          "route53:ListResourceRecordSets"
         ]
-        Resource = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:*"
+        Resource = "*"
       },
-      # IAM Management: Scoped to Project Roles, Policies & OIDC Provider
+      {
+        Sid    = "SecretsManagerManagement"
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:CreateSecret", "secretsmanager:DeleteSecret", "secretsmanager:DescribeSecret",
+          "secretsmanager:GetResourcePolicy", "secretsmanager:GetSecretValue", "secretsmanager:PutSecretValue",
+          "secretsmanager:UpdateSecret", "secretsmanager:TagResource", "secretsmanager:UntagResource",
+          "secretsmanager:RestoreSecret", "secretsmanager:ListSecrets"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "LogsManagement"
+        Effect = "Allow"
+        Action = [
+          "logs:DescribeLogGroups", "logs:CreateLogGroup", "logs:DeleteLogGroup",
+          "logs:PutRetentionPolicy", "logs:ListTagsForResource", "logs:TagResource", "logs:UntagResource"
+        ]
+        Resource = "*"
+      },
       {
         Sid    = "IAMScopedToPrefix"
         Effect = "Allow"
         Action = [
-          "iam:CreateRole",
-          "iam:DeleteRole",
-          "iam:GetRole",
-          "iam:UpdateRole",
-          "iam:PassRole",
-          "iam:ListRolePolicies",
-          "iam:ListAttachedRolePolicies",
-          "iam:AttachRolePolicy",
-          "iam:DetachRolePolicy",
-          "iam:PutRolePolicy",
-          "iam:DeleteRolePolicy",
-          "iam:GetRolePolicy",
-          "iam:CreatePolicy",
-          "iam:DeletePolicy",
-          "iam:GetPolicy",
-          "iam:CreatePolicyVersion",
-          "iam:DeletePolicyVersion",
-          "iam:SetDefaultPolicyVersion",
-          "iam:GetPolicyVersion",
-          "iam:ListPolicyVersions",
-          "iam:TagRole",
-          "iam:UntagRole",
-          "iam:TagPolicy",
-          "iam:ListInstanceProfilesForRole",
-          "iam:ListRoleTags",
-          "iam:UntagPolicy",
-          # OIDC Identity Provider creation for IRSA
-          "iam:CreateOpenIDConnectProvider",
-          "iam:DeleteOpenIDConnectProvider",
-          "iam:GetOpenIDConnectProvider",
-          "iam:TagOpenIDConnectProvider",
-          "iam:UntagOpenIDConnectProvider"
+          "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:UpdateRole", "iam:PassRole",
+          "iam:ListRolePolicies", "iam:ListAttachedRolePolicies", "iam:AttachRolePolicy", "iam:DetachRolePolicy",
+          "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:GetRolePolicy", "iam:CreatePolicy",
+          "iam:DeletePolicy", "iam:GetPolicy", "iam:CreatePolicyVersion", "iam:DeletePolicyVersion",
+          "iam:SetDefaultPolicyVersion", "iam:GetPolicyVersion", "iam:ListPolicyVersions", "iam:TagRole",
+          "iam:UntagRole", "iam:TagPolicy", "iam:ListInstanceProfilesForRole", "iam:ListRoleTags", "iam:UntagPolicy",
+          "iam:CreateOpenIDConnectProvider", "iam:DeleteOpenIDConnectProvider", "iam:GetOpenIDConnectProvider",
+          "iam:TagOpenIDConnectProvider", "iam:UntagOpenIDConnectProvider"
         ]
         Resource = [
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-*",
@@ -295,13 +216,10 @@ resource "aws_iam_policy" "infra_scoped_policy" {
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/group2-*"
         ]
       },
-      # PassRole specifically for EKS and EC2 Worker Nodes
       {
-        Sid    = "PassRoleForEKSServices"
-        Effect = "Allow"
-        Action = [
-          "iam:PassRole"
-        ]
+        Sid      = "PassRoleForEKSServices"
+        Effect   = "Allow"
+        Action   = ["iam:PassRole"]
         Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*"
         Condition = {
           StringEquals = {
@@ -316,50 +234,25 @@ resource "aws_iam_policy" "infra_scoped_policy" {
         Sid    = "AllowKMSKeyManagement"
         Effect = "Allow"
         Action = [
-          "kms:CreateKey",
-          "kms:DescribeKey",
-          "kms:EnableKey",
-          "kms:EnableKeyRotation",
-          "kms:GetKeyPolicy",
-          "kms:GetKeyRotationStatus",
-          "kms:ListResourceTags",
-          "kms:PutKeyPolicy",
-          "kms:ScheduleKeyDeletion",
-          "kms:TagResource",
-          "kms:UntagResource",
-          "kms:CreateAlias",
-          "kms:DeleteAlias",
-          "kms:UpdateAlias",
-          "kms:UpdateKeyDescription"
+          "kms:CreateKey", "kms:DescribeKey", "kms:EnableKey", "kms:EnableKeyRotation",
+          "kms:GetKeyPolicy", "kms:GetKeyRotationStatus", "kms:ListResourceTags", "kms:PutKeyPolicy",
+          "kms:ScheduleKeyDeletion", "kms:TagResource", "kms:UntagResource", "kms:CreateAlias",
+          "kms:DeleteAlias", "kms:UpdateAlias", "kms:UpdateKeyDescription", "kms:ListAliases"
         ]
         Resource = "*"
-      },
-      {
-        "Sid" : "AllowKMSListAliases",
-        "Effect" : "Allow",
-        "Action" : [
-          "kms:ListAliases",
-          "kms:DescribeKey"
-        ],
-        "Resource" : "*"
-      },
-      {
-        "Sid" : "AllowEKSAccessPolicyRead",
-        "Effect" : "Allow",
-        "Action" : [
-          "eks:ListAssociatedAccessPolicies",
-          "eks:DescribeAccessEntry",
-          "eks:ListAccessEntries"
-        ],
-        "Resource" : "*"
       }
     ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "infra_scoped_attach" {
+resource "aws_iam_role_policy_attachment" "infra_scoped_attach_part1" {
   role       = aws_iam_role.infra_deployer_role.name
-  policy_arn = aws_iam_policy.infra_scoped_policy.arn
+  policy_arn = aws_iam_policy.infra_scoped_policy_part1.arn
+}
+
+resource "aws_iam_role_policy_attachment" "infra_scoped_attach_part2" {
+  role       = aws_iam_role.infra_deployer_role.name
+  policy_arn = aws_iam_policy.infra_scoped_policy_part2.arn
 }
 
 # ---------------------------------------------------------------------

@@ -1,0 +1,31 @@
+grafana:
+  dashboards:
+    favourite:
+      Kyverno:
+        gnetId: 15987
+        revision: 2
+        datasource: Prometheus
+      Trivy Operator Dashboard:
+        gnetId: 17813
+        revision: 2
+        datasource: Prometheus
+      ArgoCD:
+        gnetId: 14584
+        revision: 1
+        datasource: Prometheus
+      Loki stack monitoring:
+        gnetId: 14055
+        revision: 5
+        datasource: Prometheus
+      Loki-Canary:
+        gnetId: 11489
+        revision: 4
+        datasource: LokiPrometheus
+      K8S Dashboard:
+        gnetId: 15661
+        revision: 2
+        datasource: Prometheus
+      cert-manager:
+        gnetId: 11001
+        revision: 1
+        datasource: Prometheus
