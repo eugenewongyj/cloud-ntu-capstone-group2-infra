@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alb-ingress-class
+  namespace: argocd
+spec:
+  project: infra-project
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    targetRevision: main
+    path: gitops/infra/manifests/alb-ingress-class
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
