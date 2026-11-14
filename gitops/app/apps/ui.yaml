@@ -32,6 +32,11 @@ spec:
           # This label is critical: it tells Prometheus to pick up this monitor
           additionalLabels:
             release: kube-prometheus-stack
+        ingress:
+          enabled: false
+          annotations: {}
+          hosts: []
+          tls: []
   destination:
     server: https://kubernetes.default.svc
     namespace: retail-store
