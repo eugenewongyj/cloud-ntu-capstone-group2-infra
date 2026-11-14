@@ -39,5 +39,8 @@ spec:
     namespace: retail-store
 
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
