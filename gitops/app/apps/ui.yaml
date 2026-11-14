@@ -33,8 +33,8 @@ spec:
           additionalLabels:
             release: kube-prometheus-stack
         ingress:
-          enabled: false
-          annotations: {}
+          enabled: true
+          className: alb
           hosts: []
           tls: []
   destination:
