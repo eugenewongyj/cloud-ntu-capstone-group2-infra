@@ -240,6 +240,22 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
           "kms:DeleteAlias", "kms:UpdateAlias", "kms:UpdateKeyDescription", "kms:ListAliases"
         ]
         Resource = "*"
+      },
+      # SQS: application messaging queues, scoped to project prefix
+      {
+        Sid    = "SQSScopedToProject"
+        Effect = "Allow"
+        Action = [
+          "sqs:CreateQueue",
+          "sqs:DeleteQueue",
+          "sqs:GetQueueAttributes",
+          "sqs:SetQueueAttributes",
+          "sqs:GetQueueUrl",
+          "sqs:TagQueue",
+          "sqs:UntagQueue",
+          "sqs:ListQueueTags"
+        ]
+        Resource = "arn:aws:sqs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:group2-capstone-*"
       }
     ]
   })
