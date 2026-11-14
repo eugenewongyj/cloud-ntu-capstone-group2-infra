@@ -139,6 +139,22 @@ resource "aws_iam_policy" "infra_scoped_policy" {
         ]
         Resource = "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/*"
       },
+      # SQS: application messaging queues, scoped to project prefix
+      {
+        Sid    = "SQSScopedToProject"
+        Effect = "Allow"
+        Action = [
+          "sqs:CreateQueue",
+          "sqs:DeleteQueue",
+          "sqs:GetQueueAttributes",
+          "sqs:SetQueueAttributes",
+          "sqs:GetQueueUrl",
+          "sqs:TagQueue",
+          "sqs:UntagQueue",
+          "sqs:ListQueueTags"
+        ]
+        Resource = "arn:aws:sqs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:group2-capstone-*"
+      },
       # EC2/VPC Full Networking Access
       {
         Sid    = "EC2NetworkingAccess"

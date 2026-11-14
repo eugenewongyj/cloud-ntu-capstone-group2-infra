@@ -75,3 +75,9 @@ variable "aurora_backup_retention_days" {
   description = "Days to retain automated Aurora backups"
   default     = 1
 }
+
+variable "orders_namespace" {
+  description = "Kubernetes namespace where the orders service runs"
+  type        = string
+  default     = "retail-store"
+}
