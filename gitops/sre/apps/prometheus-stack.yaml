@@ -9,136 +9,19 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: sre-project
-  source:
-    repoURL: https://prometheus-community.github.io/helm-charts
-    chart: kube-prometheus-stack
-    targetRevision: 93.1.1
-    helm:
-      valuesObject:
-        crds:
-          enabled: false
-
-        # Disable EKS-managed control plane components
-        kubeControllerManager:
-          enabled: false
-        kubeScheduler:
-          enabled: false
-        kubeEtcd:
-          enabled: false
-        kubeProxy:
-          enabled: false
-
-        # Keep CoreDNS and Kubelet (these run on your worker nodes)
-        coreDns:
-          enabled: true
-        kubelet:
-          enabled: true
-
-        # 1. Grafana configuration + Ingress
-        grafana:
-          enabled: true
-          additionalDataSources:
-            - name: Loki
-              type: loki
-              access: proxy
-              url: http://loki-gateway.logging.svc.cluster.local:80
-              jsonData:
-                maxLines: 1000
-            # NEW: Tempo Data Source added here
-            - name: Tempo
-              type: tempo
-              access: proxy
-              url: http://tempo.logging.svc.cluster.local:3100
-              jsonData:
-                tracesToLogsV2:
-                  datasourceUid: 'Loki' # Matches your Loki name above
-                  spanStartTimeShift: '1h'
-                  spanEndTimeShift: '1h'
-                  filterByTraceID: false
-                  filterBySpanID: false
-                  customQuery: true
-                  query: '{app="%s"} |= "%s"'
-          ingress:
-            enabled: true
-            ingressClassName: nginx
-            annotations:
-              cert-manager.io/cluster-issuer: letsencrypt-staging
-            hosts:
-              - group2-capstone-grafana.sctp-sandbox.com
-            tls:
-              - secretName: grafana-tls
-                hosts:
-                  - group2-capstone-grafana.sctp-sandbox.com
-          # ADD THIS BLOCK: Tells Helm to create the directory on the pod
-          dashboardProviders:
-            dashboardproviders.yaml:
-              apiVersion: 1
-              providers:
-                - name: 'favourite' # Must match the name below
-                  orgId: 1
-                  folder: 'favourite'
-                  type: file
-                  disableDeletion: false
-                  editable: true
-                  options:
-                    path: /var/lib/grafana/dashboards/favourite
-          dashboards:
-            favourite: # <-- Changed from 'default'
-              Kyverno:
-                gnetId: 15987
-                revision: 2
-                datasource: Prometheus
-              Trivy Operator Dashboard:
-                gnetId: 17813
-                revision: 2
-                datasource: Prometheus
-              ArgoCD:
-                gnetId: 14584
-                revision: 1
-                datasource: Prometheus
-              Loki stack monitoring (Promtail, Loki):
-                gnetId: 14055
-                revision: 5
-                datasource: Prometheus
-              Loki-Canary:
-                gnetId: 11489
-                revision: 4
-                datasource: LokiPrometheus
-              K8S Dashboard:
-                gnetId: 15661
-                revision: 2
-                datasource: Prometheus
-              cert-manager:
-                gnetId: 11001
-                revision: 1
-                datasource: Prometheus
-              # Add other favorite dashboards here...
-
-        # 2. Prometheus configuration, persistent storage + Ingress
-        prometheus:
-          enabled: true
-          ingress:
-            enabled: true
-            ingressClassName: nginx
-            annotations:
-              cert-manager.io/cluster-issuer: letsencrypt-staging
-            hosts:
-              - group2-capstone-prometheus.sctp-sandbox.com
-            tls:
-              - secretName: prometheus-tls
-                hosts:
-                  - group2-capstone-prometheus.sctp-sandbox.com
-          prometheusSpec:
-            enableRemoteWriteReceiver: true
-            storageSpec:
-              volumeClaimTemplate:
-                spec:
-                  storageClassName: gp3
-                  accessModes: ["ReadWriteOnce"]
-                  resources:
-                    requests:
-                      storage: 20Gi
-
+  sources:
+    # 1. Pull the remote Helm chart from Prometheus Community
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 93.1.1
+      helm:
+        valueFiles:
+          - $values/gitops/sre/apps/prometheus-stack-values.yaml
+          - $values/gitops/sre/apps/grafana-dashboards.yaml
+    # 2. Pull your values files from your GitHub repository (matching your 'gitops' folder structure)
+    - repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+      targetRevision: HEAD
+      ref: values
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

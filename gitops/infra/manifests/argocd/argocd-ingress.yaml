@@ -5,14 +5,16 @@ metadata:
   name: argocd-server
   namespace: argocd
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-staging
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    ingress.kubernetes.io/success-codes: "200-399"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    # Point the ALB directly to your AWS ACM Certificate ARN
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-southeast-1:255945442255:certificate/743ad498-ca28-4f99-b483-7e233badca1d"
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
 spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-        - group2-capstone-argocd.sctp-sandbox.com
-      secretName: argocd-server-tls
+  ingressClassName: alb
   rules:
     - host: group2-capstone-argocd.sctp-sandbox.com
       http:
@@ -23,4 +25,4 @@ spec:
               service:
                 name: argocd-server
                 port:
-                  number: 80
+                  name: http
