@@ -140,21 +140,6 @@ resource "aws_iam_policy" "infra_scoped_policy" {
         Resource = "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/*"
       },
       # SQS: application messaging queues, scoped to project prefix
-      {
-        Sid    = "SQSScopedToProject"
-        Effect = "Allow"
-        Action = [
-          "sqs:CreateQueue",
-          "sqs:DeleteQueue",
-          "sqs:GetQueueAttributes",
-          "sqs:SetQueueAttributes",
-          "sqs:GetQueueUrl",
-          "sqs:TagQueue",
-          "sqs:UntagQueue",
-          "sqs:ListQueueTags"
-        ]
-        Resource = "arn:aws:sqs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:group2-capstone-*"
-      },
       # EC2/VPC Full Networking Access
       {
         Sid    = "EC2NetworkingAccess"
@@ -375,6 +360,42 @@ resource "aws_iam_policy" "infra_scoped_policy" {
 resource "aws_iam_role_policy_attachment" "infra_scoped_attach" {
   role       = aws_iam_role.infra_deployer_role.name
   policy_arn = aws_iam_policy.infra_scoped_policy.arn
+}
+
+# ---------------------------------------------------------------------
+# Separate policy for application messaging (SQS).
+# Kept apart from infra_scoped_policy because IAM managed policies are
+# limited to 6,144 characters.
+# ---------------------------------------------------------------------
+resource "aws_iam_policy" "infra_messaging_policy" {
+  name        = "${var.prefix}-infra-deployer-messaging"
+  description = "Allow the infra pipeline to manage project SQS queues"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "SQSScopedToProject"
+        Effect = "Allow"
+        Action = [
+          "sqs:CreateQueue",
+          "sqs:DeleteQueue",
+          "sqs:GetQueueAttributes",
+          "sqs:SetQueueAttributes",
+          "sqs:GetQueueUrl",
+          "sqs:TagQueue",
+          "sqs:UntagQueue",
+          "sqs:ListQueueTags"
+        ]
+        Resource = "arn:aws:sqs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:group2-capstone-*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "infra_messaging_attach" {
+  role       = aws_iam_role.infra_deployer_role.name
+  policy_arn = aws_iam_policy.infra_messaging_policy.arn
 }
 
 # ==========================================================
