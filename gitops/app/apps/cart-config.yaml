@@ -1,0 +1,21 @@
+# Creates the "cart-config" ConfigMap used by the cart service (DynamoDB settings).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cart-config
+  namespace: argocd
+spec:
+  project: app-project
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    targetRevision: main
+    path: gitops/app/manifests/cart-config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: retail-store
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
