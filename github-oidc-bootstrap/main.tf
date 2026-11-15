@@ -390,6 +390,68 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
   })
 }
 
+# Policy Part 3: DynamoDB, DAX, ElastiCache, and OpenSearch Serverless permissions
+resource "aws_iam_policy" "infra_scoped_policy_part3" {
+  name        = "${var.prefix}-infra-deployer-policy-part3"
+  description = "NoSQL, Caching, and Search permissions for Terraform"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "DynamoDBAndDAX"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:CreateTable", "dynamodb:DeleteTable", "dynamodb:UpdateTable", "dynamodb:DescribeTable",
+          "dynamodb:DescribeContinuousBackups", "dynamodb:DescribeTimeToLive", "dynamodb:ListTagsOfResource",
+          "dynamodb:TagResource", "dynamodb:UntagResource", "dynamodb:UpdateTimeToLive", "dynamodb:UpdateContinuousBackups",
+          "dax:CreateSubnetGroup", "dax:DeleteSubnetGroup", "dax:DescribeSubnetGroups", "dax:UpdateSubnetGroup",
+          "dax:CreateParameterGroup", "dax:DeleteParameterGroup", "dax:DescribeParameterGroups", "dax:UpdateParameterGroup",
+          "dax:CreateCluster", "dax:DeleteCluster", "dax:DescribeClusters", "dax:UpdateCluster",
+          "dax:ListTags", "dax:TagResource", "dax:UntagResource"
+        ]
+        Resource = [
+          "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.prefix}-*",
+          "arn:aws:dax:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*"
+        ]
+      },
+      {
+        Sid    = "ElastiCacheServerless"
+        Effect = "Allow"
+        Action = [
+          "elasticache:CreateServerlessCache", "elasticache:DeleteServerlessCache",
+          "elasticache:DescribeServerlessCaches", "elasticache:UpdateServerlessCache",
+          "elasticache:ListTagsForResource", "elasticache:AddTagsToResource", "elasticache:RemoveTagsFromResource"
+        ]
+        Resource = "arn:aws:elasticache:${var.aws_region}:${data.aws_caller_identity.current.account_id}:serverlesscache:${var.prefix}-*"
+      },
+      {
+        # OpenSearch Serverless relies heavily on non-ARN resource identifiers (e.g. aoss:collection/*)
+        # and requires the awscc provider (CloudFormation API) to provision resources.
+        Sid    = "OpenSearchServerless"
+        Effect = "Allow"
+        Action = [
+          "aoss:CreateSecurityPolicy", "aoss:GetSecurityPolicy", "aoss:UpdateSecurityPolicy", "aoss:DeleteSecurityPolicy",
+          "aoss:CreateVpcEndpoint", "aoss:GetVpcEndpoint", "aoss:UpdateVpcEndpoint", "aoss:DeleteVpcEndpoint",
+          "aoss:CreateAccessPolicy", "aoss:GetAccessPolicy", "aoss:UpdateAccessPolicy", "aoss:DeleteAccessPolicy",
+          "aoss:CreateCollection", "aoss:GetCollection", "aoss:UpdateCollection", "aoss:DeleteCollection",
+          "aoss:ListSecurityPolicies", "aoss:ListAccessPolicies", "aoss:ListVpcEndpoints", "aoss:ListCollections",
+          "aoss:ListTagsForResource", "aoss:TagResource", "aoss:UntagResource",
+          "cloudformation:CreateResource", "cloudformation:GetResource", "cloudformation:UpdateResource",
+          "cloudformation:DeleteResource", "cloudformation:ListResources"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Attach Part 3 to your Deployer Role
+resource "aws_iam_role_policy_attachment" "infra_scoped_attach_part3" {
+  role       = aws_iam_role.infra_deployer_role.name
+  policy_arn = aws_iam_policy.infra_scoped_policy_part3.arn
+}
+
 resource "aws_iam_role_policy_attachment" "infra_scoped_attach_part1" {
   role       = aws_iam_role.infra_deployer_role.name
   policy_arn = aws_iam_policy.infra_scoped_policy_part1.arn
