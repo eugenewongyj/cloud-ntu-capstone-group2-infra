@@ -11,7 +11,7 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     # Point the ALB directly to your AWS ACM Certificate ARN
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-southeast-1:255945442255:certificate/5db327d8-2ed3-4deb-9154-25ff85c90eaa"
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-southeast-1:255945442255:certificate/60ff1f4f-de58-4e43-a98c-3d4edf3f78e1"
     alb.ingress.kubernetes.io/backend-protocol: HTTP
 spec:
   ingressClassName: alb
