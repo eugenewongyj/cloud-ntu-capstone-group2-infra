@@ -17,7 +17,7 @@ grafana:
         gnetId: 1860
         revision: 46
         datasource: Prometheus
-      Amazon CloudWatch Logs:
+      AWS CloudWatch Logs:
         gnetId: 11266
         revision: 1
         datasource: CloudWatch
@@ -25,19 +25,7 @@ grafana:
         gnetId: 14361
         revision: 1
         datasource: CloudWatch
-      AWS EKS:
-        gnetId: 20577
-        revision: 1
-        datasource: CloudWatch
-      AWS CloudWatch Logs:
-        gnetId: 758
-        revision: 6
-        datasource: CloudWatch
-      CloudWatch Logs:
-        gnetId: 20303
-        revision: 2
-        datasource: CloudWatch
-      CloudWatch Logs Dashboard:
+      AWS CloudWatch Logs Dashboard:
         gnetId: 24331
         revision: 1
         datasource: CloudWatch
