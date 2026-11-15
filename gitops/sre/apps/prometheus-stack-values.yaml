@@ -30,7 +30,7 @@ grafana:
     create: true
     name: "kube-prometheus-stack-grafana"
     annotations:
-      eks.amazonaws.com/role-arn: "arn:aws:iam::255945442255:role/group2-tk-staging-grafana-cloudwatch-role"
+      eks.amazonaws.com/role-arn: "arn:aws:iam::255945442255:role/group2-capstone-grafana-cloudwatch-role"
   additionalDataSources:
     - name: Loki
       type: loki
