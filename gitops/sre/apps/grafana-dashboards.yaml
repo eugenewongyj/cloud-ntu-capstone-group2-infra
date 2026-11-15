@@ -17,3 +17,7 @@ grafana:
         gnetId: 1860
         revision: 46
         datasource: Prometheus
+      AWS ALB Cloudwatch Metrics:
+        gnetId: 14361
+        revision: 1
+        datasource: Prometheus
