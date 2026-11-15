@@ -61,7 +61,6 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
           "dynamodb:DescribeTable"
         ]
         Resource = [
-          "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/swiftkart-tflocks-*",
           "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.prefix}-tflocks-*"
         ]
       },
@@ -72,8 +71,6 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
         Resource = [
           "arn:aws:s3:::${var.prefix}-*",
           "arn:aws:s3:::${var.prefix}-*/*",
-          "arn:aws:s3:::swiftkart-tfstate-*",
-          "arn:aws:s3:::swiftkart-tfstate-*/*",
           "arn:aws:s3:::${var.tfstate_bucket_name}",
           "arn:aws:s3:::${var.tfstate_bucket_name}/*"
         ]
@@ -104,19 +101,49 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
         Resource = "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/*"
       },
       {
-        Sid    = "EC2NetworkingAccess"
+        # Rule 1: Read-Only / Describe (Must be "*", no conditions)
+        Sid      = "EC2NetworkingRead"
+        Effect   = "Allow"
+        Action   = ["ec2:Describe*"]
+        Resource = "*"
+      },
+      {
+        # Rule 2: Creation (Must be "*", but strictly guarded by RequestTag)
+        # Terraform can only create these if it applies your group2-tk tag during creation
+        Sid    = "EC2NetworkingCreate"
         Effect = "Allow"
         Action = [
-          "ec2:Describe*", "ec2:CreateVpc", "ec2:DeleteVpc", "ec2:ModifyVpcAttribute", "ec2:CreateSubnet",
-          "ec2:DeleteSubnet", "ec2:ModifySubnetAttribute", "ec2:CreateRouteTable", "ec2:DeleteRouteTable",
-          "ec2:CreateRoute", "ec2:DeleteRoute", "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable",
-          "ec2:CreateInternetGateway", "ec2:DeleteInternetGateway", "ec2:AttachInternetGateway", "ec2:DetachInternetGateway",
-          "ec2:CreateNatGateway", "ec2:DeleteNatGateway", "ec2:AllocateAddress", "ec2:ReleaseAddress",
-          "ec2:AssociateAddress", "ec2:DisassociateAddress", "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
-          "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress", "ec2:RevokeSecurityGroupIngress",
-          "ec2:RevokeSecurityGroupEgress", "ec2:CreateTags", "ec2:DeleteTags", "ec2:RunInstances", "ec2:TerminateInstances"
+          "ec2:CreateVpc", "ec2:CreateSubnet", "ec2:CreateRouteTable",
+          "ec2:CreateInternetGateway", "ec2:CreateNatGateway", "ec2:AllocateAddress",
+          "ec2:CreateSecurityGroup", "ec2:RunInstances", "ec2:CreateTags"
         ]
         Resource = "*"
+        Condition = {
+          StringEquals = {
+            "aws:RequestTag/Project" : var.project
+          }
+        }
+      },
+      {
+        # Rule 3: Modify/Delete (Must be "*", but strictly guarded by ResourceTag)
+        # Terraform can only delete or modify resources that ALREADY have your group2-tk tag
+        Sid    = "EC2NetworkingModifyDelete"
+        Effect = "Allow"
+        Action = [
+          "ec2:DeleteVpc", "ec2:ModifyVpcAttribute", "ec2:DeleteSubnet", "ec2:ModifySubnetAttribute",
+          "ec2:DeleteRouteTable", "ec2:CreateRoute", "ec2:DeleteRoute", "ec2:AssociateRouteTable",
+          "ec2:DisassociateRouteTable", "ec2:DeleteInternetGateway", "ec2:AttachInternetGateway",
+          "ec2:DetachInternetGateway", "ec2:DeleteNatGateway", "ec2:ReleaseAddress", "ec2:AssociateAddress",
+          "ec2:DisassociateAddress", "ec2:DeleteSecurityGroup", "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:AuthorizeSecurityGroupEgress", "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
+          "ec2:DeleteTags", "ec2:TerminateInstances"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "aws:ResourceTag/Project" : var.project
+          }
+        }
       },
       {
         Sid    = "RDSClusterAndSubnetGroupManagement"
@@ -180,7 +207,13 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
           "secretsmanager:UpdateSecret", "secretsmanager:TagResource", "secretsmanager:UntagResource",
           "secretsmanager:RestoreSecret", "secretsmanager:ListSecrets"
         ]
-        Resource = "*"
+        # Only allow access to secrets starting with your project prefix
+        Resource = [
+          "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.prefix}-*",
+          "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.prefix}/*",
+          # ADDED: Allow RDS to auto-generate managed passwords
+          "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:rds!*"
+        ]
       },
       {
         Sid    = "LogsManagement"
@@ -195,7 +228,7 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
         Sid    = "IAMScopedToPrefix"
         Effect = "Allow"
         Action = [
-          "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:UpdateRole", "iam:PassRole",
+          "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:UpdateRole",
           "iam:ListRolePolicies", "iam:ListAttachedRolePolicies", "iam:AttachRolePolicy", "iam:DetachRolePolicy",
           "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:GetRolePolicy", "iam:CreatePolicy",
           "iam:DeletePolicy", "iam:GetPolicy", "iam:CreatePolicyVersion", "iam:DeletePolicyVersion",
@@ -206,38 +239,61 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
         ]
         Resource = [
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-*",
-          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/capstone-*",
-          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*eks*",
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/${var.prefix}-*",
-          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/capstone-*",
-          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*eks*",
-          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/*",
-          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/group2-*",
-          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/group2-*"
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/*"
         ]
       },
       {
         Sid      = "PassRoleForEKSServices"
         Effect   = "Allow"
         Action   = ["iam:PassRole"]
-        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*"
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-*"
         Condition = {
           StringEquals = {
             "iam:PassedToService" : [
               "eks.amazonaws.com",
-              "ec2.amazonaws.com"
+              "ec2.amazonaws.com",
+              "pods.eks.amazonaws.com"
             ]
           }
         }
       },
       {
-        Sid    = "AllowKMSKeyManagement"
+        # Block 1: Creating keys requires the RequestTag
+        Sid      = "KMSCreateAndTag"
+        Effect   = "Allow"
+        Action   = ["kms:CreateKey", "kms:TagResource"]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "aws:RequestTag/Project" : var.project
+          }
+        }
+      },
+      {
+        # Block 2: Modifying existing keys requires the ResourceTag
+        Sid    = "KMSManageExistingKeys"
         Effect = "Allow"
         Action = [
-          "kms:CreateKey", "kms:DescribeKey", "kms:EnableKey", "kms:EnableKeyRotation",
-          "kms:GetKeyPolicy", "kms:GetKeyRotationStatus", "kms:ListResourceTags", "kms:PutKeyPolicy",
-          "kms:ScheduleKeyDeletion", "kms:TagResource", "kms:UntagResource", "kms:CreateAlias",
-          "kms:DeleteAlias", "kms:UpdateAlias", "kms:UpdateKeyDescription", "kms:ListAliases"
+          "kms:EnableKey", "kms:EnableKeyRotation",
+          "kms:GetKeyPolicy", "kms:GetKeyRotationStatus", "kms:PutKeyPolicy",
+          "kms:ScheduleKeyDeletion", "kms:UntagResource", "kms:UpdateKeyDescription"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "aws:ResourceTag/Project" : var.project
+          }
+        }
+      },
+      {
+        # Block 3: Aliases, reading, and grants do not support tag conditions
+        Sid    = "KMSAliasesAndUsage"
+        Effect = "Allow"
+        Action = [
+          "kms:CreateAlias", "kms:DeleteAlias", "kms:UpdateAlias", "kms:ListAliases",
+          "kms:DescribeKey", "kms:ListResourceTags",
+          "kms:CreateGrant", "kms:RetireGrant", "kms:Decrypt", "kms:GenerateDataKey*"
         ]
         Resource = "*"
       },
@@ -375,8 +431,7 @@ resource "aws_iam_policy" "app_scoped_policy" {
           "ecr:CompleteLayerUpload"
         ]
         Resource = [
-          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/${var.prefix}-*",
-          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/swiftkart-*"
+          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/${var.prefix}-*"
         ]
       },
       # 3. EKS DescribeCluster (required for `aws eks update-kubeconfig`)
@@ -387,8 +442,7 @@ resource "aws_iam_policy" "app_scoped_policy" {
           "eks:DescribeCluster"
         ]
         Resource = [
-          "arn:aws:eks:${var.aws_region}:${data.aws_caller_identity.current.account_id}:cluster/*${var.prefix}*",
-          "arn:aws:eks:${var.aws_region}:${data.aws_caller_identity.current.account_id}:cluster/*swiftkart*"
+          "arn:aws:eks:${var.aws_region}:${data.aws_caller_identity.current.account_id}:cluster/*${var.prefix}*"
         ]
       }
     ]
