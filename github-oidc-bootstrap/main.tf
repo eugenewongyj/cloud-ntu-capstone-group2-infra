@@ -526,3 +526,88 @@ resource "aws_iam_role_policy_attachment" "app_scoped_attach" {
   role       = aws_iam_role.app_deployer_role.name
   policy_arn = aws_iam_policy.app_scoped_policy.arn
 }
+
+# ---------------------------------------------------------------------
+# Infra pipeline: DynamoDB + DAX for the cart service (dynamodb-dax.tf).
+# Separate policy because IAM managed policies are limited to 6,144 characters.
+# ---------------------------------------------------------------------
+resource "aws_iam_policy" "infra_cart_data_policy" {
+  name        = "${var.prefix}-infra-deployer-cart-data"
+  description = "Allow the infra pipeline to manage the cart DynamoDB table and DAX cluster"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "DynamoDBCartTable"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:CreateTable",
+          "dynamodb:DeleteTable",
+          "dynamodb:DescribeTable",
+          "dynamodb:UpdateTable",
+          "dynamodb:DescribeContinuousBackups",
+          "dynamodb:UpdateContinuousBackups",
+          "dynamodb:DescribeTimeToLive",
+          "dynamodb:ListTagsOfResource",
+          "dynamodb:TagResource",
+          "dynamodb:UntagResource"
+        ]
+        Resource = [
+          "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.prefix}-*"
+        ]
+      },
+      {
+        # DAX subnet/parameter groups have no ARNs, so Resource must be "*"
+        Sid    = "DAXManagement"
+        Effect = "Allow"
+        Action = [
+          "dax:CreateCluster",
+          "dax:DeleteCluster",
+          "dax:DescribeClusters",
+          "dax:UpdateCluster",
+          "dax:IncreaseReplicationFactor",
+          "dax:DecreaseReplicationFactor",
+          "dax:CreateSubnetGroup",
+          "dax:DeleteSubnetGroup",
+          "dax:DescribeSubnetGroups",
+          "dax:UpdateSubnetGroup",
+          "dax:CreateParameterGroup",
+          "dax:DeleteParameterGroup",
+          "dax:DescribeParameterGroups",
+          "dax:DescribeParameters",
+          "dax:UpdateParameterGroup",
+          "dax:TagResource",
+          "dax:UntagResource",
+          "dax:ListTags"
+        ]
+        Resource = "*"
+      },
+      {
+        # DAX assumes a service role to reach the table; Terraform must be allowed to hand it over
+        Sid      = "PassRoleToDAX"
+        Effect   = "Allow"
+        Action   = ["iam:PassRole"]
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-*"
+        Condition = {
+          StringEquals = { "iam:PassedToService" = "dax.amazonaws.com" }
+        }
+      },
+      {
+        # First DAX cluster in the account creates its service-linked role
+        Sid      = "DAXServiceLinkedRole"
+        Effect   = "Allow"
+        Action   = ["iam:CreateServiceLinkedRole"]
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/dax.amazonaws.com/*"
+        Condition = {
+          StringEquals = { "iam:AWSServiceName" = "dax.amazonaws.com" }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "infra_cart_data_attach" {
+  role       = aws_iam_role.infra_deployer_role.name
+  policy_arn = aws_iam_policy.infra_cart_data_policy.arn
+}
