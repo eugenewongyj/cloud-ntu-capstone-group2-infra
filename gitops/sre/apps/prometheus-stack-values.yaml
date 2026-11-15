@@ -26,6 +26,8 @@ alertmanager:
 # 1. Grafana configuration + Ingress
 grafana:
   enabled: true
+  serviceAccount:
+    create: true
   additionalDataSources:
     - name: Loki
       type: loki
@@ -46,6 +48,12 @@ grafana:
           filterBySpanID: false
           customQuery: true
           query: '{app="%s"} |= "%s"'
+    - name: CloudWatch
+      type: cloudwatch
+      # authType "default" tells Grafana to use the EKS IAM Role
+      jsonData:
+        authType: default
+        defaultRegion: ap-southeast-1
   ingress:
     enabled: true
     ingressClassName: alb
