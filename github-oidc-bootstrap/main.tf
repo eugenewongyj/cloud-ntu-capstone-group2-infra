@@ -684,3 +684,72 @@ resource "aws_iam_role_policy_attachment" "infra_cart_data_attach" {
   role       = aws_iam_role.infra_deployer_role.name
   policy_arn = aws_iam_policy.infra_cart_data_policy.arn
 }
+
+
+# ---------------------------------------------------------------------
+# Infra pipeline: ElastiCache Serverless for the checkout service (elasticache.tf).
+# Separate policy because IAM managed policies are limited to 6,144 characters.
+# ---------------------------------------------------------------------
+resource "aws_iam_policy" "infra_checkout_cache_policy" {
+  name        = "${var.prefix}-infra-deployer-checkout-cache"
+  description = "Allow the infra pipeline to manage the checkout ElastiCache Serverless cache"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "ElastiCacheServerlessScoped"
+        Effect = "Allow"
+        Action = [
+          "elasticache:CreateServerlessCache",
+          "elasticache:DeleteServerlessCache",
+          "elasticache:ModifyServerlessCache",
+          "elasticache:AddTagsToResource",
+          "elasticache:RemoveTagsFromResource",
+          "elasticache:ListTagsForResource"
+        ]
+        Resource = [
+          "arn:aws:elasticache:${var.aws_region}:${data.aws_caller_identity.current.account_id}:serverlesscache:${var.prefix}-*",
+          "arn:aws:elasticache:${var.aws_region}:${data.aws_caller_identity.current.account_id}:serverlesscachesnapshot:*"
+        ]
+      },
+      {
+        # Describe calls do not support resource-level scoping
+        Sid    = "ElastiCacheDescribe"
+        Effect = "Allow"
+        Action = [
+          "elasticache:DescribeServerlessCaches",
+          "elasticache:DescribeServerlessCacheSnapshots"
+        ]
+        Resource = "*"
+      },
+      {
+        # Serverless places VPC endpoints in our subnets on our behalf
+        Sid    = "ElastiCacheVpcEndpoints"
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateVpcEndpoint",
+          "ec2:ModifyVpcEndpoint",
+          "ec2:DeleteVpcEndpoints",
+          "ec2:DescribeVpcEndpoints"
+        ]
+        Resource = "*"
+      },
+      {
+        # First ElastiCache resource in the account creates its service-linked role
+        Sid      = "ElastiCacheServiceLinkedRole"
+        Effect   = "Allow"
+        Action   = ["iam:CreateServiceLinkedRole"]
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/elasticache.amazonaws.com/*"
+        Condition = {
+          StringEquals = { "iam:AWSServiceName" = "elasticache.amazonaws.com" }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "infra_checkout_cache_attach" {
+  role       = aws_iam_role.infra_deployer_role.name
+  policy_arn = aws_iam_policy.infra_checkout_cache_policy.arn
+}
