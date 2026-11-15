@@ -26,14 +26,21 @@ For peak events (e.g. 11.11 at midnight, Black Friday). Day-to-day settings are 
   ```
 - [ ] **Aurora: raise the ceiling.** `aurora_max_capacity` defaults to **1 ACU**, which is likely the first bottleneck. Raise it (e.g. 8–16) in `variables.tf`, and consider raising `aurora_min_capacity` so it doesn't start cold.
 - [ ] **OpenSearch Serverless** (if deployed): confirm `opensearch_search_ocu_max` is high enough and `opensearch_standby_replicas = "ENABLED"`.
+- [ ] **ElastiCache (checkout)**: confirm `checkout_cache_ecpu_max` and `checkout_cache_max_storage_gb` (cost caps in `elasticache.tf`) are above the expected peak, so the caps don't throttle the sale.
 - [ ] **App pods:** raise replica counts / autoscaling limits for `ui`, `catalog`, `cart`, `checkout` and `orders` in `gitops/app/apps/*.yaml`.
 - [ ] **Bootstrap permissions** are applied (`github-oidc-bootstrap`), so the pipeline doesn't fail mid-change.
+
+## ~1 hour before the sale
+- [ ] **ElastiCache (checkout): pre-warm.** Serverless scales automatically, but pre-warming means capacity is ready at the launch minute. Raise the minimum and apply through the pipeline:
+  ```hcl
+  checkout_cache_ecpu_min = <expected peak ECPU/s> # must be >= 1000; you pay for this minimum while it is set
+  ```
 
 ## Sale day
 - [ ] Freeze deployments (no merges to `main`) from a few hours before until after the sale.
 - [ ] Have someone watching the dashboards at the start time.
-- [ ] Watch for: DynamoDB `ThrottledRequests`, DAX `CPUUtilization`, Aurora `ServerlessDatabaseCapacity` at its max, pod restarts.
+- [ ] Watch for: DynamoDB `ThrottledRequests`, DAX `CPUUtilization`, Aurora `ServerlessDatabaseCapacity` at its max, ElastiCache `ThrottledCmds` / `ElastiCacheProcessingUnits` near `checkout_cache_ecpu_max`, pod restarts.
 
 ## After the sale
-- [ ] **Scale back down** to save cost: revert DAX (`dax.t3.small`, 1 node), Aurora max ACU and pod replicas.
+- [ ] **Scale back down** to save cost: revert DAX (`dax.t3.small`, 1 node), Aurora max ACU, pod replicas, and set `checkout_cache_ecpu_min = 0` (ElastiCache).
 - [ ] Note the actual peak numbers here for next time.

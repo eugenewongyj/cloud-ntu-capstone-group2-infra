@@ -20,6 +20,14 @@ spec:
         app:
           endpoints:
             orders: http://orders:80
+          # ElastiCache Serverless (elasticache.tf). Uncomment AFTER terraform apply,
+          # and paste the "checkout_cache_endpoint" output (host:port) below.
+          # Until then checkout keeps using in-memory storage.
+          # persistence:
+          #   provider: redis
+          #   redis:
+          #     endpoint: "<checkout_cache_endpoint output>"
+          #     tls: true   # Serverless always requires TLS (rediss://)
         # Add the OTel instrumentation annotation here
         # podAnnotations:
         #   # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
