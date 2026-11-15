@@ -1,6 +1,7 @@
 # ==============================================================================
 # Grafana CloudWatch IAM Role (IRSA)
 # ==============================================================================
+data "aws_caller_identity" "current" {}
 
 # 1. Least-Privilege IAM Policy for Grafana
 resource "aws_iam_policy" "grafana_cloudwatch" {
