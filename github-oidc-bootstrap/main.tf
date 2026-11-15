@@ -133,10 +133,10 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
           "ec2:DeleteVpc", "ec2:ModifyVpcAttribute", "ec2:DeleteSubnet", "ec2:ModifySubnetAttribute",
           "ec2:DeleteRouteTable", "ec2:CreateRoute", "ec2:DeleteRoute", "ec2:AssociateRouteTable",
           "ec2:DisassociateRouteTable", "ec2:DeleteInternetGateway", "ec2:AttachInternetGateway",
-          "ec2:DetachInternetGateway", "ec2:DeleteNatGateway", "ec2:ReleaseAddress", "ec2:AssociateAddress",
-          "ec2:DisassociateAddress", "ec2:DeleteSecurityGroup", "ec2:AuthorizeSecurityGroupIngress",
-          "ec2:AuthorizeSecurityGroupEgress", "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
-          "ec2:DeleteTags", "ec2:TerminateInstances"
+          "ec2:DetachInternetGateway", "ec2:DeleteNatGateway", "ec2:DeleteSecurityGroup", 
+          "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress", 
+          "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
+          "ec2:TerminateInstances"
         ]
         Resource = "*"
         Condition = {
@@ -144,6 +144,20 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
             "aws:ResourceTag/Project" : var.project
           }
         }
+      },{
+        # NEW BLOCK: For actions that target untaggable network associations 
+        # or shared EKS security groups that lack the Prefix tag
+        Sid    = "EC2UntaggableResources"
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateTags", 
+          "ec2:DeleteTags",
+          "ec2:AllocateAddress", 
+          "ec2:ReleaseAddress", 
+          "ec2:AssociateAddress",
+          "ec2:DisassociateAddress"
+        ]
+        Resource = "*"
       },
       {
         Sid    = "RDSClusterAndSubnetGroupManagement"
