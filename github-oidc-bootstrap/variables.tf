@@ -37,3 +37,9 @@ variable "tfstate_bucket_name" {
   #default     = "sctp-tfstate-ce13"
   default = "sctp-core-tfstate"
 }
+
+variable "project" {
+  type        = string
+  description = "Prefix for tagging resources"
+  default     = "capstone-project-group-02"
+}
