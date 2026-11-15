@@ -421,6 +421,79 @@ resource "aws_iam_role_policy_attachment" "infra_messaging_attach" {
   policy_arn = aws_iam_policy.infra_messaging_policy.arn
 }
 
+# ---------------------------------------------------------------------
+# Separate policy for OpenSearch Serverless (catalog search, opensearch.tf).
+# Kept apart for the same 6,144-character managed policy limit.
+# ---------------------------------------------------------------------
+resource "aws_iam_policy" "infra_search_policy" {
+  name        = "${var.prefix}-infra-deployer-search"
+  description = "Allow the infra pipeline to manage OpenSearch Serverless for the catalog"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        # AOSS policies and VPC endpoints have no ARNs, so Resource must be "*"
+        Sid      = "OpenSearchServerlessManagement"
+        Effect   = "Allow"
+        Action   = ["aoss:*"]
+        Resource = "*"
+      },
+      {
+        # The awscc provider calls AWS through the Cloud Control API
+        Sid    = "CloudControlApi"
+        Effect = "Allow"
+        Action = [
+          "cloudformation:CreateResource",
+          "cloudformation:GetResource",
+          "cloudformation:UpdateResource",
+          "cloudformation:DeleteResource",
+          "cloudformation:GetResourceRequestStatus",
+          "cloudformation:ListResources"
+        ]
+        Resource = "*"
+      },
+      {
+        # Creating an AOSS VPC endpoint creates an EC2 interface endpoint + private DNS on our behalf
+        Sid    = "AossVpcEndpointDependencies"
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateVpcEndpoint",
+          "ec2:DeleteVpcEndpoints",
+          "ec2:ModifyVpcEndpoint",
+          "ec2:DescribeVpcEndpoints",
+          "route53:CreateHostedZone",
+          "route53:DeleteHostedZone",
+          "route53:GetHostedZone",
+          "route53:ListHostedZonesByName",
+          "route53:ListHostedZonesByVPC",
+          "route53:AssociateVPCWithHostedZone",
+          "route53:DisassociateVPCFromHostedZone",
+          "route53:ChangeResourceRecordSets",
+          "route53:ListResourceRecordSets",
+          "route53:GetChange"
+        ]
+        Resource = "*"
+      },
+      {
+        # First AOSS collection in the account creates its service-linked role
+        Sid      = "AossServiceLinkedRole"
+        Effect   = "Allow"
+        Action   = ["iam:CreateServiceLinkedRole"]
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/observability.aoss.amazonaws.com/*"
+        Condition = {
+          StringEquals = { "iam:AWSServiceName" = "observability.aoss.amazonaws.com" }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "infra_search_attach" {
+  role       = aws_iam_role.infra_deployer_role.name
+  policy_arn = aws_iam_policy.infra_search_policy.arn
+}
+
 # ==========================================================
 # ROLE 2: Application Pipeline Role (group2-app)
 # ==========================================================
