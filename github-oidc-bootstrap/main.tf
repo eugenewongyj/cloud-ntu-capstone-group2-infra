@@ -186,22 +186,39 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
         }
       },
       {
-        # 2. Authorize placing those resources INSIDE the parent VPC
-        Sid    = "EC2NetworkingCreateInsideVpc"
+        # 2a. Authorize associating new resources with existing TAGGED parent resources
+        Sid    = "EC2NetworkingCreateInsideParentTagged"
         Effect = "Allow"
         Action = [
           "ec2:CreateSubnet", "ec2:CreateRouteTable",
           "ec2:CreateInternetGateway", "ec2:CreateNatGateway",
           "ec2:CreateSecurityGroup", "ec2:RunInstances"
         ]
-        # This targets the existing VPC, not the new resource
-        Resource = "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:vpc/*"
+        Resource = [
+          "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:vpc/*",
+          "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:subnet/*",
+          "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:security-group/*",
+          "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:network-interface/*"
+        ]
         Condition = {
           StringEquals = {
-            # Notice this is ResourceTag: it verifies the VPC already has your project tag
             "aws:ResourceTag/Project": var.project 
           }
         }
+      },
+      {
+        # 2b. Authorize linking to resources where AWS drops tag context or doesn't own the resource
+        Sid    = "EC2NetworkingCreateInsideParentUntagged"
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateNatGateway",
+          "ec2:RunInstances"
+        ]
+        Resource = [
+          "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:elastic-ip/*",
+          "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:image/*",
+          "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:key-pair/*"
+        ]
       },
       {
         Sid    = "RDSClusterAndSubnetGroupManagement"
