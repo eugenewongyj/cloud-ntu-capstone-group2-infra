@@ -16,6 +16,10 @@ spec:
         image:
           repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-checkout
           tag: "54ccf4e2592237c87e77e6725e06318abb8a9ce5"
+          # Checkout submits orders to the orders service
+        app:
+          endpoints:
+            orders: http://orders:80
         # Add the OTel instrumentation annotation here
         # podAnnotations:
         #   # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
