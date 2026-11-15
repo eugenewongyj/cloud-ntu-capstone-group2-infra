@@ -104,7 +104,7 @@ variable "opensearch_search_ocu_min" {
 variable "opensearch_search_ocu_max" {
   description = "Maximum search OCUs for the catalog collection"
   type        = number
-  default     = 30
+  default     = 32
 }
 
 variable "opensearch_index_ocu_min" {
@@ -116,7 +116,7 @@ variable "opensearch_index_ocu_min" {
 variable "opensearch_index_ocu_max" {
   description = "Maximum indexing OCUs for the catalog collection"
   type        = number
-  default     = 6
+  default     = 8
 }
 
 variable "opensearch_standby_replicas" {

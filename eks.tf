@@ -28,6 +28,13 @@ module "eks" {
   # Enable IRSA (IAM Roles for Service Accounts)
   enable_irsa = true
 
+  # 1. Enable all 5 control plane log types
+  cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+
+  # 2. Limit log retention to 7 days to prevent runaway CloudWatch costs
+  # (The Terraform module automatically creates the Log Group for you)
+  cloudwatch_log_group_retention_in_days = 7
+
   access_entries = {
     github_app_deployer = {
       principal_arn = "arn:aws:iam::255945442255:role/group2-capstone-app-deployer-role"
