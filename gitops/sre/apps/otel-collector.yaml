@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: retail-store-collector-collector
+  name: retail-store-collector
   namespace: opentelemetry-system
   annotations:
     argocd.argoproj.io/sync-wave: "1"
