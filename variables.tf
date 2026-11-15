@@ -86,3 +86,52 @@ variable "project" {
   description = "Prefix for tagging resources"
   default     = "capstone-project-group-02"
 }
+# ---------------------------------------------------------------------
+# OpenSearch Serverless (catalog search)
+# ---------------------------------------------------------------------
+variable "catalog_namespace" {
+  description = "Kubernetes namespace where the catalog service runs"
+  type        = string
+  default     = "retail-store"
+}
+
+variable "opensearch_search_ocu_min" {
+  description = "Minimum search OCUs for the catalog collection"
+  type        = number
+  default     = 2
+}
+
+variable "opensearch_search_ocu_max" {
+  description = "Maximum search OCUs for the catalog collection"
+  type        = number
+  default     = 30
+}
+
+variable "opensearch_index_ocu_min" {
+  description = "Minimum indexing OCUs for the catalog collection"
+  type        = number
+  default     = 2
+}
+
+variable "opensearch_index_ocu_max" {
+  description = "Maximum indexing OCUs for the catalog collection"
+  type        = number
+  default     = 6
+}
+
+variable "opensearch_standby_replicas" {
+  description = "ENABLED = Multi-AZ standby copies (resilient). DISABLED = cheaper, single-AZ (dev/test only)"
+  type        = string
+  default     = "ENABLED"
+
+  validation {
+    condition     = contains(["ENABLED", "DISABLED"], var.opensearch_standby_replicas)
+    error_message = "opensearch_standby_replicas must be ENABLED or DISABLED."
+  }
+}
+
+variable "opensearch_admin_principals" {
+  description = "Extra IAM user/role ARNs given read/write access to the catalog collection data (e.g. team members for debugging)"
+  type        = list(string)
+  default     = []
+}

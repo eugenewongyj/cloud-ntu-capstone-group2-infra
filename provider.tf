@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    awscc = {
+      source  = "hashicorp/awscc"
+      version = "~> 1.110" # needed for OpenSearch Serverless collection groups (opensearch.tf)
+    }
     archive = {
       source  = "hashicorp/archive"
       version = "~> 2.4"
@@ -37,4 +41,9 @@ provider "aws" {
       Project = var.project
     }
   }
+}
+
+# AWS Cloud Control provider (used for OpenSearch Serverless collection groups)
+provider "awscc" {
+  region = var.aws_region
 }
