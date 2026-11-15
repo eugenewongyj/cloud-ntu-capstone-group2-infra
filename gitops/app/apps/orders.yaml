@@ -17,6 +17,20 @@ spec:
         image:
           repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-orders
           tag: "54ccf4e2592237c87e77e6725e06318abb8a9ce5"
+          # Service account name must match the Pod Identity association in sqs.tf
+        serviceAccount:
+          create: true
+          name: orders
+        # Publish order events to SQS (IAM role via Pod Identity, no credentials stored)
+        app:
+          messaging:
+            provider: sqs
+            sqs:
+              topic: group2-capstone-orders-events
+              region: ap-southeast-1
+            rabbitmq:
+              secret:
+                create: false   # not using RabbitMQ: don't create an empty secret
         # Add the OTel instrumentation annotation here
         # podAnnotations:
         #   # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
