@@ -17,3 +17,7 @@ grafana:
         gnetId: 1860
         revision: 46
         datasource: Prometheus
+      Amazon CloudWatch Logs:
+        gnetId: 11266
+        revision: 1
+        datasource: CloudWatch
