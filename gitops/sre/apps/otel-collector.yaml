@@ -12,7 +12,7 @@ metadata:
   name: swiftkart-collector
   namespace: opentelemetry-system
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "5"
 spec:
   config: |
     receivers:
