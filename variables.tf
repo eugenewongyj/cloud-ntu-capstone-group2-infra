@@ -95,28 +95,52 @@ variable "catalog_namespace" {
   default     = "retail-store"
 }
 
+# OCU values: AWS only accepts 0, 2, 4, 8, 16 or a multiple of 16 (max 1,700).
+# Staging: minimum 0 = no compute cost when idle (first search after a quiet
+# period may be slow for a few seconds). Before a sale, raise the minimums to 2+.
+
 variable "opensearch_search_ocu_min" {
-  description = "Minimum search OCUs for the catalog collection"
+  description = "Minimum search OCUs for the catalog collection (0 = scale to zero when idle)"
   type        = number
-  default     = 2
+  default     = 0
+
+  validation {
+    condition     = contains([0, 2, 4, 8], var.opensearch_search_ocu_min) || (var.opensearch_search_ocu_min >= 16 && var.opensearch_search_ocu_min <= 1700 && var.opensearch_search_ocu_min % 16 == 0)
+    error_message = "OCU values must be 0, 2, 4, 8, 16 or a multiple of 16 (max 1700)."
+  }
 }
 
 variable "opensearch_search_ocu_max" {
-  description = "Maximum search OCUs for the catalog collection"
+  description = "Maximum search OCUs for the catalog collection (cost cap)"
   type        = number
-  default     = 30
+  default     = 32
+
+  validation {
+    condition     = contains([2, 4, 8], var.opensearch_search_ocu_max) || (var.opensearch_search_ocu_max >= 16 && var.opensearch_search_ocu_max <= 1700 && var.opensearch_search_ocu_max % 16 == 0)
+    error_message = "Maximum OCU must be 2, 4, 8, 16 or a multiple of 16 (max 1700)."
+  }
 }
 
 variable "opensearch_index_ocu_min" {
-  description = "Minimum indexing OCUs for the catalog collection"
+  description = "Minimum indexing OCUs for the catalog collection (0 = scale to zero when idle)"
   type        = number
-  default     = 2
+  default     = 0
+
+  validation {
+    condition     = contains([0, 2, 4, 8], var.opensearch_index_ocu_min) || (var.opensearch_index_ocu_min >= 16 && var.opensearch_index_ocu_min <= 1700 && var.opensearch_index_ocu_min % 16 == 0)
+    error_message = "OCU values must be 0, 2, 4, 8, 16 or a multiple of 16 (max 1700)."
+  }
 }
 
 variable "opensearch_index_ocu_max" {
-  description = "Maximum indexing OCUs for the catalog collection"
+  description = "Maximum indexing OCUs for the catalog collection (cost cap)"
   type        = number
-  default     = 6
+  default     = 8
+
+  validation {
+    condition     = contains([2, 4, 8], var.opensearch_index_ocu_max) || (var.opensearch_index_ocu_max >= 16 && var.opensearch_index_ocu_max <= 1700 && var.opensearch_index_ocu_max % 16 == 0)
+    error_message = "Maximum OCU must be 2, 4, 8, 16 or a multiple of 16 (max 1700)."
+  }
 }
 
 variable "opensearch_standby_replicas" {
