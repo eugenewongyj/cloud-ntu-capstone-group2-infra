@@ -72,7 +72,7 @@ data "aws_iam_policy_document" "grafana_trust" {
       test     = "StringEquals"
       variable = "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:sub"
       # This explicitly locks the role to the Grafana pod in the monitoring namespace
-      values   = ["system:serviceaccount:monitoring:kube-prometheus-stack-grafana"]
+      values = ["system:serviceaccount:monitoring:kube-prometheus-stack-grafana"]
     }
 
     condition {
