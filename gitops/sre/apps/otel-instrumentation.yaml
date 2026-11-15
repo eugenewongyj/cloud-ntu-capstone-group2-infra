@@ -1,7 +1,7 @@
 apiVersion: opentelemetry.io/v1alpha1
 kind: Instrumentation
 metadata:
-  name: swiftkart-instrumentation
+  name: retail-store-instrumentation
   namespace: retail-store # Must match where your SwiftKart apps live
   annotations:
     argocd.argoproj.io/sync-wave: "1"
