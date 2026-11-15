@@ -109,7 +109,6 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
       },
       {
         # Rule 2: Creation (Must be "*", but strictly guarded by RequestTag)
-        # Terraform can only create these if it applies your group2-tk tag during creation
         Sid    = "EC2NetworkingCreate"
         Effect = "Allow"
         Action = [
@@ -126,7 +125,6 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
       },
       {
         # Rule 3: Modify/Delete (Must be "*", but strictly guarded by ResourceTag)
-        # Terraform can only delete or modify resources that ALREADY have your group2-tk tag
         Sid    = "EC2NetworkingModifyDelete"
         Effect = "Allow"
         Action = [
