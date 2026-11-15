@@ -7,6 +7,16 @@ https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app
 # Pre-flash-sale checklist
 For peak events (e.g. 11.11 at midnight, Black Friday). Day-to-day settings are kept small to save cost, so scale up **before** the sale and back down **after**.
 
+> [!IMPORTANT]
+> **OpenSearch (catalog search) minimum OCU: the sale rule**
+>
+> | When | `opensearch_search_ocu_min` | `opensearch_index_ocu_min` | Why |
+> |---|---|---|---|
+> | **BEFORE a sale** (1–2 days ahead) | **2** | **2** | Search is already running at launch. At 0, the first searches are slow while it starts up |
+> | **AFTER a sale** | **0** | **0** | No compute cost when idle. Leaving it at 2 costs roughly US$700+/month |
+>
+> Change both values in `variables.tf`, open a PR, merge it, then run the **Terraform CD** workflow.
+
 ## 1 week before
 - [ ] **Load test** with `src/load-generator` (app repo) at the expected peak. Fix whatever slows down first.
 - [ ] **Agree on the expected peak** (requests per second) and on the sale's start and end times.
@@ -25,7 +35,13 @@ For peak events (e.g. 11.11 at midnight, Black Friday). Day-to-day settings are 
     --warm-throughput ReadUnitsPerSecond=<peak reads/s>,WriteUnitsPerSecond=<peak writes/s>
   ```
 - [ ] **Aurora: raise the ceiling.** `aurora_max_capacity` defaults to **1 ACU**, which is likely the first bottleneck. Raise it (e.g. 8–16) in `variables.tf`, and consider raising `aurora_min_capacity` so it doesn't start cold.
-- [ ] **OpenSearch Serverless** (if deployed): confirm `opensearch_search_ocu_max` is high enough and `opensearch_standby_replicas = "ENABLED"`.
+- [ ] **OpenSearch Serverless: pre-warm.** Staging minimums are **0** (no compute cost when idle, but the first search after a quiet period is slow). In `variables.tf`, raise them so search is ready at launch, and confirm the maximums are high enough (allowed values: 0, 2, 4, 8, 16 or multiples of 16):
+  ```hcl
+  opensearch_search_ocu_min = 2  # staging 0
+  opensearch_index_ocu_min  = 2  # staging 0
+  opensearch_search_ocu_max = 32 # raise to 48/64 if the load test needs it
+  ```
+  Also confirm `opensearch_standby_replicas = "ENABLED"`.
 - [ ] **ElastiCache (checkout)**: confirm `checkout_cache_ecpu_max` and `checkout_cache_max_storage_gb` (cost caps in `elasticache.tf`) are above the expected peak, so the caps don't throttle the sale.
 - [ ] **App pods:** raise replica counts / autoscaling limits for `ui`, `catalog`, `cart`, `checkout` and `orders` in `gitops/app/apps/*.yaml`.
 - [ ] **Bootstrap permissions** are applied (`github-oidc-bootstrap`), so the pipeline doesn't fail mid-change.
@@ -42,5 +58,5 @@ For peak events (e.g. 11.11 at midnight, Black Friday). Day-to-day settings are 
 - [ ] Watch for: DynamoDB `ThrottledRequests`, DAX `CPUUtilization`, Aurora `ServerlessDatabaseCapacity` at its max, ElastiCache `ThrottledCmds` / `ElastiCacheProcessingUnits` near `checkout_cache_ecpu_max`, pod restarts.
 
 ## After the sale
-- [ ] **Scale back down** to save cost: revert DAX (`dax.t3.small`, 1 node), Aurora max ACU, pod replicas, and set `checkout_cache_ecpu_min = 0` (ElastiCache).
+- [ ] **Scale back down** to save cost: revert DAX (`dax.t3.small`, 1 node), Aurora max ACU, pod replicas, set `checkout_cache_ecpu_min = 0` (ElastiCache), and set the OpenSearch minimums back to 0 (`opensearch_search_ocu_min`, `opensearch_index_ocu_min`).
 - [ ] Note the actual peak numbers here for next time.
