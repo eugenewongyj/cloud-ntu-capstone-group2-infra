@@ -29,3 +29,17 @@ grafana:
         gnetId: 24331
         revision: 1
         datasource: CloudWatch
+      OpenTelemetry & Tempo:
+        gnetId: 23242
+        revision: 1
+        datasource: Prometheus
+      Lightweight APM for OpenTelemetry:  
+        gnetId: 23243
+        revision: 1
+        datasource: 
+          - name: DS_PROMETHEUS
+            value: Prometheus
+          - name: DS_TEMPO
+            value: Tempo
+          - name: DS_LOKI
+            value: Loki
