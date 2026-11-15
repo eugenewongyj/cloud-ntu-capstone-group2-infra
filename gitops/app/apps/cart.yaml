@@ -16,6 +16,17 @@ spec:
         - name: fullnameOverride
           value: carts
       valuesObject:
+        # Service account name must match the Pod Identity association in dynamodb-dax.tf
+        # (var.cart_service_account = "cart-carts"): gives the pod short-lived AWS credentials
+        serviceAccount:
+          create: true
+          name: cart-carts
+        # Settings come from our own ConfigMap "cart-config" (gitops/app/manifests/cart-config):
+        # DynamoDB table + AWS_REGION. The chart has no region setting, and Pod Identity
+        # provides credentials but not the region.
+        configMap:
+          create: false
+          name: cart-config
       # Add the OTel instrumentation annotation here
         # podAnnotations:
         #   # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language

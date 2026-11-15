@@ -1,0 +1,14 @@
+# Settings for the cart service (used instead of the chart's own ConfigMap,
+# see gitops/app/apps/cart.yaml). Values must match dynamodb-dax.tf.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cart-config
+  namespace: retail-store
+data:
+  # Store carts in DynamoDB (table created by Terraform, so the app must not create it)
+  RETAIL_CART_PERSISTENCE_PROVIDER: dynamodb
+  RETAIL_CART_PERSISTENCE_DYNAMODB_TABLE_NAME: group2-capstone-carts
+  RETAIL_CART_PERSISTENCE_DYNAMODB_CREATE_TABLE: "false"
+  # AWS region for the AWS SDK. Credentials come from Pod Identity (short-lived, no keys).
+  AWS_REGION: ap-southeast-1
