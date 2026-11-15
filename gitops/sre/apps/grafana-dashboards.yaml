@@ -20,4 +20,8 @@ grafana:
       AWS ALB Cloudwatch Metrics:
         gnetId: 14361
         revision: 1
-        datasource: Prometheus
+        datasource: CloudWatch
+      Amazon CloudWatch Logs:
+        gnetId: 11266
+        revision: 1
+        datasource: CloudWatch
