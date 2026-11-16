@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opentelemetry-crds
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+spec:
+  project: sre-project
+  source:
+    repoURL: https://github.com/open-telemetry/opentelemetry-operator.git
+    targetRevision: v0.129.0
+    path: config/crd/bases
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: opentelemetry-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
