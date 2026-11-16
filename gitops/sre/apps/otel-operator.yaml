@@ -3,6 +3,9 @@ kind: Application
 metadata:
   name: opentelemetry-operator
   namespace: argocd
+  annotations:
+    # ── ADD THIS SYNC WAVE ──────────────────────────────
+    argocd.argoproj.io/sync-wave: "-2"
 spec:
   project: sre-project
   source:
