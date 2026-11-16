@@ -35,6 +35,9 @@ spec:
         ingress:
           enabled: true
           className: alb
+          annotations:
+            alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+            alb.ingress.kubernetes.io/ssl-redirect: "443"
           hosts: 
             - group2-retail.sctp-sandbox.com
           tls: []
@@ -42,5 +45,8 @@ spec:
     server: https://kubernetes.default.svc
     namespace: retail-store
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
