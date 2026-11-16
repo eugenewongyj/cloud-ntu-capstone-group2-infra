@@ -65,7 +65,7 @@ grafana:
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
       alb.ingress.kubernetes.io/ssl-redirect: "443"
-      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-southeast-1:255945442255:certificate/60ff1f4f-de58-4e43-a98c-3d4edf3f78e1"
+      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-southeast-1:255945442255:certificate/aa61f32b-3ecf-4bff-b963-3c5b9d048bea"
       alb.ingress.kubernetes.io/backend-protocol: HTTP
     hosts:
       - group2-capstone-grafana.sctp-sandbox.com
@@ -94,7 +94,7 @@ prometheus:
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
       alb.ingress.kubernetes.io/ssl-redirect: "443"
-      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-southeast-1:255945442255:certificate/60ff1f4f-de58-4e43-a98c-3d4edf3f78e1"
+      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-southeast-1:255945442255:certificate/aa61f32b-3ecf-4bff-b963-3c5b9d048bea"
       alb.ingress.kubernetes.io/backend-protocol: HTTP
     hosts:
       - group2-capstone-prometheus.sctp-sandbox.com
