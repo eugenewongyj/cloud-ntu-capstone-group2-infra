@@ -14,6 +14,8 @@ spec:
     targetRevision: 0.129.0 # Update to the latest stable chart version
     helm:
       valuesObject:
+        crds:
+          enabled: true # Let Helm handle CRDs and inject the webhook CA bundle
         # Instruct Helm to auto-generate a self-signed cert instead of requiring cert-manager
         admissionWebhooks:
           certManager:
