@@ -22,6 +22,7 @@ spec:
             enabled: false
           autoGenerateCert:
             enabled: true
+            recreate: false # ── ADD THIS: Prevents regenerating certs on every render ──
             
         # ADDED: Increase CPU limits and probe timeouts to prevent "context deadline exceeded"
         manager:
