@@ -4,27 +4,23 @@ metadata:
   name: opentelemetry-operator
   namespace: argocd
   annotations:
-    # ── ADD THIS SYNC WAVE ──────────────────────────────
     argocd.argoproj.io/sync-wave: "-2"
 spec:
   project: sre-project
   source:
     repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
     chart: opentelemetry-operator
-    targetRevision: 0.129.0 # Update to the latest stable chart version
+    targetRevision: 0.129.0
     helm:
       valuesObject:
         crds:
-          enabled: true # Let Helm handle CRDs and inject the webhook CA bundle
-        # Instruct Helm to auto-generate a self-signed cert instead of requiring cert-manager
+          create: true # <-- MUST be 'create: true', NOT 'enabled: true'
         admissionWebhooks:
           certManager:
             enabled: false
           autoGenerateCert:
             enabled: true
-            recreate: false # ── ADD THIS: Prevents regenerating certs on every render ──
-            
-        # ADDED: Increase CPU limits and probe timeouts to prevent "context deadline exceeded"
+            recreate: false
         manager:
           resources:
             requests:
@@ -33,11 +29,6 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-          # livenessProbe:
-          #   timeoutSeconds: 3
-          # readinessProbe:
-          #   timeoutSeconds: 3
-
   destination:
     server: https://kubernetes.default.svc
     namespace: opentelemetry-system
@@ -47,8 +38,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true # Recommended for large CRDs in Helm charts
-  # Prevents ArgoCD from wiping out the auto-generated webhook CA bundle
+      - ServerSideApply=true
   ignoreDifferences:
     - group: admissionregistration.k8s.io
       kind: MutatingWebhookConfiguration
