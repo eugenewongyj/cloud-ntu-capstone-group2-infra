@@ -36,7 +36,7 @@ spec:
           enabled: true
           className: alb
           hosts: 
-            - retail-group2.sctp-sandbox.com
+            - group2-retail.sctp-sandbox.com
           tls: []
   destination:
     server: https://kubernetes.default.svc
