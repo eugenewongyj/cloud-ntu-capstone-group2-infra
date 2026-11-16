@@ -2,12 +2,13 @@ apiVersion: opentelemetry.io/v1alpha1
 kind: Instrumentation
 metadata:
   name: retail-store-instrumentation
-  namespace: retail-store # Must match where your SwiftKart apps live
+  namespace: retail-store
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "5" # Move to wave 5 so operator pod is 100% Ready first
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   exporter:
     endpoint: "http://retail-store-collector.opentelemetry-system.svc.cluster.local:4318"
   sampler:
     type: parentbased_traceidratio
-    argument: "1.0" # Sample 100% of traces for the capstone demo
+    argument: "1.0"

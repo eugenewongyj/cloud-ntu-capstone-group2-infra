@@ -6,15 +6,18 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 ---
-apiVersion: opentelemetry.io/v1alpha1
+apiVersion: opentelemetry.io/v1beta1 # Changed from v1alpha1 to v1beta1 to bypass conversion webhook!
 kind: OpenTelemetryCollector
 metadata:
   name: retail-store
   namespace: opentelemetry-system
   annotations:
     argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  config: |
+  mode: deployment
+  serviceAccount: retail-store-collector
+  config:
     receivers:
       otlp:
         protocols:
