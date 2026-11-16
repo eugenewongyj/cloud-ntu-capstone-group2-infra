@@ -47,17 +47,17 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true # Recommended for large CRDs in Helm charts
-  # # Prevents ArgoCD from wiping out the auto-generated webhook CA bundle
-  # ignoreDifferences:
-  #   - group: admissionregistration.k8s.io
-  #     kind: MutatingWebhookConfiguration
-  #     jqPathExpressions:
-  #       - '.webhooks[].clientConfig.caBundle'
-  #   - group: admissionregistration.k8s.io
-  #     kind: ValidatingWebhookConfiguration
-  #     jqPathExpressions:
-  #       - '.webhooks[].clientConfig.caBundle'
-  #   - group: apiextensions.k8s.io
-  #     kind: CustomResourceDefinition
-  #     jqPathExpressions:
-  #       - '.spec.conversion.webhook.clientConfig.caBundle'
+  # Prevents ArgoCD from wiping out the auto-generated webhook CA bundle
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      jqPathExpressions:
+        - '.webhooks[].clientConfig.caBundle'
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jqPathExpressions:
+        - '.webhooks[].clientConfig.caBundle'
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jqPathExpressions:
+        - '.spec.conversion.webhook.clientConfig.caBundle'
