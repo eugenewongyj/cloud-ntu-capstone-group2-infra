@@ -128,3 +128,8 @@ done
 echo "--> [9/9] Teardown complete. Remaining Pods & Namespaces:"
 kubectl get pods -A
 kubectl get ns
+
+echo "--> Removing EKS Pod Identity Associations..."
+for id in $(aws eks list-pod-identity-associations --cluster-name "${CLUSTER_NAME}" --region "${AWS_REGION}" --query 'associations[*].associationId' --output text 2>/dev/null); do
+  aws eks delete-pod-identity-association --cluster-name "${CLUSTER_NAME}" --association-id "${id}" --region "${AWS_REGION}" >/dev/null 2>&1 || true
+done
