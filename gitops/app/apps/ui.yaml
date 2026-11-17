@@ -41,6 +41,9 @@ spec:
           hosts: 
             - group2-retail.sctp-sandbox.com
           tls: []
+        app:
+          endpoints:
+            catalog: http://catalog:80
   destination:
     server: https://kubernetes.default.svc
     namespace: retail-store
