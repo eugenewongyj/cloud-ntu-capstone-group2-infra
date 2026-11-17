@@ -16,7 +16,7 @@ metadata:
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
-  name: retail-store
+  name: retail-store-collector
   namespace: opentelemetry-system
   annotations:
     argocd.argoproj.io/sync-wave: "5"
