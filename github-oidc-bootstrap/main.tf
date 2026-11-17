@@ -280,11 +280,9 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
           "secretsmanager:UpdateSecret", "secretsmanager:TagResource", "secretsmanager:UntagResource",
           "secretsmanager:RestoreSecret", "secretsmanager:ListSecrets"
         ]
-        # Only allow access to secrets starting with your project prefix
         Resource = [
           "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.prefix}-*",
           "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.prefix}/*",
-          # ADDED: Allow RDS to auto-generate managed passwords
           "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:rds!*"
         ]
       },
@@ -302,12 +300,14 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
         Effect = "Allow"
         Action = [
           "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:UpdateRole",
+          "iam:UpdateAssumeRolePolicy", # <-- ADDED: Allows updating IRSA/OIDC trust policies
           "iam:ListRolePolicies", "iam:ListAttachedRolePolicies", "iam:AttachRolePolicy", "iam:DetachRolePolicy",
           "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:GetRolePolicy", "iam:CreatePolicy",
           "iam:DeletePolicy", "iam:GetPolicy", "iam:CreatePolicyVersion", "iam:DeletePolicyVersion",
           "iam:SetDefaultPolicyVersion", "iam:GetPolicyVersion", "iam:ListPolicyVersions", "iam:TagRole",
           "iam:UntagRole", "iam:TagPolicy", "iam:ListInstanceProfilesForRole", "iam:ListRoleTags", "iam:UntagPolicy",
           "iam:CreateOpenIDConnectProvider", "iam:DeleteOpenIDConnectProvider", "iam:GetOpenIDConnectProvider",
+          "iam:UpdateOpenIDConnectProviderThumbprint", "iam:AddClientIDToOpenIDConnectProvider", "iam:RemoveClientIDFromOpenIDConnectProvider",
           "iam:TagOpenIDConnectProvider", "iam:UntagOpenIDConnectProvider"
         ]
         Resource = [
@@ -332,7 +332,6 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
         }
       },
       {
-        # Block 1: Creating keys requires the RequestTag
         Sid      = "KMSCreateAndTag"
         Effect   = "Allow"
         Action   = ["kms:CreateKey", "kms:TagResource"]
@@ -344,7 +343,6 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
         }
       },
       {
-        # Block 2: Modifying existing keys requires the ResourceTag
         Sid    = "KMSManageExistingKeys"
         Effect = "Allow"
         Action = [
@@ -360,7 +358,6 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
         }
       },
       {
-        # Block 3: Aliases, reading, and grants do not support tag conditions
         Sid    = "KMSAliasesAndUsage"
         Effect = "Allow"
         Action = [
@@ -369,22 +366,6 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
           "kms:CreateGrant", "kms:RetireGrant", "kms:Decrypt", "kms:GenerateDataKey*"
         ]
         Resource = "*"
-      },
-      # SQS: application messaging queues, scoped to project prefix
-      {
-        Sid    = "SQSScopedToProject"
-        Effect = "Allow"
-        Action = [
-          "sqs:CreateQueue",
-          "sqs:DeleteQueue",
-          "sqs:GetQueueAttributes",
-          "sqs:SetQueueAttributes",
-          "sqs:GetQueueUrl",
-          "sqs:TagQueue",
-          "sqs:UntagQueue",
-          "sqs:ListQueueTags"
-        ]
-        Resource = "arn:aws:sqs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:group2-capstone-*"
       }
     ]
   })
