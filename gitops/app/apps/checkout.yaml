@@ -28,9 +28,9 @@ spec:
               endpoint: "group2-capstone-checkout-gc2iuw.serverless.apse1.cache.amazonaws.com:6379"
               tls: true   # Serverless always requires TLS (rediss://)
         # Add the OTel instrumentation annotation here
-        # podAnnotations:
-        #   # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
-        #   instrumentation.opentelemetry.io/inject-java: "true"
+        podAnnotations:
+          # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
+          instrumentation.opentelemetry.io/inject-nodejs: "retail-store-instrumentation"
         # Set the Pod Size (Requests and Limits)
         resources:
           requests:
