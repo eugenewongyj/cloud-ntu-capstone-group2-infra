@@ -95,21 +95,14 @@ helm list -A --no-headers 2>/dev/null | awk '{print $1 " -n " $2}' | while read 
   fi
 done
 
-echo "--> [6/9] Force-Purging All Controllers, Pods & PVCs..."
-for ns in "${TARGET_NAMESPACES[@]}"; do
-  if kubectl get ns "${ns}" >/dev/null 2>&1; then
-    echo "Force-cleaning workloads in namespace: ${ns}..."
-    # 1. Delete controllers immediately without waiting so they stop spawning pods
-    kubectl delete deployments,statefulsets,daemonsets,replicasets,jobs,cronjobs --all -n "${ns}" --wait=false 2>/dev/null || true
-    
-    # 2. Strip finalizers from PVCs and delete them without blocking
-    strip_finalizers "pvc" "${ns}"
-    kubectl delete pvc --all -n "${ns}" --wait=false 2>/dev/null || true
-
-    # 3. Strip finalizers on any pods and force-kill all pods immediately
-    strip_finalizers "pods" "${ns}"
-    kubectl delete pods --all -n "${ns}" --force --grace-period=0 2>/dev/null || true
-  fi
+echo "--> [6/9] Force-Purging All Workloads & Controllers Across All App Namespaces..."
+for kind in deployments statefulsets daemonsets replicasets jobs cronjobs pods pvc; do
+  kubectl get "${kind}" -A --no-headers 2>/dev/null | awk '$1 !~ /^(kube-system|kube-public|kube-node-lease|default)$/ {print $1, $2}' | while read -r ns name; do
+    if [ -n "$name" ]; then
+      kubectl patch "${kind}" "$name" -n "$ns" --type=merge -p '{"metadata":{"finalizers":[]}}' 2>/dev/null || true
+      kubectl delete "${kind}" "$name" -n "$ns" --force --grace-period=0 --wait=false 2>/dev/null || true
+    fi
+  done
 done
 
 echo "--> [7/9] Purging Application Namespaces..."
