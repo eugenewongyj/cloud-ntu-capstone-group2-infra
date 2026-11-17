@@ -32,9 +32,9 @@ spec:
               secret:
                 create: false   # not using RabbitMQ: don't create an empty secret
         # Add the OTel instrumentation annotation here
-        # podAnnotations:
-        #   # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
-        #   instrumentation.opentelemetry.io/inject-java: "true"
+        podAnnotations:
+          # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
+          instrumentation.opentelemetry.io/inject-java: "retail-store-instrumentation"
         # Set the Pod Size (Requests and Limits)
         resources:
           requests:
