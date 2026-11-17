@@ -32,3 +32,15 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - RespectIgnoreDifferences=true # <-- REQUIRED so ArgoCD doesn't overwrite the Secret during syncs
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: kube-prometheus-stack-grafana
+      jsonPointers:
+        - /data
+    - group: apps
+      kind: Deployment
+      name: kube-prometheus-stack-grafana
+      jqPathExpressions:
+        - '.spec.template.metadata.annotations."checksum/secret"'
