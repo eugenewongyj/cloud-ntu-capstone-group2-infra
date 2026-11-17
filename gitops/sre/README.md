@@ -58,7 +58,7 @@ The SRE workstream aims to:
 | Log collection | Grafana Alloy | Kubernetes log collection and forwarding |
 | Log aggregation | Grafana Loki | Centralised log storage and querying |
 | Visualisation | Grafana | Metrics, logs, and dashboards |
-| Load testing | Locust | Controlled HTTP traffic generation |
+| Load testing | Grafana k6 | Controlled HTTP traffic generation |
 | Version control | Git / GitHub | Configuration and change history |
 | Operational tooling | AWS CLI / kubectl | Infrastructure and Kubernetes inspection |
 
@@ -82,7 +82,7 @@ The reliability engineering lifecycle follows:
 | Reliability | Define measurable objectives | SLI queries and SLO definitions |
 | Alerting | Detect operational degradation | Alert rules and notification tests |
 | Visualisation | Support operational investigation | Grafana dashboards |
-| Load validation | Assess performance under traffic | Locust results and correlated metrics |
+| Load validation | Assess performance under traffic | k6 results and correlated metrics |
 | Incident response | Support diagnosis and recovery | Health reports and incident evidence |
 
 ### Reliability Measurement
@@ -358,7 +358,7 @@ Recovery procedures must respect shared infrastructure ownership and avoid uncon
 
 ## 8. Load Testing and Reliability Validation
 
-The SRE validation workstream uses **Locust** to generate controlled HTTP application traffic.
+The SRE validation workstream uses **Grafana k6** to generate controlled HTTP application traffic.
 
 The purpose is to establish performance baselines and correlate application behaviour with observability data.
 
@@ -377,9 +377,8 @@ The purpose is to establish performance baselines and correlate application beha
 
 | File | Purpose |
 |---|---|
-| `validate/locustfile.py` | Locust HTTP test scenarios |
-| `validate/requirements.txt` | Python dependencies |
-| `validate/run.sh` | Test execution helper |
+| `validate/k6/product-listing.js` | k6 product-listing test scenarios |
+| `validate/k6/run.sh` | k6 execution helper |
 | `validate/.gitignore` | Local artifact exclusions |
 | `validate/README.md` | Test setup and instructions |
 | `validate/health-report.md` | Reliability findings and evidence |
@@ -393,7 +392,7 @@ Before running a load test:
 3. Agree on traffic intensity and duration.
 4. Verify that observability components are available.
 5. Ensure the test will not disrupt other teams.
-6. Execute the documented Locust scenario.
+6. Execute the approved k6 profile using `validate/k6/run.sh`.
 7. Record throughput, latency, and errors.
 8. Correlate results with Prometheus, Grafana, and Kubernetes observations.
 9. Document findings and limitations.
@@ -1087,10 +1086,10 @@ sre/
 ├── validate/
 │   ├── .gitignore
 │   ├── README.md
-│   ├── locustfile.py
-│   ├── requirements.txt
-│   ├── run.sh
-│   └── health-report.md
+│   ├── health-report.md
+│   └── k6/
+│       ├── product-listing.js
+│       └── run.sh
 │
 └── reference/
     ├── helm/
@@ -1104,7 +1103,7 @@ sre/
 |---|---|---|
 | `deploy/` | Declarative observability deployment | Argo CD Applications and AppProject |
 | `observe/` | Monitoring and visualisation | Kubernetes YAML, dashboard JSON, PromQL |
-| `validate/` | Reliability testing | Locust scripts, reports, documentation |
+| `validate/` | Reliability testing | k6 scripts, reports, documentation |
 | `reference/` | Supporting technical documentation | Monitoring references and Helm configuration guidance |
 
 The central `gitops/` directory remains separate from the SRE workstream and provides shared deployment orchestration.
