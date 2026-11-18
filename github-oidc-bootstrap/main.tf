@@ -734,3 +734,51 @@ resource "aws_iam_role_policy_attachment" "infra_checkout_cache_attach" {
   role       = aws_iam_role.infra_deployer_role.name
   policy_arn = aws_iam_policy.infra_checkout_cache_policy.arn
 }
+
+# ---------------------------------------------------------------------
+# WAF (waf.tf): let the infra pipeline manage the project's Web ACL
+# ---------------------------------------------------------------------
+resource "aws_iam_policy" "infra_waf_policy" {
+  name        = "${var.prefix}-infra-deployer-waf"
+  description = "Allow the infra pipeline to manage the project WAF Web ACL"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "WafWebAclScoped"
+        Effect = "Allow"
+        Action = [
+          "wafv2:CreateWebACL",
+          "wafv2:UpdateWebACL",
+          "wafv2:DeleteWebACL",
+          "wafv2:GetWebACL",
+          "wafv2:TagResource",
+          "wafv2:UntagResource",
+          "wafv2:ListTagsForResource"
+        ]
+        Resource = [
+          "arn:aws:wafv2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:regional/webacl/${var.prefix}-*/*",
+          # AWS managed rule groups used inside the Web ACL
+          "arn:aws:wafv2:${var.aws_region}:aws:regional/managedruleset/*/*"
+        ]
+      },
+      {
+        # List / describe calls do not support resource-level scoping
+        Sid    = "WafRead"
+        Effect = "Allow"
+        Action = [
+          "wafv2:ListWebACLs",
+          "wafv2:DescribeManagedRuleGroup",
+          "wafv2:CheckCapacity"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "infra_waf_attach" {
+  role       = aws_iam_role.infra_deployer_role.name
+  policy_arn = aws_iam_policy.infra_waf_policy.arn
+}

@@ -159,3 +159,9 @@ variable "opensearch_admin_principals" {
   type        = list(string)
   default     = []
 }
+
+variable "waf_rate_limit_per_ip" {
+  description = "Max requests one IP may send in 5 minutes before the WAF blocks it"
+  type        = number
+  default     = 2000
+}
