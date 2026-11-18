@@ -2,7 +2,7 @@ grafana:
   dashboards:
     favourite:
       Kyverno:
-        gnetId: 15987
+        gnetId: 25743
         revision: 2
         datasource: Prometheus
       Trivy Operator Dashboard:
