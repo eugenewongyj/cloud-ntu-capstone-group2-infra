@@ -49,6 +49,7 @@ spec:
         app:
           endpoints:
             catalog: http://catalog:80
+            carts: http://carts:80
   destination:
     server: https://kubernetes.default.svc
     namespace: retail-store
