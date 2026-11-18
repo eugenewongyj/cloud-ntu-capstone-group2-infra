@@ -1,0 +1,45 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: capstone-discord-routing
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  route:
+    groupBy: ['namespace', 'alertname', 'severity']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    receiver: 'discord-notifications'
+    routes:
+      # Suppress the always-firing Watchdog heartbeat alert
+      - matchers:
+          - name: alertname
+            value: Watchdog
+            matchType: '='
+        receiver: 'null-receiver'
+      # Fast-track critical alerts
+      - matchers:
+          - name: severity
+            value: critical
+            matchType: '='
+        groupWait: 10s
+        repeatInterval: 1h
+        receiver: 'discord-notifications'
+
+  receivers:
+    - name: 'null-receiver'
+    - name: 'discord-notifications'
+      discordConfigs:
+        - apiURL:
+            name: sre-monitoring-discord-webhook
+            key: url
+          sendResolved: true
+          title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }} ({{ .CommonLabels.namespace }})'
+          message: >-
+            {{ range .Alerts }}
+            **Severity:** `{{ .Labels.severity }}`
+            **Summary:** {{ .Annotations.summary }}
+            **Details:** {{ .Annotations.description }}
+            {{ end }}

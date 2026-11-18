@@ -17,11 +17,16 @@ coreDns:
 kubelet:
   enabled: true
 
-# Alertmanager config fix for internal TLS
+# Alertmanager config fix for internal TLS + AlertmanagerConfig CRD discovery
 alertmanager:
+  enabled: true
   alertmanagerSpec:
     webConfig:
       tlsConfig: null
+    alertmanagerConfigSelector:
+      matchLabels:
+        release: kube-prometheus-stack
+    alertmanagerConfigNamespaceSelector: {}
 
 # 1. Grafana configuration + Ingress
 grafana:
