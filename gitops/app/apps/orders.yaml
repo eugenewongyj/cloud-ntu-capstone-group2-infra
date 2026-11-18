@@ -16,7 +16,7 @@ spec:
         # Our own image from ECR (built + scanned by CI), not the public upstream image
         image:
           repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-orders
-          tag: "4387822fd22e916d81c5978e7e03889a932ba932"
+          tag: "5641ed5f5ed2ce4991149e9507e497ab80366fa1"
           # Service account name must match the Pod Identity association in sqs.tf
         serviceAccount:
           create: true
