@@ -22,6 +22,10 @@ metadata:
     argocd.argoproj.io/sync-wave: "5"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  mode: deployment
+  replicas: 1
+  serviceAccount: retail-store-collector
+  image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.114.0
   config:
     receivers:
       otlp:
