@@ -22,7 +22,7 @@ spec:
         # Send vulnerability metrics to Prometheus
         serviceMonitor:
           enabled: true
-          additionalLabels:
+          labels:
             release: kube-prometheus-stack
   destination:
     server: https://kubernetes.default.svc
