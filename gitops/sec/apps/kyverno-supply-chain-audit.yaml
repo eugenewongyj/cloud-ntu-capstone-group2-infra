@@ -1,0 +1,88 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: supply-chain-image-hygiene-audit
+  annotations:
+    policies.kyverno.io/title: Supply Chain and Image Hygiene (Audit)
+    policies.kyverno.io/category: Supply Chain Security
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: block-mutable-latest-tags
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["retail-store"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - argocd
+                - monitoring
+                - logging
+                - opentelemetry-system
+      validate:
+        message: "Container images must use an immutable tag or digest (':latest' or untagged images are prohibited)."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest & *:*"
+            =(initContainers):
+              - image: "!*:latest & *:*"
+
+    - name: restrict-allowed-registries
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["retail-store"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - argocd
+                - monitoring
+                - logging
+                - opentelemetry-system
+      validate:
+        message: "Images must be pulled from approved registries (AWS ECR, public.ecr.aws, ghcr.io, or quay.io)."
+        pattern:
+          spec:
+            containers:
+              - image: "255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/* | public.ecr.aws/* | ghcr.io/* | quay.io/*"
+            =(initContainers):
+              - image: "255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/* | public.ecr.aws/* | ghcr.io/* | quay.io/*"
+
+    - name: verify-cosign-github-oidc-signatures
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["retail-store"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - argocd
+                - monitoring
+                - logging
+                - opentelemetry-system
+      verifyImages:
+        - imageReferences:
+            - "255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/*"
+          failureAction: Ignore # Keeps verification in Audit mode without blocking pod scheduling
+          mutateDigest: false     # Prevents ArgoCD sync drift on image tags
+          verifyDigest: false
+          attestors:
+            - entries:
+                - keyless:
+                    subject: "https://github.com/eugenewongyj/*"
+                    issuer: "https://token.actions.githubusercontent.com"
+                    rekor:
+                      url: https://rekor.sigstore.dev

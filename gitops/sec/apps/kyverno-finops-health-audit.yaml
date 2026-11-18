@@ -1,0 +1,63 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: operational-finops-guardrails-audit
+  annotations:
+    policies.kyverno.io/title: Operational and FinOps Guardrails (Audit)
+    policies.kyverno.io/category: FinOps & Reliability
+    policies.kyverno.io/severity: medium
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: require-resource-requests-and-limits
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["retail-store"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - argocd
+                - monitoring
+                - logging
+                - opentelemetry-system
+      validate:
+        message: "Containers must define CPU/memory requests and memory limits for HPA and EKS Auto Mode Karpenter."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    cpu: "?*"
+                    memory: "?*"
+                  limits:
+                    memory: "?*"
+
+    - name: require-liveness-and-readiness-probes
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["retail-store"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - argocd
+                - monitoring
+                - logging
+                - opentelemetry-system
+      validate:
+        message: "Application containers must define both livenessProbe and readinessProbe."
+        pattern:
+          spec:
+            containers:
+              - livenessProbe:
+                  "?*": "?*"
+                readinessProbe:
+                  "?*": "?*"

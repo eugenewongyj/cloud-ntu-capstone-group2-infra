@@ -1,0 +1,67 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: pod-security-baseline-audit
+  annotations:
+    policies.kyverno.io/title: Pod Security Baseline (Audit)
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: disallow-privileged-and-root
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["retail-store"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - argocd
+                - monitoring
+                - logging
+                - opentelemetry-system
+      validate:
+        message: "Containers must set runAsNonRoot=true, allowPrivilegeEscalation=false, and privileged=false."
+        pattern:
+          spec:
+            =(securityContext):
+              =(runAsNonRoot): true
+            containers:
+              - securityContext:
+                  runAsNonRoot: true
+                  allowPrivilegeEscalation: false
+                  privileged: false
+            =(initContainers):
+              - =(securityContext):
+                  =(allowPrivilegeEscalation): false
+                  =(privileged): false
+
+    - name: block-dangerous-volumes-and-host-namespaces
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["retail-store"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - argocd
+                - monitoring
+                - logging
+                - opentelemetry-system
+      validate:
+        message: "Pods cannot use hostPath volumes, hostNetwork, hostPID, or hostIPC."
+        pattern:
+          spec:
+            =(hostNetwork): false
+            =(hostPID): false
+            =(hostIPC): false
+            =(volumes):
+              - X(hostPath): "null"

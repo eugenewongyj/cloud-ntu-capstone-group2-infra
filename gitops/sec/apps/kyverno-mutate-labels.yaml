@@ -1,0 +1,32 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: inject-governance-labels
+  annotations:
+    policies.kyverno.io/title: Auto-Inject Standard Governance Labels
+    policies.kyverno.io/category: Governance
+spec:
+  background: false
+  rules:
+    - name: add-standard-labels-to-deployments
+      match:
+        any:
+          - resources:
+              kinds: ["Deployment"]
+              namespaces: ["retail-store"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - argocd
+                - monitoring
+                - logging
+                - opentelemetry-system
+      mutate:
+        patchStrategicMerge:
+          metadata:
+            labels:
+              +(team): "group2"
+              +(environment): "prod"
+              +(managed-by): "gitops"
