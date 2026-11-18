@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: capstone-retail-store-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: retail-store.rules
+      rules:
+        - alert: RetailStorePodCrashLooping
+          expr: rate(kube_pod_container_status_restarts_total{namespace="retail-store"}[5m]) > 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.pod }} is restarting in retail-store"
+            description: "Container {{ $labels.container }} in pod {{ $labels.pod }} has restarted repeatedly over the last 5 minutes."
+
+        - alert: RetailStoreHPAMaxedOut
+          expr: |
+            kube_horizontalpodautoscaler_status_current_replicas{namespace="retail-store"}
+            ==
+            kube_horizontalpodautoscaler_spec_max_replicas{namespace="retail-store"}
+          for: 3m
+          labels:
+            severity: warning
+          annotations:
+            summary: "HPA {{ $labels.horizontalpodautoscaler }} reached max replicas"
+            description: "Deployment {{ $labels.horizontalpodautoscaler }} has been pinned at its max replica ceiling for 3 minutes."
+
+        - alert: RetailStoreCriticalVulnerabilityDetected
+          expr: sum by (image_repository, image_tag) (trivy_image_vulnerabilities{namespace="retail-store", severity="Critical"}) > 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Critical CVE found in {{ $labels.image_repository }}:{{ $labels.image_tag }}"
+            description: "Trivy Operator detected {{ $value }} Critical vulnerabilities in a running retail-store container."
