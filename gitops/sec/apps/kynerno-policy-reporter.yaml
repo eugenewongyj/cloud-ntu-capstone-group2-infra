@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: policy-reporter
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: sec-project
+  source:
+    repoURL: https://kyverno.github.io/policy-reporter
+    chart: policy-reporter
+    targetRevision: 3.0.1
+    helm:
+      valuesObject:
+        metrics:
+          enabled: true
+        monitoring:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+            labels:
+              release: kube-prometheus-stack
+          grafana:
+            enabled: true
+            namespace: monitoring
+            folder: Security
+            labels:
+              grafana_dashboard: "1"
+        kyvernoPlugin:
+          enabled: true
+        ui:
+          enabled: true
+        # Optional: forward audit failure logs to Loki
+        loki:
+          host: http://loki-gateway.logging.svc.cluster.local:80
+          minimumPriority: warning
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kyverno
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
