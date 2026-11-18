@@ -27,6 +27,8 @@ alertmanager:
       matchLabels:
         release: kube-prometheus-stack
     alertmanagerConfigNamespaceSelector: {}
+    alertmanagerConfigMatcherStrategy:
+      type: None
 
 # 1. Grafana configuration + Ingress
 grafana:
