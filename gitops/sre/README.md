@@ -439,6 +439,9 @@ flowchart TD
 
     CRDS["prometheus-crds.yaml"]
     STACK["prometheus-stack.yaml"]
+    VALUES["gitops/sre/values/"]
+    PROMVALUES["prometheus.yaml"]
+    GRAFVALUES["grafana-dashboards.yaml"]
     LOKI["loki.yaml"]
     ALLOY["alloy.yaml"]
     MON["monitoring-app.yaml"]
@@ -452,6 +455,9 @@ flowchart TD
 
     DEPLOY --> CRDS
     DEPLOY --> STACK
+    STACK -.->|"helm.valueFiles via $values"| VALUES
+    VALUES --> PROMVALUES
+    VALUES --> GRAFVALUES
     DEPLOY --> LOKI
     DEPLOY --> ALLOY
     DEPLOY --> MON
@@ -644,6 +650,7 @@ flowchart TD
 
     CRDCH["Prometheus Operator CRDs"]
     PROMCH["kube-prometheus-stack"]
+    VALUES["gitops/sre/values/<br/>prometheus.yaml<br/>grafana-dashboards.yaml"]
     LOKICH["Loki Helm chart"]
     ALLOYCH["Alloy Helm chart"]
 
@@ -661,6 +668,8 @@ flowchart TD
 
     CRD --> CRDCH
     PROM --> PROMCH
+    PROM -.->|"helm.valueFiles via $values"| VALUES
+    VALUES -.->|"Helm configuration overrides"| PROMCH
     LOKI --> LOKICH
     ALLOY --> ALLOYCH
 
@@ -685,24 +694,31 @@ The relevant chart-source structure is:
 
 ```yaml
 spec:
-  source:
-    repoURL: https://prometheus-community.github.io/helm-charts
-    chart: kube-prometheus-stack
-    targetRevision: CHART_VERSION_FROM_COMMITTED_FILE
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 93.1.1
+      helm:
+        valueFiles:
+          - $values/gitops/sre/values/prometheus.yaml
+          - $values/gitops/sre/values/grafana-dashboards.yaml
 
-    helm:
-      valuesObject:
-        # Capstone-specific chart values
+    - repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+      targetRevision: HEAD
+      ref: values
 ```
 
-The exact chart version and inline values must be read from the committed Capstone Application.
+The Argo CD Application pins the Helm chart version and references two external values files. The `$values` prefix resolves through the Git source identified by `ref: values`. Helm applies the values files in the declared order, with later values overriding earlier values when keys overlap.
 
 | YAML field | Capstone significance |
 |---|---|
-| `repoURL` | Prometheus Community Helm repository |
-| `chart` | Selects kube-prometheus-stack |
-| `targetRevision` | Pins the Helm chart version |
-| `helm.valuesObject` | Supplies Capstone-specific configuration |
+| `spec.sources` | Defines the Helm chart source and the Git repository containing values |
+| `repoURL` | Identifies the Prometheus Community Helm repository or the Capstone Git repository |
+| `chart` | Selects `kube-prometheus-stack` |
+| `targetRevision: 93.1.1` | Pins the Helm chart version |
+| `helm.valueFiles` | Loads the Prometheus and Grafana overrides from `gitops/sre/values/` |
+| `ref: values` | Makes the Git source available through the `$values` reference |
+| `targetRevision: HEAD` | Selects the configured Git revision; its resolution should be verified before deployment |
 
 Depending on the actual enabled values, the chart can manage Prometheus, Grafana, Alertmanager, Prometheus Operator, Services, and supporting resources.
 
@@ -879,22 +895,29 @@ Changes must be reviewed against the shared Capstone cluster's resource constrai
 
 #### 9.5.8 Inline Helm Values vs. Reference Files
 
-Active observability Helm configurations are maintained in the Argo CD
-Application manifests under `gitops/sre/apps/`.
+Active observability deployment definitions are maintained in the Argo CD
+Application manifests under `gitops/sre/apps/`. Helm configuration may be
+supplied through external values files or inline values, depending on the
+component.
 
-| Component | Active configuration |
-|---|---|
-| Prometheus and Grafana | `gitops/sre/apps/prometheus-stack.yaml` |
-| Loki | `gitops/sre/apps/loki.yaml` |
-| Grafana Alloy | `gitops/sre/apps/alloy.yaml` |
+| Component | Argo CD Application | Helm configuration |
+|---|---|---|
+| Prometheus and Grafana | `gitops/sre/apps/prometheus-stack.yaml` | `gitops/sre/values/prometheus.yaml` and `gitops/sre/values/grafana-dashboards.yaml` |
+| Loki | `gitops/sre/apps/loki.yaml` | Inline Helm values in the Application |
+| Grafana Alloy | `gitops/sre/apps/alloy.yaml` | Inline Helm values in the Application |
 
-Each Application supplies its deployment configuration through
-`spec.source.helm.valuesObject`.
+The Prometheus Application uses `spec.sources` and `helm.valueFiles`.
+Its `$values` references resolve to the Git source declared with
+`ref: values`. The external values files are configuration inputs,
+not standalone Kubernetes resources or Argo CD Applications.
 
-The former standalone Helm values examples have been retired to avoid
-duplicated configuration sources.
+Loki and Grafana Alloy retain their existing inline Helm configuration.
+Their configuration should not be relocated without a separate review
+and validation.
 
-The `gitops/sre/reference/helm/` directory retains supporting documentation.
+The `gitops/sre/reference/helm/` directory retains supporting documentation
+and reference material rather than serving as the active Prometheus
+configuration source.
 
 #### 9.5.9 End-to-End Deployment Relationship
 
@@ -1066,21 +1089,32 @@ No unverified capability should be represented as production-ready.
 ## 11. Repository Structure
 
 ```text
-sre/
+gitops/sre/
 ├── README.md
 │
-├── deploy/
+├── apps/
 │   ├── alloy.yaml
 │   ├── loki.yaml
 │   ├── monitoring-app.yaml
+│   ├── otel-collector.yaml
+│   ├── otel-instrumentation.yaml
+│   ├── otel-operator.yaml
+│   ├── prometheus-adapter.yaml
 │   ├── prometheus-crds.yaml
 │   ├── prometheus-stack.yaml
+│   └── tempo.yaml
+│
+├── values/
+│   ├── grafana-dashboards.yaml
+│   └── prometheus.yaml
+│
+├── projects/
 │   └── sre-project.yaml
 │
 ├── observe/
-│   ├── monitoring.yaml
-│   ├── grafana-dashboard.yaml
 │   ├── capstone-health.json
+│   ├── grafana-dashboard.yaml
+│   ├── monitoring.yaml
 │   └── prometheus-sli-queries.promql
 │
 ├── validate/
@@ -1093,18 +1127,21 @@ sre/
 │
 └── reference/
     ├── helm/
-    │   ├── README.md
-    └── monitoring-README.md
+    │   └── README.md
+    ├── monitoring-README.md
+    └── otel-crds.yaml
 ```
 
 ### Directory Responsibilities
 
 | Directory | Responsibility | Primary artifacts |
 |---|---|---|
-| `deploy/` | Declarative observability deployment | Argo CD Applications and AppProject |
+| `apps/` | Declarative observability deployment definitions | Argo CD Applications and Kubernetes resource manifests |
+| `values/` | External Helm configuration inputs | Prometheus and Grafana dashboard values files |
+| `projects/` | Argo CD project configuration | SRE AppProject manifest |
 | `observe/` | Monitoring and visualisation | Kubernetes YAML, dashboard JSON, PromQL |
-| `validate/` | Reliability testing | k6 scripts, reports, documentation |
-| `reference/` | Supporting technical documentation | Monitoring references and Helm configuration guidance |
+| `validate/` | Reliability testing and evidence | k6 scripts, health reports, validation documentation |
+| `reference/` | Supporting technical documentation and reference manifests | Helm guidance, monitoring references, OpenTelemetry CRD reference |
 
 The central `gitops/` directory remains separate from the SRE workstream and provides shared deployment orchestration.
 

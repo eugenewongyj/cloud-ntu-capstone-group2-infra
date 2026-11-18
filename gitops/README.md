@@ -186,7 +186,7 @@ flowchart TB
     D["discovery.kubernetes.pods.targets<br/>pod discovery for log collection"]
     LOG["loki.source.kubernetes.local_pods<br/>pod log streaming"]
     L["Loki gateway<br/>logging.svc.cluster.local:80"]
-    G["Grafana<br/>prometheus-stack.yaml:37–45<br/>Loki additionalDataSources"]
+    G["Grafana<br/>sre/values/prometheus.yaml:34–40<br/>Loki additionalDataSources"]
   end
   MON -->|"Argo CD renders ServiceMonitor + PrometheusRule YAML"| SM1
   MON -->|"same monitoring.yaml"| SM2
@@ -212,7 +212,7 @@ flowchart TB
 flowchart TB
   subgraph STORAGE["6 — Prometheus persistent storage"]
     SC["infra/apps/gp3-storageclass.yaml<br/>metadata.name: gp3<br/>provisioner: ebs.csi.eks.amazonaws.com<br/>reclaimPolicy: Retain<br/>volumeBindingMode: WaitForFirstConsumer"]
-    V["sre/apps/prometheus-stack.yaml:75–82<br/>storageSpec.volumeClaimTemplate.spec<br/>storageClassName: gp3<br/>accessModes: ReadWriteOnce<br/>requests.storage: 20Gi"]
+    V["sre/values/prometheus.yaml:105–112<br/>storageSpec.volumeClaimTemplate.spec<br/>storageClassName: gp3<br/>accessModes: ReadWriteOnce<br/>requests.storage: 20Gi"]
     PVC["Operator-managed StatefulSet → PVC"]
     CSI["EKS Auto Mode EBS CSI → PV / EBS volume"]
     V -->|"volumeClaimTemplate requests 20Gi"| PVC
@@ -231,14 +231,16 @@ flowchart TB
     RULE -->|"spec.groups[].rules[].expr / for / labels"| P
     P -->|"firing alerts"| AM
   end
-  subgraph TEST["9 — Operator-run load validation"]
-    RUN["sre/validate/run.sh:8,19<br/>CAPSTONE_PRODUCT_PATH required<br/>locust --headless --host TARGET_HOST"]
-    PY["sre/validate/locustfile.py<br/>ProductListingUser(HttpUser)<br/>self.client.get(PRODUCT_PATH)<br/>LoadTestShape / BASE_USERS / SPAWN_RATE"]
+  subgraph TEST["9 — Operator-run k6 load validation"]
+    RUN["sre/validate/k6/run.sh<br/>TARGET_HOST + CAPSTONE_PRODUCT_PATH<br/>LOAD_PROFILE + BASE_USERS"]
+    JS["sre/validate/k6/product-listing.js<br/>ramping-vus / HTTP GET<br/>p95 latency + failure thresholds"]
     APP["Approved Capstone staging HTTP endpoint"]
     MET["Application latency, error rate, request rate"]
-    RUN -->|"-f locustfile.py; --host TARGET_HOST"| PY
-    PY -->|"HTTP GET; product_listing"| APP
+    RW["Optional k6 Prometheus remote write<br/>requires configuration and ingestion validation"]
+    RUN -->|"k6 run product-listing.js"| JS
+    JS -->|"HTTP GET; product_listing"| APP
     APP -->|"generates measurable traffic"| MET
+    JS -.->|"optional metrics export"| RW
   end
 ```
 
@@ -256,14 +258,14 @@ flowchart TB
 | `gitops/root/root-sre.yaml:11–15` | `project: sre-project`, `path: gitops/sre/apps` | Argo CD checks `sre-project` and reads SRE child Applications |
 | `gitops/sre/apps/prometheus-crds.yaml:13–15` | `chart: prometheus-operator-crds`, `targetRevision: 33.0.1` | CRDs required before Prometheus custom resources can be accepted |
 | `gitops/sre/apps/prometheus-stack.yaml:13–15` | `chart: kube-prometheus-stack`, `targetRevision: 93.1.1` | Helm renders Prometheus, Alertmanager, Grafana and related resources |
-| `gitops/sre/apps/prometheus-stack.yaml:73` | `enableRemoteWriteReceiver: true` in the pinned snapshot | Receiver is configured historically, but the consolidated Alloy log-only flow does **not** use it |
+| `gitops/sre/values/prometheus.yaml:104` | `enableRemoteWriteReceiver: true` in the active Helm values | Receiver is enabled in the active Helm values, but the consolidated Alloy log-only flow does **not** use it |
 | `gitops/sre/apps/alloy.yaml` (proposed local revision) | `discovery.kubernetes` → `discovery.relabel` → `loki.source.kubernetes` → `loki.write` | Alloy collects pod logs only; no Alloy Prometheus scrape or remote-write path |
 | `gitops/sre/apps/alloy.yaml` (proposed local revision) | `forward_to = [loki.write.local.receiver]` | Kubernetes pod log pipeline forwards to Loki's `/loki/api/v1/push`; line numbers must be refreshed after merge |
-| `gitops/sre/apps/prometheus-stack.yaml:76–82` | `storageClassName: gp3`, `storage: 20Gi` | Requires matching StorageClass `metadata.name: gp3` |
+| `gitops/sre/values/prometheus.yaml:105–112` | `storageClassName: gp3`, `storage: 20Gi` | Requires matching StorageClass `metadata.name: gp3` |
 | `gitops/infra/apps/gp3-storageclass.yaml` | `provisioner: ebs.csi.eks.amazonaws.com`, `reclaimPolicy: Retain` | EKS Auto Mode EBS CSI provisions persistent volume; retained PV may outlive PVC |
 | `gitops/sre/apps/loki.yaml:23–42` | `storage.type: s3`, `schema: v13` | Declares Loki TSDB object storage in the configured S3 bucket |
 | `gitops/sre/observe/monitoring.yaml` | `namespaceSelector.matchNames: [retail-store]`, `selector.matchLabels`, `endpoints.port: http` | Selects retail Services; matching labels and named ports require app chart verification |
-| `gitops/sre/validate/locustfile.py` | `CAPSTONE_PRODUCT_PATH`, `self.client.get(PRODUCT_PATH)` | Operator-run HTTP traffic to the explicitly approved endpoint |
+| `gitops/sre/validate/k6/product-listing.js:5–38` | `CAPSTONE_PRODUCT_PATH`, `TARGET_HOST`, `http.get`, `ramping-vus`, latency and failure thresholds | k6 generates and validates HTTP traffic against the explicitly approved Capstone staging endpoint |
 
 **Review cautions:** This is a *source-declared architecture*. No cluster runtime health, AWS permissions, actual ServiceMonitor matches, S3 write success, or notification delivery is asserted. The separate retail application repository must be checked before adding exact workload chart line references.
 
@@ -282,19 +284,19 @@ flowchart TB
 | [`gitops/bootstrap/root.yaml:10–19`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/bootstrap/root.yaml#L10-L19) | `targetRevision: main`, `path: gitops/root` | Argo CD discovers four root children | Wrong branch/path changes desired state |
 | [`gitops/root/root-sre.yaml:11–18`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/root/root-sre.yaml#L11-L18) | `project: sre-project`, `path: gitops/sre/apps` | SRE Applications are discovered | Wrong project/path prevents SRE fan-out |
 | [`gitops/sre/apps/prometheus-crds.yaml:13–24`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/prometheus-crds.yaml#L13-L24) | chart `prometheus-operator-crds`, version `33.0.1`, `prune: false` | Installs CRDs for monitoring objects | CRD absence rejects ServiceMonitor/PrometheusRule |
-| [`gitops/sre/apps/prometheus-stack.yaml:13–19`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/prometheus-stack.yaml#L13-L19) | chart `kube-prometheus-stack`, version `93.1.1`, `crds.enabled: false` | Helm deploys monitoring stack, relying on separate CRDs | Chart/CRD incompatibility can break reconciliation |
-| [`gitops/sre/apps/prometheus-stack.yaml:73–82`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/prometheus-stack.yaml#L73-L82) | `enableRemoteWriteReceiver`, `storageClassName: gp3`, `storage: 20Gi` | Prometheus storage and remote write receiver | Missing class / disabled receiver affects PVC or Alloy write |
+| `gitops/sre/apps/prometheus-stack.yaml:14–24`; `gitops/sre/values/prometheus.yaml:1–2` | chart `kube-prometheus-stack`, version `93.1.1`, external `helm.valueFiles`, `crds.enabled: false` | Argo CD renders the monitoring Helm chart using external values; Prometheus Operator CRDs are managed separately | Chart/CRD incompatibility can break reconciliation |
+| `gitops/sre/values/prometheus.yaml:104–112` | `enableRemoteWriteReceiver`, `storageClassName: gp3`, `storage: 20Gi` | Prometheus storage and remote-write receiver | Missing StorageClass affects PVC provisioning; a disabled receiver affects clients configured to use remote write |
 | [`gitops/infra/apps/gp3-storageclass.yaml:4–15`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/infra/apps/gp3-storageclass.yaml#L4-L15) | `gp3`, `ebs.csi.eks.amazonaws.com`, `Retain` | EKS Auto Mode EBS CSI provisions PV | Retained PV may survive claim deletion |
 | [`gitops/sre/apps/alloy.yaml` (historical version)](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/alloy.yaml#L29-L39) | `prometheus.scrape` → `prometheus.remote_write` **(removed in proposed revision)** | Historical Alloy metrics path, **not** part of the consolidated design | Do not restore broad pod scraping; use Operator-managed ServiceMonitors |
 | [`gitops/sre/apps/alloy.yaml` (historical log pipeline)](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/alloy.yaml#L60-L70) | `loki.source.kubernetes` → `loki.write.local` **(retained in proposed revision)** | Pod logs forwarded to Loki gateway | Wrong DNS/port prevents log delivery |
 | [`gitops/sre/apps/loki.yaml:18–42`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/loki.yaml#L18-L42) | `SimpleScalable`, `storage.type: s3`, `schema: v13` | Loki uses configured S3 backend | Missing IAM/bucket access prevents storage |
-| [`gitops/sre/apps/prometheus-stack.yaml:38–45`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/prometheus-stack.yaml#L38-L45) | Grafana `additionalDataSources` Loki URL | Grafana queries Loki gateway | Incorrect Service address breaks logs UI |
+| `gitops/sre/values/prometheus.yaml:34–40` | Grafana `additionalDataSources` Loki URL | Grafana queries Loki gateway | Incorrect Service address breaks logs UI |
 | [`gitops/sre/apps/monitoring-app.yaml:10–19`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/monitoring-app.yaml#L10-L19) | `path: gitops/sre/observe`, `include: '*.yaml'` | Argo CD loads monitoring YAML only | JSON/PromQL files are **not** directly deployed by this Application |
 | [`gitops/sre/observe/monitoring.yaml:8–33`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/observe/monitoring.yaml#L8-L33) | `ServiceMonitor` Actuator selectors / `/actuator/prometheus` | Prometheus Operator configures scrape | Labels, named Service port and endpoint must match |
 | [`gitops/sre/observe/monitoring.yaml:41–65`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/observe/monitoring.yaml#L41-L65) | `ServiceMonitor` `/metrics` | Catalog / checkout scrape intent | Missing metrics endpoint causes scrape errors |
 | [`gitops/sre/observe/monitoring.yaml:73–95`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/observe/monitoring.yaml#L73-L95) | `PrometheusRule`, `CapstoneTargetDown` | Prometheus evaluates `up` expression | No matching series means rule may never fire |
-| [`gitops/sre/validate/run.sh:3–21`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/validate/run.sh#L3-L21) | `TARGET_HOST`, `CAPSTONE_PRODUCT_PATH`, `locust --headless` | Operator-run test against approved endpoint | Wrong URL or path invalidates test |
-| [`gitops/sre/validate/locustfile.py:18–45`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/validate/locustfile.py#L18-L45) | `PRODUCT_PATH`, `HttpUser`, `@task`, `self.client.get` | Generates HTTP requests and validates response | Different path/marker changes workload and success criteria |
+| `gitops/sre/validate/k6/run.sh` | `TARGET_HOST`, `CAPSTONE_PRODUCT_PATH`, `LOAD_PROFILE`, `BASE_USERS`, optional Prometheus remote write | Validates configuration and invokes k6 against an approved endpoint | Incorrect target/path invalidates results; flash-demo requires team approval |
+| `gitops/sre/validate/k6/product-listing.js:5–38` | `ramping-vus`, `http.get`, `CAPSTONE_EXPECT_TEXT`, p95 and failure thresholds | Generates product-listing requests and evaluates response validity | Incorrect path/marker or failed thresholds affects test results |
 
 ## 3. Terraform → AWS → bootstrap (actual code)
 
@@ -643,7 +645,7 @@ spec:
 ## 6. Persistent metrics: exact PVC ↔ StorageClass linkage
 
 
-**Source:** [`gitops/sre/apps/prometheus-stack.yaml:L59–L82`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/prometheus-stack.yaml#L59-L82)
+**Source (active Helm values):** `gitops/sre/values/prometheus.yaml:L88–L112`
 
 ```yaml
         # 2. Prometheus configuration, persistent storage + Ingress
@@ -984,145 +986,190 @@ This is a documentation excerpt of the intended retained pipeline, **not a byte-
 ```
 
 
-**Source:** [`gitops/sre/apps/prometheus-stack.yaml:L37–L57`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/apps/prometheus-stack.yaml#L37-L57)
+**Source (active Grafana Helm values):** `gitops/sre/values/prometheus.yaml:L26–L84`
 
 ```yaml
-        # 1. Grafana configuration + Ingress
-        grafana:
-          enabled: true
-          additionalDataSources:
-            - name: Loki
-              type: loki
-              access: proxy
-              url: http://loki-gateway.logging.svc.cluster.local:80
-              jsonData:
-                maxLines: 1000
-          ingress:
-            enabled: true
-            ingressClassName: nginx
-            annotations:
-              cert-manager.io/cluster-issuer: letsencrypt-staging
-            hosts:
-              - group2-capstone-grafana.sctp-sandbox.com
-            tls:
-              - secretName: grafana-tls
-                hosts:
-                  - group2-capstone-grafana.sctp-sandbox.com
+# 1. Grafana configuration + Ingress
+grafana:
+  enabled: true
+  serviceAccount:
+    create: true
+    name: "kube-prometheus-stack-grafana"
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::255945442255:role/group2-capstone-grafana-cloudwatch-role"
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki-gateway.logging.svc.cluster.local:80
+      jsonData:
+        maxLines: 1000
+    - name: Tempo
+      type: tempo
+      access: proxy
+      url: http://tempo.logging.svc.cluster.local:3200
+      jsonData:
+        tracesToLogsV2:
+          datasourceUid: 'Loki'
+          spanStartTimeShift: '1h'
+          spanEndTimeShift: '1h'
+          filterByTraceID: false
+          filterBySpanID: false
+          customQuery: true
+          query: '{app="%s"} |= "%s"'
+    - name: CloudWatch
+      type: cloudwatch
+      # authType "default" tells Grafana to use the EKS IAM Role
+      jsonData:
+        authType: default
+        defaultRegion: ap-southeast-1
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      #alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-southeast-1:255945442255:certificate/aa61f32b-3ecf-4bff-b963-3c5b9d048bea"
+      alb.ingress.kubernetes.io/backend-protocol: HTTP
+    hosts:
+      - group2-capstone-grafana.sctp-sandbox.com
+
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: 'favourite'
+          orgId: 1
+          folder: 'favourite'
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/favourite
 ```
 
 
 **Metrics (proposed revision):** Prometheus Operator-managed ServiceMonitors handle application metrics scraping. The Alloy `prometheus.scrape` and `prometheus.remote_write` blocks were removed in the local consolidation. The historical Prometheus `enableRemoteWriteReceiver: true` setting is not evidence that Alloy still uses remote write.
 
-**Logs:** Alloy `discovery.kubernetes "pods"` → `discovery.relabel "pod_logs"` → `loki.source.kubernetes "local_pods"` → `loki.write "local"` → Loki gateway `/loki/api/v1/push`. Loki is configured for S3 (`loki.yaml:23–42`), but source alone does not demonstrate pod IAM permissions, bucket existence or successful ingestion. Grafana adds a Loki datasource at `prometheus-stack.yaml:40–45`.
+**Logs:** Alloy `discovery.kubernetes "pods"` → `discovery.relabel "pod_logs"` → `loki.source.kubernetes "local_pods"` → `loki.write "local"` → Loki gateway `/loki/api/v1/push`. Loki is configured for S3 (`loki.yaml:23–42`), but source alone does not demonstrate pod IAM permissions, bucket existence or successful ingestion. Grafana configures its Loki datasource in `gitops/sre/values/prometheus.yaml:34–40`.
 
 
-## 9. Load testing: actual command and Python control flow
+## 9. Load testing: k6 execution and validation
 
+**Active Capstone implementation:**
 
-**Source:** [`gitops/sre/validate/run.sh:L1–L21`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/validate/run.sh#L1-L21)
+- Runner: `gitops/sre/validate/k6/run.sh`
+- Scenario: `gitops/sre/validate/k6/product-listing.js`
+- Instructions: `gitops/sre/validate/README.md`
+- Output: `gitops/sre/validate/k6/results/summary.json`
 
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-: "${TARGET_HOST:?Set TARGET_HOST to an approved test/staging URL, e.g. https://staging.example.com}"
-if [[ ! "$TARGET_HOST" =~ ^https?:// ]]; then
-  echo 'TARGET_HOST must begin with http:// or https://' >&2
-  exit 2
-fi
-: "${CAPSTONE_PRODUCT_PATH:?Set CAPSTONE_PRODUCT_PATH to the verified product listing endpoint path}"
-if [[ ! "$CAPSTONE_PRODUCT_PATH" == /* || "$CAPSTONE_PRODUCT_PATH" == //* ]]; then
-  echo 'CAPSTONE_PRODUCT_PATH must begin with one /' >&2
-  exit 2
-fi
-LOAD_PROFILE="${LOAD_PROFILE:-baseline}"
-case "$LOAD_PROFILE" in baseline|flash-demo|flash-2h) ;; *) echo 'Invalid LOAD_PROFILE' >&2; exit 2;; esac
-OUT="${OUTPUT_DIR:-results/$(date -u +%Y%m%dT%H%M%SZ)-${LOAD_PROFILE}}"
-mkdir -p "$(dirname "$OUT")"
-export LOAD_PROFILE CAPSTONE_PRODUCT_PATH
-printf 'Host: %s\nPath: %s\nProfile: %s\nResults: %s\n' "$TARGET_HOST" "$CAPSTONE_PRODUCT_PATH" "$LOAD_PROFILE" "$OUT"
-locust -f locustfile.py --headless --host "$TARGET_HOST" \
-  --csv "$OUT" --csv-full-history --html "${OUT}.html" \
-  --only-summary
-```
+### 9.1 Execution and safety controls
 
+The runner requires `TARGET_HOST` and `CAPSTONE_PRODUCT_PATH`.
+The target must be an approved staging URL, and the product path
+must begin with a single `/`.
 
-**Source:** [`gitops/sre/validate/locustfile.py:L18–L45`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/validate/locustfile.py#L18-L45)
+`LOAD_PROFILE` defaults to `smoke`; `BASE_USERS` defaults to `1`.
+The JavaScript scenario validates `BASE_USERS` as an integer from
+1 to 10.
 
-```python
-PRODUCT_PATH = os.getenv("CAPSTONE_PRODUCT_PATH", "")
-if not PRODUCT_PATH.startswith("/") or PRODUCT_PATH.startswith("//"):
-    raise ValueError("CAPSTONE_PRODUCT_PATH must be a relative absolute-path beginning with /")
+The `flash-demo` profile requires team approval and
+`CAPSTONE_LOAD_APPROVED=YES`.
 
-BASE_USERS = env_int("BASE_USERS", 5)
-SPAWN_RATE = env_int("SPAWN_RATE", 2)
-PROFILE = os.getenv("LOAD_PROFILE", "baseline").lower()
-if PROFILE not in {"baseline", "flash-demo", "flash-2h"}:
-    raise ValueError("LOAD_PROFILE must be baseline, flash-demo, or flash-2h")
+Do not run load tests against production or shared endpoints
+without explicit authorization.
 
+### 9.2 Load profiles
 
-class ProductListingUser(HttpUser):
-    wait_time = between(1, 3)
+| Profile | Concurrency stages | Duration |
+|---|---|---|
+| `smoke` | Ramp to 1 VU, then 0 | 40 seconds |
+| `baseline` | Ramp to `BASE_USERS`, hold, ramp down | 5 minutes |
+| `flash-demo` | Baseline, 10x, 20x, recovery | 10 minutes |
 
-    @task
-    def product_listing(self):
-        # Group all product listing requests under one metric name.
-        # Fail non-2xx responses and optionally enforce a simple response marker.
-        with self.client.get(PRODUCT_PATH, name="product_listing", catch_response=True,
-                             timeout=10) as response:
-            if not 200 <= response.status_code < 300:
-                response.failure(f"HTTP {response.status_code}")
-            else:
-                marker = os.getenv("CAPSTONE_EXPECT_TEXT", "")
-                if marker and marker not in response.text:
-                    response.failure("Expected product listing marker not found")
-                else:
-                    response.success()
-```
+These are virtual-user concurrency targets, not guaranteed
+requests-per-second multipliers.
 
+### 9.3 JavaScript scenario and thresholds
 
-**Source:** [`gitops/sre/validate/locustfile.py:L48–L68`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/2c38f631246c2cf9361fd1784c8b14b85b76f0ba/gitops/sre/validate/locustfile.py#L48-L68)
+**Source:** `gitops/sre/validate/k6/product-listing.js:5–38`
 
-```python
-class FlashSaleShape(LoadTestShape):
-    """User concurrency stages, not guaranteed RPS multipliers.
+The scenario uses the `ramping-vus` executor and sends HTTP GET
+requests to the configured product-listing endpoint.
 
-    Baseline: 5m by default.
-    Demo: 2m baseline, 3m 10x, 3m 20x, 2m recovery.
-    2h: 5m baseline, 60m 10x, 60m 20x, 5m recovery.
-    """
-    def tick(self):
-        if PROFILE == "baseline":
-            stages = [(300, BASE_USERS)]
-        elif PROFILE == "flash-demo":
-            stages = [(120, BASE_USERS), (300, BASE_USERS * 10),
-                      (480, BASE_USERS * 20), (600, BASE_USERS)]
-        else:
-            stages = [(300, BASE_USERS), (3900, BASE_USERS * 10),
-                      (7500, BASE_USERS * 20), (7800, BASE_USERS)]
-        elapsed = self.get_run_time()
-        for cutoff, users in stages:
-            if elapsed < cutoff:
-                return (users, SPAWN_RATE)
-        return None
-```
+Responses must return HTTP 2xx. When `CAPSTONE_EXPECT_TEXT`
+is configured, the response body must also contain that marker.
 
+The scenario defines these acceptance thresholds:
 
-**Cross-file variables:** `run.sh:3,8` requires `TARGET_HOST` and `CAPSTONE_PRODUCT_PATH`; `run.sh:17` exports `CAPSTONE_PRODUCT_PATH`, which `locustfile.py:18` reads. `run.sh:19` passes `--host "$TARGET_HOST"`; `locustfile.py:36` requests the validated product path. `LOAD_PROFILE` is exported at `run.sh:17` and parsed at `locustfile.py:24–26`; `FlashSaleShape.tick()` maps it to concurrency stages, not guaranteed requests/second. **Do not run against production/shared endpoints without approval.**
+| Metric | Threshold |
+|---|---|
+| HTTP request duration p95 | Below 500 ms |
+| HTTP request failure rate | Below 1% |
+| Custom product-listing failure rate | Below 1% |
 
+Custom metrics include `capstone_product_listing_duration`
+and `capstone_product_listing_failed`.
+
+Each iteration includes a random sleep of approximately
+one to three seconds.
+
+### 9.4 Optional Prometheus remote write
+
+**Source:** `gitops/sre/validate/k6/run.sh`
+
+When `CAPSTONE_K6_REMOTE_WRITE=YES`, the runner requires an
+authorized `K6_PROMETHEUS_RW_SERVER_URL` and enables the k6
+experimental Prometheus remote-write output.
+
+The runner exports `K6_PROMETHEUS_RW_TREND_STATS=p(95)`.
+
+Prometheus has `enableRemoteWriteReceiver: true` configured in
+`gitops/sre/values/prometheus.yaml:104`.
+
+Configuration alone does not establish successful metric
+ingestion or Grafana visibility. Both require live validation.
+
+The optional k6 remote-write path is separate from Alloy's
+log collection and forwarding to Loki.
+
+### 9.5 Results and evidence
+
+The runner writes a k6 summary to `k6/results/summary.json`.
+
+Required validation evidence includes:
+
+1. Approved staging host and verified product-listing route.
+2. Selected load profile and virtual-user configuration.
+3. Observed throughput, p95 latency and failure rates.
+4. Threshold results and product-response checks.
+5. Pod readiness, HPA behaviour and application metrics.
+6. Prometheus ingestion and Grafana queries when remote write
+   is enabled.
+
+**Cross-file configuration:** `run.sh` validates and exports
+`TARGET_HOST`, `CAPSTONE_PRODUCT_PATH`, `LOAD_PROFILE` and
+`BASE_USERS`. `product-listing.js` reads these through `__ENV`,
+generates the selected concurrency stages and validates responses.
+
+See `gitops/sre/validate/README.md` for approved execution
+instructions and additional evidence requirements.
 
 ## 10. Verification and outstanding source gaps
 
 | Question | Source-backed answer | Additional evidence required |
 |---|---|---|
 | Is the cluster EKS Auto Mode? | `eks.tf:20–23` declares it | AWS EKS API / actual node state |
-| Is Prometheus persistent? | `prometheus-stack.yaml:73–82` requests 20Gi gp3 | Bound PVC and actual mounted volume |
+| Is Prometheus persistent? | `gitops/sre/values/prometheus.yaml:105–112` requests 20Gi gp3 | Bound PVC and actual mounted volume |
 | Is Loki configured for S3? | `loki.yaml:23–42` declares S3 backend | Bucket exists, IAM access and successful writes |
 | Are all five retail Services scrapeable? | `monitoring.yaml:8–65` declares selectors and endpoints | External app repo templates and live target status |
 | Are alerts delivered? | `monitoring.yaml` declares rules | Alertmanager route/receiver and delivery test |
 | Is the proposed Alloy log-only change deployed? | The local working-tree change removes Alloy metrics scraping and remote write | Merged commit, rendered Argo CD Application and Alloy runtime configuration |
 | Is Grafana dashboard auto-loaded? | `grafana-dashboard.yaml:1–9` declares labelled ConfigMap | Grafana sidecar/chart settings and UI dashboard presence |
 | Are sync waves sufficient? | Waves exist on Applications | Child Application readiness and CRD establishment |
-| Does Locust test the real product listing? | `locustfile.py` validates configured path | Approved host and verified application route |
+| Does k6 validate the real product listing? | `gitops/sre/validate/k6/product-listing.js:5–38` validates the configured path, HTTP response and optional expected-text marker | Approved staging host, verified application route, executed test summary and threshold results |
 
 **Read-only checks (after confirming AWS account and context):**
 

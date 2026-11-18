@@ -4,9 +4,9 @@
 
 The Capstone observability stack is managed declaratively through **Argo CD, Helm, and Kubernetes**, with Git serving as the source of truth for the desired configuration.
 
-Active Helm configurations are maintained directly within the Argo CD Application manifests under `gitops/sre/apps/`, using `spec.source.helm.valuesObject`.
+Active Helm configurations use two GitOps patterns: Prometheus and Grafana use external Helm values in `gitops/sre/values/`, referenced by the multi-source Argo CD Application `gitops/sre/apps/prometheus-stack.yaml` through `spec.sources[].helm.valueFiles`. Other SRE components, including Loki, Alloy and Tempo, retain inline `spec.source.helm.valuesObject` configuration in their respective Application manifests.
 
-This directory retains supporting documentation rather than duplicate Helm values files.
+This directory retains supporting documentation rather than duplicate deployment configuration. The external values files under `gitops/sre/values/` are active configuration, not retired references.
 
 ## Observability Components
 
@@ -25,8 +25,15 @@ The following diagram illustrates how GitOps manages the observability stack.
 flowchart TB
     G["Capstone Git Repository"] --> A["gitops/sre/apps/"]
     A --> CD["Argo CD Applications"]
-    CD --> V["spec.source.helm.valuesObject"]
-    V --> H["Helm Chart Rendering"]
+
+    G --> EXT["gitops/sre/values/"]
+    EXT --> VF["External Helm valueFiles"]
+    CD -->|"Prometheus multi-source Application"| VF
+
+    CD -->|"Loki / Alloy / Tempo"| VO["Inline Helm valuesObject"]
+
+    VF --> H["Helm Chart Rendering"]
+    VO --> H
     H --> K["Kubernetes Observability Resources"]
 
     K --> P["Prometheus"]
@@ -128,7 +135,7 @@ These declarations do not independently confirm that volumes are bound, S3 permi
 
 ## Configuration Management
 
-- **Single source of truth:** Active Helm settings are maintained within their respective Argo CD Application manifests.
+- **Single source of truth:** Git contains the active Helm configuration. Prometheus/Grafana values are maintained in `gitops/sre/values/` and referenced by `gitops/sre/apps/prometheus-stack.yaml`; other SRE components retain inline values in their respective Argo CD Application manifests.
 - **No duplicated values:** Retired standalone Helm values files must not be treated as active deployment configuration.
 - **Documentation ownership:** This directory retains supporting architecture and configuration references only.
 - **Change control:** Configuration changes should undergo static validation, Helm rendering checks, and pull-request review before merge.
@@ -161,5 +168,6 @@ The following documents provide additional context:
 - **`gitops/README.md`** — End-to-end GitOps architecture, source traceability, and telemetry pipelines.
 - **`gitops/sre/README.md`** — SRE-specific monitoring, logging, alerting, storage, and operational documentation.
 - **`gitops/sre/apps/`** — Active Argo CD Application manifests and inline Helm configuration.
+- **`gitops/sre/values/`** — Active external Prometheus and Grafana Helm values referenced by the multi-source Prometheus Application.
 
 This README serves as a supporting reference for the Capstone observability stack. It is not an independent deployment configuration source.

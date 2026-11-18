@@ -16,8 +16,8 @@ spec:
       targetRevision: 93.1.1
       helm:
         valueFiles:
-          - $values/gitops/sre/apps/prometheus-stack-values.yaml
-          - $values/gitops/sre/apps/grafana-dashboards.yaml
+          - $values/gitops/sre/values/prometheus.yaml
+          - $values/gitops/sre/values/grafana-dashboards.yaml
     # 2. Pull your values files from your GitHub repository (matching your 'gitops' folder structure)
     - repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
       targetRevision: HEAD
