@@ -6,6 +6,7 @@ metadata:
     policies.kyverno.io/title: Operational and FinOps Guardrails (Audit)
     policies.kyverno.io/category: FinOps & Reliability
     policies.kyverno.io/severity: medium
+    argocd.argoproj.io/sync-wave: "5"
 spec:
   validationFailureAction: Audit
   background: true

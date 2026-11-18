@@ -15,18 +15,32 @@ spec:
     targetRevision: 3.9.2
     helm:
       valuesObject:
+        config:
+          preserve: false
         admissionController:
           replicas: 3
+          serviceMonitor:
+            enabled: true
+            additionalLabels:
+              release: kube-prometheus-stack
         backgroundController:
           replicas: 2
-        serviceMonitor:
-          enabled: true
-          additionalLabels:
-            release: kube-prometheus-stack
-        # 'Audit' creates a report. 'Enforce' actively blocks the deployment.
-        # validationFailureAction: Enforce 
-        # podSecurityStandard: baseline
-        # background: true
+          serviceMonitor:
+            enabled: true
+            additionalLabels:
+              release: kube-prometheus-stack
+        reportsController:
+          replicas: 2
+          serviceMonitor:
+            enabled: true
+            additionalLabels:
+              release: kube-prometheus-stack
+        cleanupController:
+          replicas: 2
+          serviceMonitor:
+            enabled: true
+            additionalLabels:
+              release: kube-prometheus-stack
   destination:
     server: https://kubernetes.default.svc
     namespace: kyverno
@@ -38,9 +52,8 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true # Required for Kyverno's large CRDs
   ignoreDifferences:
-    # Prevents Argo CD from infinitely syncing dynamically aggregated roles
+    # Prevents ArgoCD from infinitely syncing dynamically aggregated ClusterRoles
     - group: rbac.authorization.k8s.io
       kind: ClusterRole
-      name: 'kyverno:*'
       jqPathExpressions:
         - .rules

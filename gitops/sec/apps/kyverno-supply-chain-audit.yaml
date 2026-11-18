@@ -6,6 +6,7 @@ metadata:
     policies.kyverno.io/title: Supply Chain and Image Hygiene (Audit)
     policies.kyverno.io/category: Supply Chain Security
     policies.kyverno.io/severity: high
+    argocd.argoproj.io/sync-wave: "5"
 spec:
   validationFailureAction: Audit
   background: true

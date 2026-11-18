@@ -5,6 +5,7 @@ metadata:
   annotations:
     policies.kyverno.io/title: Auto-Inject Standard Governance Labels
     policies.kyverno.io/category: Governance
+    argocd.argoproj.io/sync-wave: "5"
 spec:
   background: false
   rules:
