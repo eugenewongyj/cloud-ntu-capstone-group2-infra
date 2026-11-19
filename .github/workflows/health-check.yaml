@@ -1,0 +1,109 @@
+name: Health Check
+run-name: Health check by ${{ github.actor }}
+
+# Run by hand (e.g. every morning after the 6am teardown / rebuild).
+# Read-only: it only describes and lists things, it never changes anything.
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # OIDC to AWS (no stored keys)
+  contents: read    # read gitops/app/apps/*.yaml for the expected image tags
+
+env:
+  CLUSTER_NAME: group2-capstone-cluster
+  NAMESPACE: retail-store
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.OIDC_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Run health checks
+        shell: bash
+        run: |
+          # GitHub runs bash with -e -o pipefail; turn that off so one failed check
+          # doesn't stop the rest - we track failures ourselves in FAIL instead.
+          set +e +o pipefail
+          FAIL=0
+          REGION="${{ vars.AWS_REGION }}"
+          S="$GITHUB_STEP_SUMMARY"
+
+          ok()  { echo "| ✅ | $1 | $2 |" >> "$S"; echo "OK   - $1: $2"; }
+          bad() { echo "| ❌ | $1 | $2 |" >> "$S"; echo "FAIL - $1: $2"; FAIL=1; }
+
+          echo "## Daily health check - $(TZ=Asia/Singapore date '+%d %b %Y %H:%M') SGT" >> "$S"
+          echo "" >> "$S"
+          echo "| | Check | Result |" >> "$S"
+          echo "|---|---|---|" >> "$S"
+
+          # 1. EKS cluster exists and is ACTIVE
+          STATUS=$(aws eks describe-cluster --name "$CLUSTER_NAME" --region "$REGION" \
+                     --query 'cluster.status' --output text 2>/dev/null || echo "NOT_FOUND")
+          if [ "$STATUS" = "ACTIVE" ]; then ok "EKS cluster" "ACTIVE"; else bad "EKS cluster" "$STATUS"; fi
+
+          if [ "$STATUS" = "ACTIVE" ]; then
+            # 2. Cluster security group exists and has rules (broken by the 6am teardown on 17 + 18 Nov)
+            SG=$(aws eks describe-cluster --name "$CLUSTER_NAME" --region "$REGION" \
+                   --query 'cluster.resourcesVpcConfig.clusterSecurityGroupId' --output text)
+            RULES=$(aws ec2 describe-security-groups --group-ids "$SG" --region "$REGION" \
+                      --query 'SecurityGroups[0].[length(IpPermissions),length(IpPermissionsEgress)]' \
+                      --output text 2>/dev/null || echo "MISSING")
+            IN=$(echo "$RULES" | awk '{print $1}'); OUT=$(echo "$RULES" | awk '{print $2}')
+            if [ "$RULES" = "MISSING" ]; then bad "Cluster SG" "$SG does not exist - cluster rebuild needed"
+            elif [ "${IN:-0}" -gt 0 ] && [ "${OUT:-0}" -gt 0 ]; then ok "Cluster SG" "$SG ($IN in / $OUT out rules)"
+            else bad "Cluster SG" "$SG has $IN in / $OUT out rules - rules stripped"; fi
+
+            # 3. NAT gateway available (private nodes need it to pull images)
+            VPC=$(aws eks describe-cluster --name "$CLUSTER_NAME" --region "$REGION" \
+                    --query 'cluster.resourcesVpcConfig.vpcId' --output text)
+            NAT=$(aws ec2 describe-nat-gateways --region "$REGION" \
+                    --filter "Name=vpc-id,Values=$VPC" "Name=state,Values=available" \
+                    --query 'length(NatGateways)' --output text)
+            if [ "${NAT:-0}" -gt 0 ]; then ok "NAT gateway" "$NAT available"; else bad "NAT gateway" "none available in $VPC"; fi
+
+            # 4-6. Kubernetes checks
+            aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$REGION" > /dev/null
+
+            TOTAL=$(kubectl get nodes --no-headers 2>/dev/null | wc -l)
+            READY=$(kubectl get nodes --no-headers 2>/dev/null | awk '$2=="Ready"' | wc -l)
+            if [ "$TOTAL" -gt 0 ] && [ "$READY" -eq "$TOTAL" ]; then ok "Nodes" "$READY/$TOTAL Ready"
+            else bad "Nodes" "$READY/$TOTAL Ready"; fi
+
+            for APP in carts catalog checkout orders ui; do
+              LINE=$(kubectl get pods -n "$NAMESPACE" --no-headers 2>/dev/null | grep "^$APP-" | head -1)
+              if [ -z "$LINE" ]; then bad "Pod $APP" "no pod found"; continue; fi
+              RDY=$(echo "$LINE" | awk '{print $2}'); PST=$(echo "$LINE" | awk '{print $3}')
+              if [ "$PST" = "Running" ] && [ "${RDY%/*}" = "${RDY#*/}" ]; then ok "Pod $APP" "$RDY $PST"
+              else bad "Pod $APP" "$RDY $PST"; fi
+            done
+
+            NOT_OK=$(kubectl get applications -n argocd --no-headers 2>/dev/null \
+                       | awk '$2!="Synced" || $3!="Healthy" {print $1"("$2"/"$3")"}' | tr '\n' ' ')
+            if [ -z "$NOT_OK" ]; then ok "Argo CD apps" "all Synced/Healthy"
+            else bad "Argo CD apps" "$NOT_OK"; fi
+          fi
+
+          # 7. The image tag Argo expects actually exists in ECR (ECR is wiped by tf-destroy)
+          for SVC in orders checkout; do
+            TAG=$(grep -E '^\s*tag:' "gitops/app/apps/$SVC.yaml" | head -1 | sed -E 's/.*tag:\s*"?([^"]+)"?.*/\1/')
+            if aws ecr describe-images --repository-name "group2-capstone-$SVC" --region "$REGION" \
+                 --image-ids imageTag="$TAG" > /dev/null 2>&1; then
+              ok "ECR $SVC" "tag ${TAG:0:7} present"
+            else
+              bad "ECR $SVC" "tag ${TAG:0:7} missing - re-run the app repo build workflow"
+            fi
+          done
+
+          echo "" >> "$S"
+          if [ "$FAIL" -eq 0 ]; then echo "### ✅ All checks passed" >> "$S"
+          else echo "### ❌ Some checks failed - see table above" >> "$S"; fi
+          exit $FAIL
