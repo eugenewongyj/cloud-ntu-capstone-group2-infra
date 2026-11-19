@@ -159,3 +159,9 @@ variable "opensearch_admin_principals" {
   type        = list(string)
   default     = []
 }
+
+variable "orders_db_engine_version" {
+  description = "Aurora PostgreSQL engine version for Orders"
+  type        = string
+  default     = "16.15"
+}
