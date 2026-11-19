@@ -85,3 +85,33 @@ output "orders_db_endpoint" {
 output "orders_db_secret_arn" {
   value = aws_rds_cluster.orders.master_user_secret[0].secret_arn
 }
+
+# --- External Secrets Operator: read-only access to the orders DB secret ---
+
+# IAM role that ESO's pod will use (via EKS Pod Identity - no access keys)
+resource "aws_iam_role" "eso" {
+  name               = "${var.project_name}-eso-role"
+  assume_role_policy = data.aws_iam_policy_document.orders_pod_trust.json # same "pods.eks.amazonaws.com" trust as orders
+}
+
+# Least privilege: ESO may read ONLY the orders DB secret, nothing else
+resource "aws_iam_role_policy" "eso_read_orders_db" {
+  name = "${var.project_name}-eso-read-orders-db"
+  role = aws_iam_role.eso.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+      Resource = aws_rds_cluster.orders.master_user_secret[0].secret_arn
+    }]
+  })
+}
+
+# Link the role to ESO's Kubernetes service account
+resource "aws_eks_pod_identity_association" "eso" {
+  cluster_name    = module.eks.cluster_name
+  namespace       = "external-secrets"
+  service_account = "external-secrets"
+  role_arn        = aws_iam_role.eso.arn
+}
