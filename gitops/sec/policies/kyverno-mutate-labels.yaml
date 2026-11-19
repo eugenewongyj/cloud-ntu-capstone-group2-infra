@@ -6,6 +6,7 @@ metadata:
     policies.kyverno.io/title: Auto-Inject Standard Governance Labels
     policies.kyverno.io/category: Governance
     argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   background: false
   rules:
