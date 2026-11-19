@@ -9,11 +9,6 @@ spec:
     aws:
       service: SecretsManager
       region: ap-southeast-1
-      auth:
-        jwt:
-          serviceAccountRef:
-            name: external-secrets
-            namespace: external-secrets
 ---
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
