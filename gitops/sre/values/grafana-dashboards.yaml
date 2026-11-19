@@ -33,6 +33,10 @@ grafana:
         gnetId: 23242
         revision: 1
         datasource: Prometheus
+      Alertmanager:
+        gnetId: 9578
+        revision: 4
+        datasource: Prometheus
       Lightweight APM for OpenTelemetry:  
         gnetId: 23243
         revision: 1
