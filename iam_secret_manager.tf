@@ -1,4 +1,4 @@
-data "aws_caller_identity" "current" {}
+#data "aws_caller_identity" "current" {}
 
 # 1. Least-Privilege IAM Policy scoped strictly to the Discord webhook secret
 resource "aws_iam_policy" "eso_sre_discord_webhook" {
