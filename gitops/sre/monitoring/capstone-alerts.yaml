@@ -1,13 +1,16 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: capstone-retail-store-alerts
+  name: capstone-sre-alerts
   namespace: monitoring
   labels:
     release: kube-prometheus-stack
 spec:
   groups:
-    - name: retail-store.rules
+    # =========================================================================
+    # 1. APPLICATION AVAILABILITY & GOLDEN SIGNALS (retail-store)
+    # =========================================================================
+    - name: sre.application.rules
       rules:
         - alert: RetailStorePodCrashLooping
           expr: rate(kube_pod_container_status_restarts_total{namespace="retail-store"}[5m]) > 0
@@ -15,9 +18,38 @@ spec:
           labels:
             severity: critical
           annotations:
-            summary: "Pod {{ $labels.pod }} is restarting in retail-store"
+            summary: "Pod {{ $labels.pod }} is crash-looping in retail-store"
             description: "Container {{ $labels.container }} in pod {{ $labels.pod }} has restarted repeatedly over the last 5 minutes."
 
+        - alert: RetailStoreDeploymentUnavailable
+          expr: |
+            kube_deployment_spec_replicas{namespace="retail-store"}
+            >
+            kube_deployment_status_replicas_available{namespace="retail-store"}
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Deployment {{ $labels.deployment }} has unavailable replicas"
+            description: "Deployment {{ $labels.deployment }} in retail-store has {{ $value }} fewer available replicas than desired for 3 minutes."
+
+        - alert: RetailStorePodNotReady
+          expr: |
+            sum by (pod) (
+              kube_pod_status_phase{namespace="retail-store", phase=~"Pending|Unknown|Failed"}
+            ) > 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.pod }} stuck in non-Running phase"
+            description: "Pod {{ $labels.pod }} in retail-store has been Pending, Failed, or Unknown for more than 3 minutes."
+
+    # =========================================================================
+    # 2. AUTOSCALING & RESOURCE SATURATION (HPA, CPU, Memory)
+    # =========================================================================
+    - name: sre.capacity.rules
+      rules:
         - alert: RetailStoreHPAMaxedOut
           expr: |
             kube_horizontalpodautoscaler_status_current_replicas{namespace="retail-store"}
@@ -28,13 +60,159 @@ spec:
             severity: warning
           annotations:
             summary: "HPA {{ $labels.horizontalpodautoscaler }} reached max replicas"
-            description: "Deployment {{ $labels.horizontalpodautoscaler }} has been pinned at its max replica ceiling for 3 minutes."
+            description: "Deployment {{ $labels.horizontalpodautoscaler }} has been pinned at its max replica ceiling ({{ $value }}) for 3 minutes."
 
+        - alert: RetailStoreHighMemoryUsage
+          expr: |
+            (
+              sum by (pod, container) (container_memory_working_set_bytes{namespace="retail-store", container!="", container!="POD"})
+              /
+              sum by (pod, container) (kube_pod_container_resource_limits{namespace="retail-store", resource="memory"})
+            ) > 0.85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage (>85%) on {{ $labels.pod }}/{{ $labels.container }}"
+            description: "Container {{ $labels.container }} in {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit (risk of OOMKill)."
+
+        - alert: RetailStoreContainerOOMKilled
+          expr: |
+            kube_pod_container_status_last_terminated_reason{namespace="retail-store", reason="OOMKilled"} == 1
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Container {{ $labels.container }} OOMKilled in {{ $labels.pod }}"
+            description: "Container {{ $labels.container }} in retail-store was terminated due to Out Of Memory (OOMKilled)."
+
+    # =========================================================================
+    # 3. DEVSECOPS & COMPLIANCE (Trivy Operator)
+    # =========================================================================
+    - name: sre.security.rules
+      rules:
         - alert: RetailStoreCriticalVulnerabilityDetected
-          expr: sum by (image_repository, image_tag) (trivy_image_vulnerabilities{namespace="retail-store", severity="Critical"}) > 0
+          expr: |
+            sum by (image_repository, image_tag) (
+              trivy_image_vulnerabilities{namespace="retail-store", severity="Critical"}
+            ) > 0
           for: 5m
           labels:
             severity: critical
           annotations:
-            summary: "Critical CVE found in {{ $labels.image_repository }}:{{ $labels.image_tag }}"
-            description: "Trivy Operator detected {{ $value }} Critical vulnerabilities in a running retail-store container."
+            summary: "Critical CVE detected in {{ $labels.image_repository }}:{{ $labels.image_tag }}"
+            description: "Trivy Operator found {{ $value }} Critical vulnerabilities in active retail-store workload image {{ $labels.image_repository }}:{{ $labels.image_tag }}."
+
+        - alert: RetailStoreExposedSecretDetected
+          expr: |
+            sum by (image_repository, image_tag) (
+              trivy_image_exposedsecrets{namespace="retail-store"}
+            ) > 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Exposed secret detected in {{ $labels.image_repository }}:{{ $labels.image_tag }}"
+            description: "Trivy Operator detected {{ $value }} exposed secret(s) embedded inside image {{ $labels.image_repository }}:{{ $labels.image_tag }}."
+
+    # =========================================================================
+    # 4. OBSERVABILITY & TELEMETRY PIPELINE HEALTH (OTel, Prometheus, Nodes)
+    # =========================================================================
+    - name: sre.platform.rules
+      rules:
+        - alert: OTelCollectorDown
+          expr: |
+            absent(kube_deployment_status_replicas_available{namespace="opentelemetry-system", deployment="retail-store-collector-collector"} >= 1)
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "OpenTelemetry Collector is down"
+            description: "Deployment retail-store-collector-collector in opentelemetry-system has 0 available replicas; distributed traces are not reaching Tempo."
+
+        - alert: PrometheusTargetDown
+          expr: up{job=~"kube-state-metrics|node-exporter|prometheus-operator"} == 0
+          for: 3m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Core Prometheus scrape target {{ $labels.job }} is down"
+            description: "Prometheus cannot scrape {{ $labels.instance }} (job={{ $labels.job }}) for more than 3 minutes."
+
+        - alert: KubernetesNodeNotReady
+          expr: kube_node_status_condition{condition="Ready", status="true"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Kubernetes node {{ $labels.node }} is NotReady"
+            description: "EKS worker node {{ $labels.node }} has been in NotReady state for more than 2 minutes."
+
+     # =========================================================================
+    # CPU & MEMORY SATURATION (Containers + EKS Nodes)
+    # =========================================================================
+    - name: sre.compute.rules
+      rules:
+        - alert: RetailStoreHighCPUUsage
+          expr: |
+            (
+              sum by (pod, container) (rate(container_cpu_usage_seconds_total{namespace="retail-store", container!="", container!="POD"}[5m]))
+              /
+              sum by (pod, container) (kube_pod_container_resource_limits{namespace="retail-store", resource="cpu"})
+            ) > 0.85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage (>85%) on {{ $labels.pod }}/{{ $labels.container }}"
+            description: "Container {{ $labels.container }} in {{ $labels.pod }} is consuming {{ $value | humanizePercentage }} of its CPU limit for 5 minutes."
+
+        - alert: RetailStoreCPUThrottlingHigh
+          expr: |
+            (
+              sum by (pod, container) (rate(container_cpu_cfs_throttled_periods_total{namespace="retail-store", container!="", container!="POD"}[5m]))
+              /
+              sum by (pod, container) (rate(container_cpu_cfs_periods_total{namespace="retail-store", container!="", container!="POD"}[5m]))
+            ) > 0.25
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU throttling (>25%) on {{ $labels.pod }}/{{ $labels.container }}"
+            description: "Container {{ $labels.container }} in {{ $labels.pod }} is being CFS-throttled {{ $value | humanizePercentage }} of the time, causing latency spikes."
+
+        - alert: KubernetesNodeHighCPU
+          expr: |
+            (
+              1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))
+            ) > 0.85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "EKS node {{ $labels.instance }} CPU usage > 85%"
+            description: "Worker node {{ $labels.instance }} has sustained {{ $value | humanizePercentage }} CPU utilization for 5 minutes."
+
+        - alert: KubernetesNodeHighMemory
+          expr: |
+            (
+              1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+            ) > 0.85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "EKS node {{ $labels.instance }} memory usage > 85%"
+            description: "Worker node {{ $labels.instance }} has less than 15% available RAM remaining ({{ $value | humanizePercentage }} used)."
+
+        - alert: KubernetesNodeCriticalMemory
+          expr: |
+            (
+              1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+            ) > 0.95
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "EKS node {{ $labels.instance }} memory critical (>95%)"
+            description: "Worker node {{ $labels.instance }} is at {{ $value | humanizePercentage }} memory usage; kubelet pod eviction is imminent."       
