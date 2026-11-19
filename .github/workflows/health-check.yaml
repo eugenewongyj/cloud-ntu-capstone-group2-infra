@@ -95,9 +95,12 @@ jobs:
           # 7. The image tag Argo expects actually exists in ECR (ECR is wiped by tf-destroy)
           for SVC in orders checkout; do
             TAG=$(grep -E '^\s*tag:' "gitops/app/apps/$SVC.yaml" | head -1 | sed -E 's/.*tag:\s*"?([^"]+)"?.*/\1/')
-            if aws ecr describe-images --repository-name "group2-capstone-$SVC" --region "$REGION" \
-                 --image-ids imageTag="$TAG" > /dev/null 2>&1; then
+            ERR=$(aws ecr describe-images --repository-name "group2-capstone-$SVC" --region "$REGION" \
+                    --image-ids imageTag="$TAG" 2>&1 >/dev/null); RC=$?
+            if [ $RC -eq 0 ]; then
               ok "ECR $SVC" "tag ${TAG:0:7} present"
+            elif echo "$ERR" | grep -q "AccessDenied"; then
+              bad "ECR $SVC" "cannot check - pipeline role lacks ecr:DescribeImages"
             else
               bad "ECR $SVC" "tag ${TAG:0:7} missing - re-run the app repo build workflow"
             fi
