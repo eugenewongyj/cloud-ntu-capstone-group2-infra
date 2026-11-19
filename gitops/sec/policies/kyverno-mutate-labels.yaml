@@ -8,6 +8,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "5"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  failurePolicy: Ignore
   background: false
   rules:
     - name: add-standard-labels-to-deployments
