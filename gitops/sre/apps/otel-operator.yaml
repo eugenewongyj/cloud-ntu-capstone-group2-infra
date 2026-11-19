@@ -20,7 +20,8 @@ spec:
             enabled: false
           autoGenerateCert:
             enabled: true
-            recreate: false
+            recreate: true
+            certPeriodDays: 365
         manager:
           resources:
             requests:
