@@ -24,7 +24,7 @@ spec:
           create: true
           name: orders
         # Publish order events to SQS (IAM role via Pod Identity, no credentials stored)
-                app:
+        app:
           messaging:
             provider: sqs
             sqs:
