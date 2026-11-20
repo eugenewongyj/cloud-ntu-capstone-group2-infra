@@ -761,7 +761,8 @@ resource "aws_iam_policy" "infra_waf_policy" {
         Resource = [
           "arn:aws:wafv2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:regional/webacl/${var.prefix}-*/*",
           # AWS managed rule groups used inside the Web ACL
-          "arn:aws:wafv2:${var.aws_region}:aws:regional/managedruleset/*/*"
+          # (AWS checks these against OUR account id, not "aws")
+          "arn:aws:wafv2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:regional/managedruleset/*/*"
         ]
       },
       {
