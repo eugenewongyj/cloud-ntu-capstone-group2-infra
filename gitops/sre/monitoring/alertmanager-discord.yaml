@@ -7,24 +7,23 @@ metadata:
     release: kube-prometheus-stack
 spec:
   route:
-    groupBy: ['namespace', 'alertname', 'severity']
+    groupBy: ['namespace', 'severity']
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 4h
     receiver: 'discord-notifications'
     routes:
-      # Suppress the always-firing Watchdog heartbeat alert
       - matchers:
           - name: alertname
             value: Watchdog
             matchType: '='
         receiver: 'null-receiver'
-      # Fast-track critical alerts
       - matchers:
           - name: severity
             value: critical
             matchType: '='
-        groupWait: 10s
+        groupBy: ['namespace', 'alertname']
+        groupWait: 15s
         repeatInterval: 1h
         receiver: 'discord-notifications'
 
