@@ -131,7 +131,8 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
         Action = [
           "ec2:DeleteVpc", "ec2:ModifyVpcAttribute", "ec2:DeleteSubnet", "ec2:ModifySubnetAttribute",
           "ec2:DeleteRouteTable", "ec2:CreateRoute", "ec2:DeleteRoute", "ec2:AssociateRouteTable",
-          "ec2:DisassociateRouteTable", "ec2:DeleteInternetGateway", "ec2:AttachInternetGateway",
+          "ec2:DisassociateRouteTable", "ec2:ReplaceRouteTableAssociation",
+          "ec2:DeleteInternetGateway", "ec2:AttachInternetGateway",
           "ec2:DetachInternetGateway", "ec2:DeleteNatGateway", "ec2:DeleteSecurityGroup", 
           "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress", 
           "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
