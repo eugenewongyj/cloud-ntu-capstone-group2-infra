@@ -159,7 +159,7 @@ spec:
               sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{namespace="retail-store", container!="", container!="POD"}[5m]))
               /
               sum by (namespace, pod, container) (kube_pod_container_resource_limits{namespace="retail-store", resource="cpu"})
-            ) > 0.85
+            ) > 0.50
           for: 3m
           labels:
             severity: warning
