@@ -6,12 +6,13 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "-2"
-    ingress.kubernetes.io/success-codes: "200-399"
+    alb.ingress.kubernetes.io/group.name: "group2-capstone-shared"
+    alb.ingress.kubernetes.io/group.order: "10"
+    alb.ingress.kubernetes.io/success-codes: "200-399"
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
-    #alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-southeast-1:255945442255:certificate/aa61f32b-3ecf-4bff-b963-3c5b9d048bea"
     alb.ingress.kubernetes.io/backend-protocol: HTTP
 spec:
   ingressClassName: alb
