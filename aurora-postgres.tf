@@ -94,17 +94,28 @@ resource "aws_iam_role" "eso" {
   assume_role_policy = data.aws_iam_policy_document.orders_pod_trust.json # same "pods.eks.amazonaws.com" trust as orders
 }
 
-# Least privilege: ESO may read ONLY the orders DB secret, nothing else
+# Least privilege: ESO may READ only the orders DB secret.
+# ListSecrets (names/tags only, never values) lets ESO find the secret by tag,
+# because the RDS-managed secret name changes on every rebuild.
 resource "aws_iam_role_policy" "eso_read_orders_db" {
   name = "${var.project_name}-eso-read-orders-db"
   role = aws_iam_role.eso.id
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
-      Resource = aws_rds_cluster.orders.master_user_secret[0].secret_arn
-    }]
+    Statement = [
+      {
+        Sid      = "ReadOrdersDbSecretOnly"
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+        Resource = aws_rds_cluster.orders.master_user_secret[0].secret_arn
+      },
+      {
+        Sid      = "FindSecretsByTag"
+        Effect   = "Allow"
+        Action   = ["secretsmanager:ListSecrets"]
+        Resource = "*"
+      }
+    ]
   })
 }
 
