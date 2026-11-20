@@ -95,7 +95,8 @@ resource "aws_iam_role" "eso" {
 }
 
 # Least privilege: ESO may READ only the orders DB secret.
-# ListSecrets (names/tags only, never values) lets ESO find the secret by tag,
+# ListSecrets + BatchGetSecretValue let ESO find the secret by tag. Neither returns values on its
+# own: AWS still checks GetSecretValue per secret, which is scoped to the orders secret only.
 # because the RDS-managed secret name changes on every rebuild.
 resource "aws_iam_role_policy" "eso_read_orders_db" {
   name = "${var.project_name}-eso-read-orders-db"
@@ -112,7 +113,7 @@ resource "aws_iam_role_policy" "eso_read_orders_db" {
       {
         Sid      = "FindSecretsByTag"
         Effect   = "Allow"
-        Action   = ["secretsmanager:ListSecrets"]
+        Action   = ["secretsmanager:ListSecrets", "secretsmanager:BatchGetSecretValue"]
         Resource = "*"
       }
     ]
