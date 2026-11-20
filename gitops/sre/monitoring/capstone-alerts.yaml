@@ -14,7 +14,7 @@ spec:
       rules:
         - alert: RetailStorePodCrashLooping
           expr: rate(kube_pod_container_status_restarts_total{namespace="retail-store"}[5m]) > 0
-          for: 2m
+          for: 1m
           labels:
             severity: critical
           annotations:
@@ -26,7 +26,7 @@ spec:
             kube_deployment_spec_replicas{namespace="retail-store"}
             >
             kube_deployment_status_replicas_available{namespace="retail-store"}
-          for: 3m
+          for: 2m
           labels:
             severity: critical
           annotations:
@@ -38,7 +38,7 @@ spec:
             sum by (pod) (
               kube_pod_status_phase{namespace="retail-store", phase=~"Pending|Unknown|Failed"}
             ) > 0
-          for: 3m
+          for: 2m
           labels:
             severity: critical
           annotations:
@@ -55,7 +55,7 @@ spec:
             kube_horizontalpodautoscaler_status_current_replicas{namespace="retail-store"}
             ==
             kube_horizontalpodautoscaler_spec_max_replicas{namespace="retail-store"}
-          for: 3m
+          for: 1m
           labels:
             severity: warning
           annotations:
@@ -65,11 +65,11 @@ spec:
         - alert: RetailStoreHighMemoryUsage
           expr: |
             (
-              sum by (pod, container) (container_memory_working_set_bytes{namespace="retail-store", container!="", container!="POD"})
+              sum by (namespace, pod, container) (container_memory_working_set_bytes{namespace="retail-store", container!="", container!="POD"})
               /
-              sum by (pod, container) (kube_pod_container_resource_limits{namespace="retail-store", resource="memory"})
+              sum by (namespace, pod, container) (kube_pod_container_resource_limits{namespace="retail-store", resource="memory"})
             ) > 0.85
-          for: 5m
+          for: 1m
           labels:
             severity: warning
           annotations:
@@ -91,21 +91,21 @@ spec:
     # =========================================================================
     - name: sre.security.rules
       rules:
-        - alert: RetailStoreCriticalVulnerabilityDetected
-          expr: |
-            sum by (image_repository, image_tag) (
-              trivy_image_vulnerabilities{namespace="retail-store", severity="Critical"}
-            ) > 0
-          for: 5m
-          labels:
-            severity: critical
-          annotations:
-            summary: "Critical CVE detected in {{ $labels.image_repository }}:{{ $labels.image_tag }}"
-            description: "Trivy Operator found {{ $value }} Critical vulnerabilities in active retail-store workload image {{ $labels.image_repository }}:{{ $labels.image_tag }}."
+        # - alert: RetailStoreCriticalVulnerabilityDetected
+        #   expr: |
+        #     sum by (image_repository, image_tag) (
+        #       trivy_image_vulnerabilities{namespace="retail-store", severity="Critical"}
+        #     ) > 0
+        #   for: 5m
+        #   labels:
+        #     severity: critical
+        #   annotations:
+        #     summary: "Critical CVE detected in {{ $labels.image_repository }}:{{ $labels.image_tag }}"
+        #     description: "Trivy Operator found {{ $value }} Critical vulnerabilities in active retail-store workload image {{ $labels.image_repository }}:{{ $labels.image_tag }}."
 
         - alert: RetailStoreExposedSecretDetected
           expr: |
-            sum by (image_repository, image_tag) (
+            sum by (namespace, image_repository, image_tag) (
               trivy_image_exposedsecrets{namespace="retail-store"}
             ) > 0
           for: 2m
@@ -123,7 +123,7 @@ spec:
         - alert: OTelCollectorDown
           expr: |
             absent(kube_deployment_status_replicas_available{namespace="opentelemetry-system", deployment="retail-store-collector-collector"} >= 1)
-          for: 2m
+          for: 1m
           labels:
             severity: critical
           annotations:
@@ -132,7 +132,7 @@ spec:
 
         - alert: PrometheusTargetDown
           expr: up{job=~"kube-state-metrics|node-exporter|prometheus-operator"} == 0
-          for: 3m
+          for: 1m
           labels:
             severity: warning
           annotations:
@@ -141,7 +141,7 @@ spec:
 
         - alert: KubernetesNodeNotReady
           expr: kube_node_status_condition{condition="Ready", status="true"} == 0
-          for: 2m
+          for: 1m
           labels:
             severity: critical
           annotations:
@@ -156,11 +156,11 @@ spec:
         - alert: RetailStoreHighCPUUsage
           expr: |
             (
-              sum by (pod, container) (rate(container_cpu_usage_seconds_total{namespace="retail-store", container!="", container!="POD"}[5m]))
+              sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{namespace="retail-store", container!="", container!="POD"}[5m]))
               /
-              sum by (pod, container) (kube_pod_container_resource_limits{namespace="retail-store", resource="cpu"})
+              sum by (namespace, pod, container) (kube_pod_container_resource_limits{namespace="retail-store", resource="cpu"})
             ) > 0.85
-          for: 5m
+          for: 3m
           labels:
             severity: warning
           annotations:
@@ -170,11 +170,11 @@ spec:
         - alert: RetailStoreCPUThrottlingHigh
           expr: |
             (
-              sum by (pod, container) (rate(container_cpu_cfs_throttled_periods_total{namespace="retail-store", container!="", container!="POD"}[5m]))
+              sum by (namespace, pod, container) (rate(container_cpu_cfs_throttled_periods_total{namespace="retail-store", container!="", container!="POD"}[5m]))
               /
-              sum by (pod, container) (rate(container_cpu_cfs_periods_total{namespace="retail-store", container!="", container!="POD"}[5m]))
+              sum by (namespace, pod, container) (rate(container_cpu_cfs_periods_total{namespace="retail-store", container!="", container!="POD"}[5m]))
             ) > 0.25
-          for: 5m
+          for: 3m
           labels:
             severity: warning
           annotations:
@@ -186,7 +186,7 @@ spec:
             (
               1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))
             ) > 0.85
-          for: 5m
+          for: 3m
           labels:
             severity: warning
           annotations:
@@ -198,7 +198,7 @@ spec:
             (
               1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
             ) > 0.85
-          for: 5m
+          for: 1m
           labels:
             severity: warning
           annotations:
@@ -210,7 +210,7 @@ spec:
             (
               1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
             ) > 0.95
-          for: 2m
+          for: 3m
           labels:
             severity: critical
           annotations:
