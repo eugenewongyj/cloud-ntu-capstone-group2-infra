@@ -160,6 +160,11 @@ variable "opensearch_admin_principals" {
   default     = []
 }
 
+variable "waf_rate_limit_per_ip" {
+  description = "Max requests one IP may send in 5 minutes before the WAF blocks it"
+  type        = number
+  default     = 2000
+}
 variable "orders_db_engine_version" {
   description = "Aurora PostgreSQL engine version for Orders"
   type        = string
