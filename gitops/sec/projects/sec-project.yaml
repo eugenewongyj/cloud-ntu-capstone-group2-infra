@@ -37,3 +37,5 @@ spec:
       kind: ClusterSecretStore
     - group: kyverno.io
       kind: ClusterPolicy
+    - group: aquasecurity.github.io
+      kind: ClusterComplianceReport
