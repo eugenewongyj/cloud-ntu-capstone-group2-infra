@@ -81,24 +81,30 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# 1. Allocate an Elastic IP for the NAT Gateway
+# High availability: ONE NAT Gateway PER AZ (one in each public subnet).
+# Each private subnet sends internet traffic to the NAT in its OWN AZ,
+# so if one AZ (or its NAT) fails, the other AZ keeps working.
+
+# 1. Allocate one Elastic IP per NAT Gateway
 resource "aws_eip" "nat" {
+  count  = length(var.private_subnet_cidrs)
   domain = "vpc"
 
   tags = {
-    Name        = "${var.project_name}-nat-eip"
+    Name        = "${var.project_name}-nat-eip-${count.index + 1}"
     environment = "common"
     component   = "infra"
   }
 }
 
-# 2. Provision NAT Gateway in the FIRST Public Subnet
+# 2. One NAT Gateway in EACH public subnet (AZ-a and AZ-b)
 resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id # Placed in public subnet 1
+  count         = length(var.private_subnet_cidrs)
+  allocation_id = aws_eip.nat[count.index].id
+  subnet_id     = aws_subnet.public[count.index].id
 
   tags = {
-    Name        = "${var.project_name}-nat-gw"
+    Name        = "${var.project_name}-nat-gw-${count.index + 1}"
     environment = "common"
     component   = "infra"
   }
@@ -107,27 +113,74 @@ resource "aws_nat_gateway" "main" {
   depends_on = [aws_internet_gateway.igw]
 }
 
-# 3. Create Private Route Table
+# 3. One Private Route Table PER AZ, each pointing at its own AZ's NAT
 resource "aws_route_table" "private" {
+  count  = length(var.private_subnet_cidrs)
   vpc_id = aws_vpc.main.id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
+    nat_gateway_id = aws_nat_gateway.main[count.index].id
   }
 
   tags = {
-    Name        = "${var.project_name}-private-rt"
+    Name        = "${var.project_name}-private-rt-${count.index + 1}"
     environment = "common"
     component   = "infra"
   }
 }
 
-# 4. Associate ALL Private Subnets with the Private Route Table
+# 4. Associate each Private Subnet with the Route Table of its own AZ
 resource "aws_route_table_association" "private" {
   count          = length(aws_subnet.private)
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.private[count.index].id
+}
+
+# Keep the EXISTING NAT, EIP and route table (now index [0]) instead of
+# destroying and recreating them when they moved from single to count.
+moved {
+  from = aws_eip.nat
+  to   = aws_eip.nat[0]
+}
+
+moved {
+  from = aws_nat_gateway.main
+  to   = aws_nat_gateway.main[0]
+}
+
+moved {
+  from = aws_route_table.private
+  to   = aws_route_table.private[0]
+}
+
+# Free Gateway VPC Endpoints: traffic to DynamoDB (carts) and S3 (e.g. ECR
+# image layers) stays on the AWS network instead of going through the NAT.
+# This saves NAT data charges and keeps working even if a NAT is down.
+resource "aws_vpc_endpoint" "dynamodb" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.aws_region}.dynamodb"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = aws_route_table.private[*].id
+
+  tags = {
+    Name        = "${var.project_name}-dynamodb-endpoint"
+    environment = "common"
+    component   = "infra"
+  }
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = aws_route_table.private[*].id
+
+  tags = {
+    Name        = "${var.project_name}-s3-endpoint"
+    environment = "common"
+    component   = "infra"
+  }
 }
 
 # 5. Database Subnets (Dynamically mapped across available AZs, isolated from internet)
