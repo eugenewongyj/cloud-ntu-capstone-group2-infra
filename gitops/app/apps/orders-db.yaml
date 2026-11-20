@@ -1,0 +1,24 @@
+# Deploys the orders-db ExternalSecret (gitops/app/manifests/orders-db)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: orders-db
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"   # before the orders app (wave 6)
+spec:
+  project: app-project
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    targetRevision: main
+    path: gitops/app/manifests/orders-db
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: retail-store
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true
