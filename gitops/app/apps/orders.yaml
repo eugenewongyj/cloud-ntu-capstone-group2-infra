@@ -24,7 +24,7 @@ spec:
           create: true
           name: orders
         # Publish order events to SQS (IAM role via Pod Identity, no credentials stored)
-        app:
+                app:
           messaging:
             provider: sqs
             sqs:
@@ -33,6 +33,15 @@ spec:
             rabbitmq:
               secret:
                 create: false   # not using RabbitMQ: don't create an empty secret
+          # Aurora PostgreSQL Serverless v2 (aurora-postgres.tf): orders survive restarts
+          # and are shared by all replicas (needed for autoscaling)
+          persistence:
+            provider: postgres
+            endpoint: "group2-capstone-orders-pg.cluster-cnge2fzfx0rs.ap-southeast-1.rds.amazonaws.com:5432"
+            database: orders
+            secret:
+              create: false     # credentials come from External Secrets (gitops/app/manifests/orders-db)
+              name: orders-db
         # Add the OTel instrumentation annotation here
         podAnnotations:
           # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
