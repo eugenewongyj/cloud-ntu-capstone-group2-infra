@@ -68,8 +68,6 @@ grafana:
     enabled: true
     ingressClassName: alb
     annotations:
-      alb.ingress.kubernetes.io/group.name: "group2-capstone-shared"
-      alb.ingress.kubernetes.io/group.order: "30"
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
