@@ -17,7 +17,7 @@
 
 resource "aws_wafv2_web_acl" "main" {
   name        = "${var.project_name}-web-acl"
-  description = "Protects the shared public ALB (shop, Argo CD, Grafana, Prometheus)"
+  description = "Protects the shared public ALB - shop, Argo CD, Grafana, Prometheus"
   scope       = "REGIONAL" # REGIONAL = for ALBs
 
   default_action {
