@@ -6,14 +6,16 @@ metadata:
 spec:
   description: Workload microservices
   sourceRepos:
-    - '*'
+    - https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    - https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app.git
   destinations:
     - namespace: argocd
       server: https://kubernetes.default.svc
     - namespace: retail-store
       server: https://kubernetes.default.svc
-    - namespace: default
-      server: https://kubernetes.default.svc
-  clusterResourceWhitelist:
-    - group: '*'
-      kind: '*'
+  clusterResourceWhitelist: []
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: ResourceQuota
+    - group: ""
+      kind: LimitRange

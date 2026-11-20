@@ -18,25 +18,32 @@ spec:
         config:
           preserve: false
         admissionController:
-          replicas: 3
+          replicas: 1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           serviceMonitor:
             enabled: true
             additionalLabels:
               release: kube-prometheus-stack
         backgroundController:
-          replicas: 2
+          replicas: 1
           serviceMonitor:
             enabled: true
             additionalLabels:
               release: kube-prometheus-stack
         reportsController:
-          replicas: 2
+          replicas: 1
           serviceMonitor:
             enabled: true
             additionalLabels:
               release: kube-prometheus-stack
         cleanupController:
-          replicas: 2
+          replicas: 1
           serviceMonitor:
             enabled: true
             additionalLabels:

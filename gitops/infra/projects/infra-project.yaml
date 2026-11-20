@@ -6,7 +6,9 @@ metadata:
 spec:
   description: Core cluster infrastructure
   sourceRepos:
-    - '*'
+    - https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    - https://argoproj.github.io/argo-helm
+    - https://kubernetes-sigs.github.io/external-dns/
   destinations:
     - namespace: argocd
       server: https://kubernetes.default.svc
@@ -19,5 +21,24 @@ spec:
     - namespace: ingress-nginx
       server: https://kubernetes.default.svc
   clusterResourceWhitelist:
-    - group: '*'
-      kind: '*'
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: networking.k8s.io
+      kind: IngressClass
+    - group: eks.amazonaws.com
+      kind: IngressClassParams
+    - group: storage.k8s.io
+      kind: StorageClass
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: ResourceQuota
+    - group: ""
+      kind: LimitRange

@@ -14,6 +14,21 @@ spec:
     helm:
       valuesObject:
         controller:
+          resources:
+            requests:
+              cpu: 300m
+              memory: 768Mi
+            limits:
+              cpu: 1000m
+              memory: 1.5Gi
+          readinessProbe:
+            timeoutSeconds: 5
+            periodSeconds: 15
+            failureThreshold: 5
+          livenessProbe:
+            timeoutSeconds: 5
+            periodSeconds: 15
+            failureThreshold: 5
           metrics:
             enabled: true
             serviceMonitor:
@@ -21,6 +36,19 @@ spec:
               additionalLabels:
                 release: kube-prometheus-stack
         server:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            timeoutSeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            timeoutSeconds: 5
+            periodSeconds: 15
           extraArgs:
             - --insecure
           metrics:

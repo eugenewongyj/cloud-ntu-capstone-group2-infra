@@ -26,7 +26,8 @@ spec:
           grafana:
             enabled: true
             namespace: monitoring
-            folder: Security
+            annotation: grafana_folder
+            name: Security
             labels:
               grafana_dashboard: "1"
         kyvernoPlugin:

@@ -1,0 +1,32 @@
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: aws-secrets-manager
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  provider:
+    aws:
+      service: SecretsManager
+      region: ap-southeast-1
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: sre-monitoring-discord-webhook
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: sre-monitoring-discord-webhook
+    creationPolicy: Owner
+  data:
+    - secretKey: url
+      remoteRef:
+        key: group2-capstone/sre/discord-webhook
+        property: url

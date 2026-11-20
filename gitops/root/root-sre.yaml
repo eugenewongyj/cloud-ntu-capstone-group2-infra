@@ -22,24 +22,10 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-    # # ── PREVENTS ARGOCD FROM BREAKING THE WEBHOOK CERTS ──
-    # ignoreDifferences:
-    #   - group: admissionregistration.k8s.io
-    #     kind: MutatingWebhookConfiguration
-    #     jqPathExpressions:
-    #       - '.webhooks[].clientConfig.caBundle'
-    #   - group: admissionregistration.k8s.io
-    #     kind: ValidatingWebhookConfiguration
-    #     jqPathExpressions:
-    #       - '.webhooks[].clientConfig.caBundle'
-  # # ADD IT HERE, directly under spec
-  # ignoreDifferences:
-  #   - group: opentelemetry.io
-  #     kind: OpenTelemetryCollector
-  #     jsonPointers:
-  #       - /spec/config
-  #   - group: ""
-  #     kind: ServiceAccount
-  #     jsonPointers:
-  #       - /metadata/annotations/argocd.argoproj.io~1tracking-id
-  
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

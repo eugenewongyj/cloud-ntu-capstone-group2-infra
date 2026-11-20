@@ -165,3 +165,8 @@ variable "waf_rate_limit_per_ip" {
   type        = number
   default     = 2000
 }
+variable "orders_db_engine_version" {
+  description = "Aurora PostgreSQL engine version for Orders"
+  type        = string
+  default     = "16.15"
+}

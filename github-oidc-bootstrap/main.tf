@@ -96,7 +96,8 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
         Action = [
           "ecr:CreateRepository", "ecr:DeleteRepository", "ecr:DescribeRepositories", "ecr:GetRepositoryPolicy",
           "ecr:SetRepositoryPolicy", "ecr:DeleteRepositoryPolicy", "ecr:PutLifecyclePolicy", "ecr:GetLifecyclePolicy",
-          "ecr:DeleteLifecyclePolicy", "ecr:TagResource", "ecr:UntagResource", "ecr:ListTagsForResource"
+          "ecr:DeleteLifecyclePolicy", "ecr:TagResource", "ecr:UntagResource", "ecr:ListTagsForResource",
+          "ecr:DescribeImages"
         ]
         Resource = "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/*"
       },
