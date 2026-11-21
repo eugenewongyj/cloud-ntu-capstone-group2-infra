@@ -12,13 +12,33 @@ spec:
   source:
     repoURL: https://kubernetes-sigs.github.io/external-dns/
     chart: external-dns
-    targetRevision: 1.23.0 #
+    targetRevision: 1.23.0
     helm:
       valuesObject:
         provider: aws
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: arn:aws:iam::255945442255:role/group2-capstone-external-dns-role
+        env:
+          - name: AWS_ROLE_ARN
+            value: arn:aws:iam::255945442255:role/group2-capstone-external-dns-role
+          - name: AWS_WEB_IDENTITY_TOKEN_FILE
+            value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+          - name: AWS_STS_REGIONAL_ENDPOINTS
+            value: regional
+        extraVolumes:
+          - name: aws-iam-token
+            projected:
+              defaultMode: 420
+              sources:
+                - serviceAccountToken:
+                    audience: sts.amazonaws.com
+                    expirationSeconds: 86400
+                    path: token
+        extraVolumeMounts:
+          - name: aws-iam-token
+            mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount
+            readOnly: true
         domainFilters:
           - sctp-sandbox.com
         sources:
