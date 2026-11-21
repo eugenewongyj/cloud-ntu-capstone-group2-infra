@@ -174,3 +174,13 @@ resource "aws_eks_pod_identity_association" "tempo_s3" {
   service_account = "tempo"
   role_arn        = aws_iam_role.tempo_s3.arn
 }
+
+# ---------------------------------------------------------------------
+# 3. Node Role Attachment for Tempo (EC2 IMDS Fallback)
+# ---------------------------------------------------------------------
+# Tempo's minio-go S3 client does not support EKS Pod Identity natively
+# and falls back to the EKS Auto Mode node IAM role.
+resource "aws_iam_role_policy_attachment" "tempo_s3_node" {
+  role       = module.eks.node_iam_role_name
+  policy_arn = aws_iam_policy.tempo_s3.arn
+}
