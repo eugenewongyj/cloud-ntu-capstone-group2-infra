@@ -14,6 +14,8 @@ spec:
     helm:
       releaseName: ui
       valuesObject:
+        odeSelector:
+          workload-tier: t3-medium-apps
         # Add the OTel instrumentation annotation here
         podAnnotations:
           # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
@@ -21,11 +23,11 @@ spec:
         # Set the Pod Size (Requests and Limits)
         resources:
           requests:
+            cpu: 125m
+            memory: 256Mi
+          limits:
             cpu: 250m
             memory: 512Mi
-          limits:
-            cpu: 500m
-            memory: 1Gi
         autoscaling:
           enabled: true
           minReplicas: 1
