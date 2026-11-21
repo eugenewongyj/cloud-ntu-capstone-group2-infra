@@ -17,18 +17,6 @@ spec:
           annotations:
             eks.amazonaws.com/role-arn: arn:aws:iam::255945442255:role/group2-capstone-tempo-s3-role
 
-        extraEnv:
-          - name: AWS_REGION
-            value: ap-southeast-1
-          - name: AWS_DEFAULT_REGION
-            value: ap-southeast-1
-          - name: AWS_ROLE_ARN
-            value: arn:aws:iam::255945442255:role/group2-capstone-tempo-s3-role
-          - name: AWS_WEB_IDENTITY_TOKEN_FILE
-            value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
-          - name: AWS_STS_REGIONAL_ENDPOINTS
-            value: regional
-
         extraVolumes:
           - name: aws-iam-token
             projected:
@@ -39,12 +27,22 @@ spec:
                     expirationSeconds: 3600
                     path: token
 
-        extraVolumeMounts:
-          - name: aws-iam-token
-            mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount
-            readOnly: true
-
         tempo:
+          extraEnv:
+            - name: AWS_REGION
+              value: ap-southeast-1
+            - name: AWS_DEFAULT_REGION
+              value: ap-southeast-1
+            - name: AWS_ROLE_ARN
+              value: arn:aws:iam::255945442255:role/group2-capstone-tempo-s3-role
+            - name: AWS_WEB_IDENTITY_TOKEN_FILE
+              value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+            - name: AWS_STS_REGIONAL_ENDPOINTS
+              value: regional
+          extraVolumeMounts:
+            - name: aws-iam-token
+              mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount
+              readOnly: true
           storage:
             trace:
               backend: s3
