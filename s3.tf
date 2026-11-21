@@ -22,17 +22,26 @@ resource "aws_iam_policy" "loki_s3" {
     Statement = [
       {
         Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
         Action = [
-          "s3:ListBucket",
-          "s3:PutObject",
-          "s3:GetObject",
-          "s3:DeleteObject"
+          "sts:AssumeRole",
+          "sts:TagSession"
         ]
-        # Scoped specifically to your Loki logs bucket
-        Resource = [
-          aws_s3_bucket.loki_logs.arn,
-          "${aws_s3_bucket.loki_logs.arn}/*"
-        ]
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = module.eks.oidc_provider_arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${module.eks.oidc_provider}:aud" = "sts.amazonaws.com"
+            "${module.eks.oidc_provider}:sub" = "system:serviceaccount:logging:loki"
+          }
+        }
       }
     ]
   })
@@ -98,18 +107,26 @@ resource "aws_iam_policy" "tempo_s3" {
     Statement = [
       {
         Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
         Action = [
-          "s3:ListBucket",
-          "s3:PutObject",
-          "s3:GetObject",
-          "s3:DeleteObject",
-          "s3:GetObjectTagging",
-          "s3:PutObjectTagging"
+          "sts:AssumeRole",
+          "sts:TagSession"
         ]
-        Resource = [
-          aws_s3_bucket.tempo_traces.arn,
-          "${aws_s3_bucket.tempo_traces.arn}/*"
-        ]
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = module.eks.oidc_provider_arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${module.eks.oidc_provider}:aud" = "sts.amazonaws.com"
+            "${module.eks.oidc_provider}:sub" = "system:serviceaccount:logging:tempo"
+          }
+        }
       }
     ]
   })
