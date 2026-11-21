@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: p95-slo-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  p95-slo.json: |-
+    {
+      "title": "Flash Sale p95 Latency & SLO Health",
+      "uid": "p95-slo-health",
+      "timezone": "Asia/Singapore",
+      "refresh": "5s",
+      "schemaVersion": 39,
+      "panels": [
+        {
+          "id": 1,
+          "title": "Product Listing & Storefront p95 Latency (SLO <= 500ms)",
+          "type": "timeseries",
+          "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 0.5 }
+                ]
+              },
+              "custom": { "thresholdsStyle": { "mode": "line+area" } }
+            }
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum by (le, job) (rate(http_server_requests_seconds_bucket{namespace=\"retail-store\"}[1m])))",
+              "legendFormat": "{{job}} p95 (Spring)"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum by (le, service_name) (rate(http_server_request_duration_seconds_bucket{namespace=\"retail-store\"}[1m])))",
+              "legendFormat": "{{service_name}} p95 (OTel)"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "Request Rate (RPS) — Flash Sale Traffic Surge",
+          "type": "timeseries",
+          "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "reqps" } },
+          "targets": [
+            {
+              "expr": "sum by (job) (rate(http_server_requests_seconds_count{namespace=\"retail-store\"}[1m]))",
+              "legendFormat": "{{job}} RPS"
+            },
+            {
+              "expr": "sum by (service_name) (rate(http_server_request_duration_seconds_count{namespace=\"retail-store\"}[1m]))",
+              "legendFormat": "{{service_name}} RPS"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "Availability SLI (% Non-5xx Responses, SLO >= 99.9%)",
+          "type": "stat",
+          "gridPos": { "h": 7, "w": 8, "x": 0, "y": 9 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "decimals": 2,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 99.9 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "100 * (1 - (sum(rate(http_server_requests_seconds_count{namespace=\"retail-store\",status=~\"5..\"}[5m])) or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count{namespace=\"retail-store\"}[5m])), 0.001))",
+              "legendFormat": "Availability %"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "title": "Active Application Pods (HPA Scaling Proof)",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 8, "x": 8, "y": 9 },
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0 } },
+          "targets": [
+            {
+              "expr": "count by (deployment) (kube_pod_info{namespace=\"retail-store\"})",
+              "legendFormat": "{{deployment}}"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "title": "Error & Warning Logs (Loki Live Stream)",
+          "type": "logs",
+          "gridPos": { "h": 7, "w": 8, "x": 16, "y": 9 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "options": { "showTime": true, "wrapLogMessage": true },
+          "targets": [
+            {
+              "expr": "{namespace=\"retail-store\"} |= \"ERROR\"",
+              "refId": "A"
+            }
+          ]
+        }
+      ]
+    }
