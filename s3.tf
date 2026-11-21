@@ -181,34 +181,3 @@ resource "aws_iam_role_policy_attachment" "tempo_s3_node" {
   role       = module.eks.node_iam_role_name
   policy_arn = aws_iam_policy.tempo_s3.arn
 }
-
-# ---------------------------------------------------------------------
-# 4. Tempo IAM Credentials in AWS Secrets Manager (for ExternalSecret)
-# ---------------------------------------------------------------------
-# Bypasses EKS Auto Mode's HttpPutResponseHopLimit=1 IMDS restriction
-# without requiring projected ServiceAccount token volumes.
-resource "aws_iam_user" "tempo_s3" {
-  name = "${var.project_name}-tempo-s3-user"
-}
-
-resource "aws_iam_user_policy_attachment" "tempo_s3" {
-  user       = aws_iam_user.tempo_s3.name
-  policy_arn = aws_iam_policy.tempo_s3.arn
-}
-
-resource "aws_iam_access_key" "tempo_s3" {
-  user = aws_iam_user.tempo_s3.name
-}
-
-resource "aws_secretsmanager_secret" "tempo_s3" {
-  name                    = "${var.project_name}/tempo-s3-credentials"
-  recovery_window_in_days = 0
-}
-
-resource "aws_secretsmanager_secret_version" "tempo_s3" {
-  secret_id = aws_secretsmanager_secret.tempo_s3.id
-  secret_string = jsonencode({
-    access_key = aws_iam_access_key.tempo_s3.id
-    secret_key = aws_iam_access_key.tempo_s3.secret
-  })
-}
