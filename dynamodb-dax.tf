@@ -265,6 +265,7 @@ data "aws_iam_policy_document" "cart_pod_trust" {
       variable = "${module.eks.oidc_provider}:sub"
       values   = ["system:serviceaccount:${var.cart_namespace}:${var.cart_service_account}"]
     }
+  }
 }
 
 resource "aws_iam_role" "cart_pod" {
