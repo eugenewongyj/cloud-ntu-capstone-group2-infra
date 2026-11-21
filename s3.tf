@@ -181,11 +181,3 @@ resource "aws_iam_role_policy_attachment" "tempo_s3_node" {
   role       = module.eks.node_iam_role_name
   policy_arn = aws_iam_policy.tempo_s3.arn
 }
-
-# ---------------------------------------------------------------------
-# 3. Node Role Attachment for Tempo
-# ---------------------------------------------------------------------
-resource "aws_iam_role_policy_attachment" "tempo_s3_node" {
-  role       = module.eks.node_iam_role_name
-  policy_arn = aws_iam_policy.tempo_s3.arn
-}

@@ -4,31 +4,29 @@ metadata:
   name: tempo
   namespace: argocd
 spec:
-  project: sre-project 
+  project: sre-project
   source:
     repoURL: https://grafana-community.github.io/helm-charts
-    chart: tempo # Changed from tempo-distributed
-    targetRevision: 3.2.1 # Latest stable monolithic chart
+    chart: tempo
+    targetRevision: 3.2.1
     helm:
       valuesObject:
         serviceAccount:
           create: true
           name: tempo
-          extraEnvFrom:
-          - secretRef:
-              name: tempo-s3-credentials
-          # annotations:
-          #   eks.amazonaws.com/role-arn: arn:aws:iam::255945442255:role/group2-capstone-tempo-s3-role
-        # In the monolithic chart, storage must be nested under the tempo key
+
+        persistence:
+          enabled: true
+          size: 10Gi
+
         tempo:
           storage:
             trace:
-              backend: s3
-              s3:
-                bucket: "group2-capstone-tempo-traces-ap-southeast-1" 
-                region: "ap-southeast-1"
-                endpoint: "s3.ap-southeast-1.amazonaws.com" # ADD THIS LINE
-                insecure: false
+              backend: local
+              local:
+                path: /var/tempo/traces
+              wal:
+                path: /var/tempo/wal
   destination:
     server: https://kubernetes.default.svc
     namespace: logging
