@@ -8,6 +8,10 @@ spec:
       labels:
         workload-tier: t3-medium-platform
     spec:
+      taints:
+        - key: workload
+          value: t3-medium-platform
+          effect: NoSchedule
       nodeClassRef:
         group: eks.amazonaws.com
         kind: NodeClass

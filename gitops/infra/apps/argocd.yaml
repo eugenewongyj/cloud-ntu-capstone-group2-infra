@@ -13,6 +13,14 @@ spec:
     targetRevision: 10.17.1
     helm:
       valuesObject:
+        global:
+          nodeSelector:
+            workload-tier: t3-medium-platform
+          tolerations:
+            - key: workload
+              operator: Equal
+              value: t3-medium-platform
+              effect: NoSchedule
         controller:
           resources:
             requests:

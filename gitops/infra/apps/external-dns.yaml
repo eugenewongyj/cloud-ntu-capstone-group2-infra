@@ -16,6 +16,13 @@ spec:
     helm:
       valuesObject:
         provider: aws
+        nodeSelector:
+          workload-tier: t3-medium-platform
+        tolerations:
+          - key: workload
+            operator: Equal
+            value: t3-medium-platform
+            effect: NoSchedule
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: arn:aws:iam::255945442255:role/group2-capstone-external-dns-role
