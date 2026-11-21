@@ -20,6 +20,10 @@ spec:
           annotations:
             eks.amazonaws.com/role-arn: arn:aws:iam::255945442255:role/group2-capstone-external-dns-role
         env:
+          - name: AWS_REGION
+            value: ap-southeast-1
+          - name: AWS_DEFAULT_REGION
+            value: ap-southeast-1
           - name: AWS_ROLE_ARN
             value: arn:aws:iam::255945442255:role/group2-capstone-external-dns-role
           - name: AWS_WEB_IDENTITY_TOKEN_FILE
@@ -33,7 +37,7 @@ spec:
               sources:
                 - serviceAccountToken:
                     audience: sts.amazonaws.com
-                    expirationSeconds: 86400
+                    expirationSeconds: 3600
                     path: token
         extraVolumeMounts:
           - name: aws-iam-token
