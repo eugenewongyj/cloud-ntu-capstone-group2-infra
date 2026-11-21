@@ -108,6 +108,13 @@ prometheus:
     webConfig:
       tlsConfig: null
     enableRemoteWriteReceiver: true
+    etention: 3d
+    resources:
+      requests:
+        cpu: 100m
+        memory: 1100Mi
+      limits:
+        memory: 1500Mi
     storageSpec:
       volumeClaimTemplate:
         spec:

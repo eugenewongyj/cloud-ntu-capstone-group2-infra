@@ -44,14 +44,50 @@ spec:
         # Disable the local MinIO sandbox
         minio:
           enabled: false
-          
+
         read:
-          replicas: 2
+          replicas: 1
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
         write:
-          replicas: 2
+          replicas: 1
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 384Mi
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: prometheus
+                    topologyKey: kubernetes.io/hostname
         backend:
           replicas: 1
-
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 384Mi
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: prometheus
+                    topologyKey: kubernetes.io/hostname
+        
   destination:
     server: https://kubernetes.default.svc
     namespace: logging
