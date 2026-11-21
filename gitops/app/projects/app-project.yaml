@@ -13,10 +13,10 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: retail-store
       server: https://kubernetes.default.svc
-  clusterResourceWhitelist: []
-  namespaceResourceBlacklist:
+  clusterResourceWhitelist:
     - group: ""
       kind: Namespace
+  namespaceResourceBlacklist:
     - group: ""
       kind: ResourceQuota
     - group: ""
