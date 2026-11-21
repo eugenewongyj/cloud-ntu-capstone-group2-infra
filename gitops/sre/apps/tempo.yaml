@@ -14,19 +14,45 @@ spec:
         serviceAccount:
           create: true
           name: tempo
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::255945442255:role/group2-capstone-tempo-s3-role
 
-        persistence:
-          enabled: true
-          size: 10Gi
+        extraEnv:
+          - name: AWS_REGION
+            value: ap-southeast-1
+          - name: AWS_DEFAULT_REGION
+            value: ap-southeast-1
+          - name: AWS_ROLE_ARN
+            value: arn:aws:iam::255945442255:role/group2-capstone-tempo-s3-role
+          - name: AWS_WEB_IDENTITY_TOKEN_FILE
+            value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+          - name: AWS_STS_REGIONAL_ENDPOINTS
+            value: regional
+
+        extraVolumes:
+          - name: aws-iam-token
+            projected:
+              defaultMode: 420
+              sources:
+                - serviceAccountToken:
+                    audience: sts.amazonaws.com
+                    expirationSeconds: 3600
+                    path: token
+
+        extraVolumeMounts:
+          - name: aws-iam-token
+            mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount
+            readOnly: true
 
         tempo:
           storage:
             trace:
-              backend: local
-              local:
-                path: /var/tempo/traces
-              wal:
-                path: /var/tempo/wal
+              backend: s3
+              s3:
+                bucket: "group2-capstone-tempo-traces-ap-southeast-1"
+                endpoint: "s3.ap-southeast-1.amazonaws.com"
+                region: "ap-southeast-1"
+                insecure: false
   destination:
     server: https://kubernetes.default.svc
     namespace: logging
