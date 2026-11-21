@@ -17,6 +17,8 @@ spec:
       valuesObject:
         controller:
           type: daemonset
+          tolerations:
+            - operator: Exists
         alloy:
           extraEnv:
             - name: HOST_NODE_NAME

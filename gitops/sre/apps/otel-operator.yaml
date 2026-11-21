@@ -14,7 +14,7 @@ spec:
     helm:
       valuesObject:
         crds:
-          create: true # <-- MUST be 'create: true', NOT 'enabled: true'
+          create: true
         admissionWebhooks:
           certManager:
             enabled: false
@@ -23,6 +23,13 @@ spec:
             recreate: true
             certPeriodDays: 365
         manager:
+          nodeSelector:
+            workload-tier: t3-medium-logging
+          tolerations:
+            - key: workload
+              operator: Equal
+              value: t3-medium-logging
+              effect: NoSchedule
           resources:
             requests:
               cpu: 100m
