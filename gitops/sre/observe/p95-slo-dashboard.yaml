@@ -34,12 +34,16 @@ data:
           },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by (le, job) (rate(http_server_requests_seconds_bucket{namespace=\"retail-store\"}[1m])))",
-              "legendFormat": "{{job}} p95 (Spring)"
+              "expr": "histogram_quantile(0.95, sum by (le, job) (rate(http_server_requests_seconds_bucket{namespace=\"retail-store\"}[5m])))",
+              "legendFormat": "{{job}} p95"
             },
             {
-              "expr": "histogram_quantile(0.95, sum by (le, service_name) (rate(http_server_request_duration_seconds_bucket{namespace=\"retail-store\"}[1m])))",
-              "legendFormat": "{{service_name}} p95 (OTel)"
+              "expr": "histogram_quantile(0.95, sum by (le, job) (rate(http_server_request_duration_seconds_bucket{namespace=\"retail-store\"}[5m])))",
+              "legendFormat": "{{job}} p95"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum by (le, exported_job) (rate(http_server_duration_milliseconds_bucket[5m]))) / 1000",
+              "legendFormat": "{{exported_job}} p95 (OTel)"
             }
           ]
         },
@@ -100,14 +104,14 @@ data:
         },
         {
           "id": 5,
-          "title": "Error & Warning Logs (Loki Live Stream)",
+          "title": "Application Live Logs (Loki Stream)",
           "type": "logs",
           "gridPos": { "h": 7, "w": 8, "x": 16, "y": 9 },
           "datasource": { "type": "loki", "uid": "loki" },
           "options": { "showTime": true, "wrapLogMessage": true },
           "targets": [
             {
-              "expr": "{namespace=\"retail-store\"} |= \"ERROR\"",
+              "expr": "{namespace=\"retail-store\"}",
               "refId": "A"
             }
           ]
