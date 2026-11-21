@@ -89,9 +89,49 @@ output "orders_db_secret_arn" {
 # --- External Secrets Operator: read-only access to the orders DB secret ---
 
 # IAM role that ESO's pod will use (via EKS Pod Identity - no access keys)
+##
+# resource "aws_iam_role" "eso" {
+#   name               = "${var.project_name}-eso-role"
+#   assume_role_policy = data.aws_iam_policy_document.orders_pod_trust.json # same "pods.eks.amazonaws.com" trust as orders
+# }
+
+data "aws_iam_policy_document" "eso_pod_trust" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole", "sts:TagSession"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["pods.eks.amazonaws.com"]
+    }
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [module.eks.oidc_provider_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${module.eks.oidc_provider}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${module.eks.oidc_provider}:sub"
+      values   = ["system:serviceaccount:external-secrets:external-secrets"]
+    }
+  }
+}
+
 resource "aws_iam_role" "eso" {
   name               = "${var.project_name}-eso-role"
-  assume_role_policy = data.aws_iam_policy_document.orders_pod_trust.json # same "pods.eks.amazonaws.com" trust as orders
+  assume_role_policy = data.aws_iam_policy_document.eso_pod_trust.json
 }
 
 # Least privilege: ESO may READ only the orders DB secret.

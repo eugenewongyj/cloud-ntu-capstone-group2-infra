@@ -83,11 +83,12 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
           "eks:UpdateClusterVersion", "eks:CreateNodegroup", "eks:DeleteNodegroup", "eks:DescribeNodegroup",
           "eks:UpdateNodegroupConfig", "eks:UpdateNodegroupVersion", "eks:DescribeUpdate", "eks:TagResource",
           "eks:UntagResource", "eks:ListTagsForResource", "eks:ListClusters", "eks:ListNodegroups",
-          "eks:CreateAddon", "eks:DeleteAddon", "eks:DescribeAddon", "eks:UpdateAddon", "eks:CreateAccessEntry",
-          "eks:DeleteAccessEntry", "eks:DescribeAccessEntry", "eks:AssociateAccessPolicy", "eks:DisassociateAccessPolicy",
+          "eks:CreateAddon", "eks:DeleteAddon", "eks:DescribeAddon", "eks:UpdateAddon",
+          "eks:DescribeAddonVersions", "eks:DescribeAddonConfiguration",
+          "eks:CreateAccessEntry", "eks:DeleteAccessEntry", "eks:DescribeAccessEntry",
+          "eks:AssociateAccessPolicy", "eks:DisassociateAccessPolicy",
           "eks:CreatePodIdentityAssociation", "eks:DeletePodIdentityAssociation", "eks:DescribePodIdentityAssociation",
-          "eks:ListPodIdentityAssociations", "eks:ListAssociatedAccessPolicies", "eks:ListAccessEntries"
-        ]
+          "eks:ListPodIdentityAssociations", "eks:ListAssociatedAccessPolicies", "eks:ListAccessEntries"]
         Resource = "*"
       },
       {
