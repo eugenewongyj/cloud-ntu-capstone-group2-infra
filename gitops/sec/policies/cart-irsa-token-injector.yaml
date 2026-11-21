@@ -1,0 +1,77 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: inject-eks-web-identity-token
+spec:
+  rules:
+    - name: inject-token-for-retail-store
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - retail-store
+              names:
+                - "carts-*"
+                - "orders-*"
+                - "catalog-*"
+      mutate:
+        patchStrategicMerge:
+          spec:
+            volumes:
+              - name: aws-iam-token
+                projected:
+                  defaultMode: 420
+                  sources:
+                    - serviceAccountToken:
+                        audience: sts.amazonaws.com
+                        expirationSeconds: 3600
+                        path: token
+            containers:
+              - (name): "*"
+                env:
+                  - name: AWS_WEB_IDENTITY_TOKEN_FILE
+                    value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+                  - name: AWS_STS_REGIONAL_ENDPOINTS
+                    value: regional
+                volumeMounts:
+                  - name: aws-iam-token
+                    mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount
+                    readOnly: true
+    - name: set-cart-role-arn
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - retail-store
+              names:
+                - "carts-*"
+      mutate:
+        patchStrategicMerge:
+          spec:
+            containers:
+              - name: carts
+                env:
+                  - name: AWS_ROLE_ARN
+                    value: arn:aws:iam::255945442255:role/group2-capstone-cart-pod-role
+    - name: set-orders-role-arn
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - retail-store
+              names:
+                - "orders-*"
+      mutate:
+        patchStrategicMerge:
+          spec:
+            containers:
+              - name: orders
+                env:
+                  - name: AWS_ROLE_ARN
+                    value: arn:aws:iam::255945442255:role/group2-capstone-orders-pod-role
