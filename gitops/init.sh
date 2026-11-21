@@ -8,7 +8,7 @@ CLUSTER_NAME="group2-capstone-cluster"
 AWS_REGION="ap-southeast-1"
 REPO_URL="https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git"
 VALUES_FILE="bootstrap/common-infra/argocd-values.yaml"
-NODECLASS_FILE="bootstrap/common-infra/nodeclass.yaml"
+#NODECLASS_FILE="bootstrap/common-infra/nodeclass.yaml"
 NODEPOOL_FILE="bootstrap/common-infra/nodepool.yaml"
 
 
@@ -24,9 +24,9 @@ aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
 # 2. Apply EKS Auto Mode t3.medium NodePool BEFORE ArgoCD
 echo "--> [2/7] Applying EKS Auto Mode t3.medium NodePool..."
 if [ -f "${NODEPOOL_FILE}" ]; then
-  kubectl apply -f "${NODECLASS_FILE}"
+  #kubectl apply -f "${NODECLASS_FILE}"
   kubectl apply -f "${NODEPOOL_FILE}"
-  kubectl wait --for=condition=Ready nodeclass/default --timeout=60s || true
+  #kubectl wait --for=condition=Ready nodeclass/default --timeout=60s || true
   kubectl wait --for=condition=Ready nodepool/t3-medium-pool --timeout=60s || true
 else
   echo "Warning: ${NODEPOOL_FILE} not found; relying on built-in EKS Auto Mode NodePools."
