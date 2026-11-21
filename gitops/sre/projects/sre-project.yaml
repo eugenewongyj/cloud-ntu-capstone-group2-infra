@@ -5,25 +5,6 @@ metadata:
   namespace: argocd
 spec:
   description: Observability and reliability tooling
-  sourceRepos:
-    - https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
-    - https://grafana.github.io/helm-charts
-    - https://grafana-community.github.io/helm-charts
-    - https://prometheus-community.github.io/helm-charts
-    - https://open-telemetry.github.io/opentelemetry-helm-charts
-  destinations:
-    - namespace: argocd
-      server: https://kubernetes.default.svc
-    - namespace: monitoring
-      server: https://kubernetes.default.svc
-    - namespace: kube-system
-      server: https://kubernetes.default.svc
-    - namespace: logging
-      server: https://kubernetes.default.svc
-    - namespace: opentelemetry-system
-      server: https://kubernetes.default.svc
-    - namespace: retail-store
-      server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: apiextensions.k8s.io
       kind: CustomResourceDefinition
@@ -41,8 +22,31 @@ spec:
       kind: PriorityClass
     - group: ""
       kind: Namespace
+    - group: karpenter.sh
+      kind: NodePool
+    - group: eks.amazonaws.com
+      kind: NodeClass
+  destinations:
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+    - namespace: monitoring
+      server: https://kubernetes.default.svc
+    - namespace: kube-system
+      server: https://kubernetes.default.svc
+    - namespace: logging
+      server: https://kubernetes.default.svc
+    - namespace: opentelemetry-system
+      server: https://kubernetes.default.svc
+    - namespace: retail-store
+      server: https://kubernetes.default.svc
   namespaceResourceBlacklist:
     - group: ""
       kind: ResourceQuota
     - group: ""
       kind: LimitRange
+  sourceRepos:
+    - https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    - https://grafana.github.io/helm-charts
+    - https://grafana-community.github.io/helm-charts
+    - https://prometheus-community.github.io/helm-charts
+    - https://open-telemetry.github.io/opentelemetry-helm-charts
