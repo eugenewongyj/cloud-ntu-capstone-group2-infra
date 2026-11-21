@@ -16,10 +16,38 @@ spec:
     helm:
       valuesObject:
         deploymentMode: SimpleScalable
-        
+
+        global:
+          extraEnv:
+            - name: AWS_REGION
+              value: ap-southeast-1
+            - name: AWS_DEFAULT_REGION
+              value: ap-southeast-1
+            - name: AWS_ROLE_ARN
+              value: arn:aws:iam::255945442255:role/group2-capstone-loki-s3-role
+            - name: AWS_WEB_IDENTITY_TOKEN_FILE
+              value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+            - name: AWS_STS_REGIONAL_ENDPOINTS
+              value: regional
+          extraVolumes:
+            - name: aws-iam-token
+              projected:
+                defaultMode: 420
+                sources:
+                  - serviceAccountToken:
+                      audience: sts.amazonaws.com
+                      expirationSeconds: 3600
+                      path: token
+          extraVolumeMounts:
+            - name: aws-iam-token
+              mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount
+              readOnly: true
+
         loki:
           auth_enabled: false
-          
+          commonConfig:
+            replication_factor: 1
+
           # Configure Loki to use AWS S3 directly
           storage:
             bucketNames:
@@ -40,7 +68,7 @@ spec:
                 index:
                   prefix: index_
                   period: 24h
-                  
+
         # Disable the local MinIO sandbox
         minio:
           enabled: false
@@ -96,7 +124,7 @@ spec:
                       matchLabels:
                         app.kubernetes.io/name: prometheus
                     topologyKey: kubernetes.io/hostname
-        
+
   destination:
     server: https://kubernetes.default.svc
     namespace: logging
