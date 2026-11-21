@@ -22,6 +22,31 @@ resource "aws_iam_policy" "loki_s3" {
     Statement = [
       {
         Effect = "Allow"
+        Action = [
+          "s3:ListBucket",
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject"
+        ]
+        Resource = [
+          aws_s3_bucket.loki_logs.arn,
+          "${aws_s3_bucket.loki_logs.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+# 2. Dedicated NEW IAM Role for Loki
+# Trusts EKS Pod Identity (pods.eks.amazonaws.com)
+resource "aws_iam_role" "loki_s3" {
+  name = "${var.project_name}-loki-s3-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
         Principal = {
           Service = "pods.eks.amazonaws.com"
         }
@@ -47,28 +72,6 @@ resource "aws_iam_policy" "loki_s3" {
   })
 }
 
-# 2. Dedicated NEW IAM Role for Loki
-# Trusts EKS Pod Identity (pods.eks.amazonaws.com)
-resource "aws_iam_role" "loki_s3" {
-  name = "${var.project_name}-loki-s3-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "pods.eks.amazonaws.com"
-        }
-        Action = [
-          "sts:AssumeRole",
-          "sts:TagSession"
-        ]
-      }
-    ]
-  })
-}
-
 # 3. Attach the policy to the new Loki role
 resource "aws_iam_role_policy_attachment" "loki_s3" {
   role       = aws_iam_role.loki_s3.name
@@ -83,7 +86,7 @@ resource "aws_eks_pod_identity_association" "loki_s3" {
   role_arn        = aws_iam_role.loki_s3.arn
 }
 
-
+# ------------------------------------------------------------------------------
 resource "aws_s3_bucket" "tempo_traces" {
   bucket        = "group2-capstone-tempo-traces-ap-southeast-1"
   force_destroy = true
@@ -103,6 +106,32 @@ resource "aws_iam_policy" "tempo_s3" {
   description = "Allows Tempo to read and write trace data to the S3 bucket"
 
   policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket",
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject",
+          "s3:GetObjectTagging",
+          "s3:PutObjectTagging"
+        ]
+        Resource = [
+          aws_s3_bucket.tempo_traces.arn,
+          "${aws_s3_bucket.tempo_traces.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+# 2. Dedicated IAM Role for Tempo (Trusts EKS Pod Identity)
+resource "aws_iam_role" "tempo_s3" {
+  name = "${var.project_name}-tempo-s3-role"
+
+  assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -127,27 +156,6 @@ resource "aws_iam_policy" "tempo_s3" {
             "${module.eks.oidc_provider}:sub" = "system:serviceaccount:logging:tempo"
           }
         }
-      }
-    ]
-  })
-}
-
-# 2. Dedicated IAM Role for Tempo (Trusts EKS Pod Identity)
-resource "aws_iam_role" "tempo_s3" {
-  name = "${var.project_name}-tempo-s3-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "pods.eks.amazonaws.com"
-        }
-        Action = [
-          "sts:AssumeRole",
-          "sts:TagSession"
-        ]
       }
     ]
   })
