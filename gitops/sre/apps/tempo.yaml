@@ -14,6 +14,8 @@ spec:
         serviceAccount:
           create: true
           name: tempo 
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::255945442255:role/group2-capstone-tempo-s3-role
         # In the monolithic chart, storage must be nested under the tempo key
         tempo:
           storage:
