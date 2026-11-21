@@ -19,7 +19,7 @@ module "eks" {
   # -------------------------------------------------------------
   cluster_compute_config = {
     enabled    = true
-    node_pools = ["system" ] # Removes default "general-purpose" so only t3-medium-pool schedules workloads
+    node_pools = ["system"] # Removes default "general-purpose" so only t3-medium-pool schedules workloads
   }
 
   # Grants cluster admin permissions to the role/user executing Terraform
