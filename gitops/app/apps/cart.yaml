@@ -23,6 +23,8 @@ spec:
         serviceAccount:
           create: true
           name: cart-carts
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::255945442255:role/group2-capstone-cart-pod-role
         # Settings come from our own ConfigMap "cart-config" (gitops/app/manifests/cart-config):
         # DynamoDB table + AWS_REGION. The chart has no region setting, and Pod Identity
         # provides credentials but not the region.

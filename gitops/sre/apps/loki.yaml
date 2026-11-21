@@ -45,6 +45,15 @@ spec:
         minio:
           enabled: false
 
+        serviceAccount:
+          create: true
+          name: loki
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::255945442255:role/group2-capstone-loki-s3-role
+
+        chunksCache:
+          enabled: false
+
         read:
           replicas: 1
           resources:
