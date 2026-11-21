@@ -27,11 +27,9 @@ if [ -d "${NODEPOOL_DIR}" ]; then
   kubectl apply -f "${NODEPOOL_DIR}/security-nodepool.yaml"
   kubectl apply -f "${NODEPOOL_DIR}/platform-nodepool.yaml"
   kubectl apply -f "${NODEPOOL_DIR}/apps-nodepool.yaml"
-  kubectl apply -f "bootstrap/common-infra/nodepool.yaml"
 
   kubectl wait --for=condition=Ready nodeclass/default --timeout=60s || true
   for np in \
-    t3-medium-platform-nodepool \
     t3-medium-logging-nodepool \
     t3-medium-monitoring-nodepool \
     t3-medium-security-nodepool \
