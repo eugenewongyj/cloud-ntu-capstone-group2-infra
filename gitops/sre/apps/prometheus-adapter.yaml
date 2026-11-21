@@ -15,6 +15,13 @@ spec:
     targetRevision: 4.11.0
     helm:
       valuesObject:
+        nodeSelector:
+          workload-tier: t3-medium-monitoring
+        tolerations:
+          - key: workload
+            operator: Equal
+            value: t3-medium-monitoring
+            effect: NoSchedule
         prometheus:
           # Points to your kube-prometheus-stack Prometheus service in the monitoring namespace
           url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local
