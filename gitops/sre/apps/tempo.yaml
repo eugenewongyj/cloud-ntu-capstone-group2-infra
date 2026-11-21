@@ -51,7 +51,6 @@ spec:
                 endpoint: "s3.ap-southeast-1.amazonaws.com"
                 region: "ap-southeast-1"
                 insecure: false
-                aws_sdk_v2: true
   destination:
     server: https://kubernetes.default.svc
     namespace: logging
