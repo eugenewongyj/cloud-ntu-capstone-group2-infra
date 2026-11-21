@@ -22,6 +22,13 @@ module "eks" {
     node_pools = ["system"] # Removes default "general-purpose" so only t3-medium-pool schedules workloads
   }
 
+  cluster_addons = {
+    eks-pod-identity-agent = {
+      most_recent    = true
+      before_compute = true
+    }
+  }
+
   # Grants cluster admin permissions to the role/user executing Terraform
   enable_cluster_creator_admin_permissions = true
 

@@ -16,6 +16,8 @@ spec:
   clusterResourceWhitelist: []
   namespaceResourceBlacklist:
     - group: ""
+      kind: Namespace
+    - group: ""
       kind: ResourceQuota
     - group: ""
       kind: LimitRange
