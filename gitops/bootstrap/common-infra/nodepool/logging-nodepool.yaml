@@ -12,6 +12,10 @@ spec:
         group: eks.amazonaws.com
         kind: NodeClass
         name: default
+      taints:
+        - key: workload
+          value: t3-medium-logging
+          effect: NoSchedule
       requirements:
         - key: node.kubernetes.io/instance-type
           operator: In

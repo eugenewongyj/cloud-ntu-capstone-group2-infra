@@ -11,6 +11,14 @@ spec:
     targetRevision: 3.2.1
     helm:
       valuesObject:
+        nodeSelector:
+          workload-tier: t3-medium-logging
+        tolerations:
+          - key: workload
+            operator: Equal
+            value: t3-medium-logging
+            effect: NoSchedule
+
         serviceAccount:
           create: true
           name: tempo
