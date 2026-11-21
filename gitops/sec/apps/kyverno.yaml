@@ -19,6 +19,13 @@ spec:
           preserve: false
         admissionController:
           replicas: 1
+          nodeSelector:
+            workload-tier: t3-medium-security
+          tolerations:
+            - key: workload
+              operator: Equal
+              value: t3-medium-security
+              effect: NoSchedule
           resources:
             requests:
               cpu: 100m
@@ -32,18 +39,39 @@ spec:
               release: kube-prometheus-stack
         backgroundController:
           replicas: 1
+          nodeSelector:
+            workload-tier: t3-medium-security
+          tolerations:
+            - key: workload
+              operator: Equal
+              value: t3-medium-security
+              effect: NoSchedule
           serviceMonitor:
             enabled: true
             additionalLabels:
               release: kube-prometheus-stack
         reportsController:
           replicas: 1
+          nodeSelector:
+            workload-tier: t3-medium-security
+          tolerations:
+            - key: workload
+              operator: Equal
+              value: t3-medium-security
+              effect: NoSchedule
           serviceMonitor:
             enabled: true
             additionalLabels:
               release: kube-prometheus-stack
         cleanupController:
           replicas: 1
+          nodeSelector:
+            workload-tier: t3-medium-security
+          tolerations:
+            - key: workload
+              operator: Equal
+              value: t3-medium-security
+              effect: NoSchedule
           serviceMonitor:
             enabled: true
             additionalLabels:

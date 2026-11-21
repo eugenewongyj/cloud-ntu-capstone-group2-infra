@@ -1,16 +1,4 @@
 apiVersion: external-secrets.io/v1
-kind: ClusterSecretStore
-metadata:
-  name: aws-secrets-manager
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-spec:
-  provider:
-    aws:
-      service: SecretsManager
-      region: ap-southeast-1
----
-apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: sre-monitoring-discord-webhook
