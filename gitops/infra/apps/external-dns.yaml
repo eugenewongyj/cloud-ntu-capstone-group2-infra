@@ -16,6 +16,9 @@ spec:
     helm:
       valuesObject:
         provider: aws
+        serviceAccount:
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::255945442255:role/group2-capstone-external-dns-role
         domainFilters:
           - sctp-sandbox.com
         sources:

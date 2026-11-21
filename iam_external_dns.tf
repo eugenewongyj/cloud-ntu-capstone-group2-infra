@@ -25,8 +25,7 @@ resource "aws_iam_policy" "external_dns" {
   })
 }
 
-# 2. Dedicated NEW IAM Role for ExternalDNS
-# Trusts EKS Pod Identity (pods.eks.amazonaws.com)
+# 2. Dedicated IAM Role for ExternalDNS (Trusts EKS Pod Identity + IRSA OIDC)
 resource "aws_iam_role" "external_dns" {
   name = "${var.project_name}-external-dns-role"
 
@@ -42,6 +41,19 @@ resource "aws_iam_role" "external_dns" {
           "sts:AssumeRole",
           "sts:TagSession"
         ]
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = module.eks.oidc_provider_arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${module.eks.oidc_provider}:aud" = "sts.amazonaws.com"
+            "${module.eks.oidc_provider}:sub" = "system:serviceaccount:external-dns:external-dns"
+          }
+        }
       }
     ]
   })
