@@ -21,6 +21,13 @@ kubelet:
 alertmanager:
   enabled: true
   alertmanagerSpec:
+    nodeSelector:
+      workload-tier: t3-medium-monitoring
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: t3-medium-monitoring
+        effect: NoSchedule
     webConfig:
       tlsConfig: null
     alertmanagerConfigSelector:
@@ -33,6 +40,13 @@ alertmanager:
 # 1. Grafana configuration + Ingress
 grafana:
   enabled: true
+  nodeSelector:
+    workload-tier: t3-medium-monitoring
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: t3-medium-monitoring
+      effect: NoSchedule
   serviceAccount:
     create: true
     name: "kube-prometheus-stack-grafana"
@@ -105,10 +119,17 @@ prometheus:
     # hosts:
     #   - group2-capstone-prometheus.sctp-sandbox.com
   prometheusSpec:
+    nodeSelector:
+      workload-tier: t3-medium-monitoring
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: t3-medium-monitoring
+        effect: NoSchedule
     webConfig:
       tlsConfig: null
     enableRemoteWriteReceiver: true
-    etention: 3d
+    retention: 3d
     resources:
       requests:
         cpu: 100m
@@ -123,3 +144,24 @@ prometheus:
           resources:
             requests:
               storage: 20Gi
+prometheusOperator:
+  nodeSelector:
+    workload-tier: t3-medium-monitoring
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: t3-medium-monitoring
+      effect: NoSchedule
+
+kube-state-metrics:
+  nodeSelector:
+    workload-tier: t3-medium-monitoring
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: t3-medium-monitoring
+      effect: NoSchedule
+
+prometheus-node-exporter:
+  tolerations:
+    - operator: Exists
