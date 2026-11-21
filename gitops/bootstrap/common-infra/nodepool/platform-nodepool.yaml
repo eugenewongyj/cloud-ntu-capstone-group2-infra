@@ -30,8 +30,8 @@ spec:
           values:
             - on-demand
   limits:
-    cpu: "3"
-    memory: 12Gi
+    cpu: "2"
+    memory: 4Gi
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
     consolidateAfter: 30s

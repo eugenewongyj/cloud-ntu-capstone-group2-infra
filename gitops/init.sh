@@ -8,9 +8,7 @@ CLUSTER_NAME="group2-capstone-cluster"
 AWS_REGION="ap-southeast-1"
 REPO_URL="https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git"
 VALUES_FILE="bootstrap/common-infra/argocd-values.yaml"
-#NODECLASS_FILE="bootstrap/common-infra/nodeclass.yaml"
-NODEPOOL_FILE="bootstrap/common-infra/nodepool.yaml"
-
+NODEPOOL_DIR="bootstrap/common-infra/nodepool"
 
 echo "=========================================="
 echo " Starting GitOps Cluster Bootstrap"
@@ -21,24 +19,34 @@ echo "=========================================="
 echo "--> [1/7] Updating kubeconfig..."
 aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
 
-# 2. Apply EKS Auto Mode t3.medium NodePool BEFORE ArgoCD
-echo "--> [2/7] Applying EKS Auto Mode t3.medium NodePool..."
-if [ -f "${NODEPOOL_FILE}" ]; then
-  #kubectl apply -f "${NODECLASS_FILE}"
-  kubectl apply -f "${NODEPOOL_FILE}"
-  #kubectl wait --for=condition=Ready nodeclass/default --timeout=60s || true
-  kubectl wait --for=condition=Ready nodepool/t3-medium-pool --timeout=60s || true
+# 2. Apply EKS Auto Mode Tiered t3.medium NodePools BEFORE ArgoCD
+echo "--> [2/7] Applying EKS Auto Mode tiered t3.medium NodePools..."
+if [ -d "${NODEPOOL_DIR}" ]; then
+  kubectl apply -f "${NODEPOOL_DIR}/logging-nodepool.yaml"
+  kubectl apply -f "${NODEPOOL_DIR}/monitoring-nodepool.yaml"
+  kubectl apply -f "${NODEPOOL_DIR}/security-nodepool.yaml"
+  kubectl apply -f "${NODEPOOL_DIR}/platform-nodepool.yaml"
+  kubectl apply -f "${NODEPOOL_DIR}/apps-nodepool.yaml"
+  kubectl apply -f "bootstrap/common-infra/nodepool.yaml"
+
+  kubectl wait --for=condition=Ready nodeclass/default --timeout=60s || true
+  for np in \
+    t3-medium-platform-nodepool \
+    t3-medium-logging-nodepool \
+    t3-medium-monitoring-nodepool \
+    t3-medium-security-nodepool \
+    t3-medium-platform-nodepool \
+    t3-medium-apps-nodepool; do
+    kubectl wait --for=condition=Ready "nodepool/${np}" --timeout=60s || true
+  done
 else
-  echo "Warning: ${NODEPOOL_FILE} not found; relying on built-in EKS Auto Mode NodePools."
+  echo "Warning: ${NODEPOOL_DIR} not found; relying on built-in EKS Auto Mode NodePools."
 fi
 
-# # 3. Deploy default gp3 StorageClass & Pre-create core namespaces
-# echo "--> [3/7] Applying gp3 StorageClass and pre-creating argocd namespace..."
-# if [ -f "bootstrap/common-infra/gp3.yaml" ]; then
-#   kubectl apply -f bootstrap/common-infra/gp3.yaml
-# fi
+# 3.  Pre-create core namespaces
+echo "--> [3/7] Applying pre-creating core namespaces..."
 
-for ns in argocd; do
+for ns in argocd ; do
   kubectl create namespace "${ns}" --dry-run=client -o yaml | kubectl apply -f -
 done
 
