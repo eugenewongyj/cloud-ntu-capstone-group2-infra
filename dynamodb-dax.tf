@@ -245,6 +245,26 @@ data "aws_iam_policy_document" "cart_pod_trust" {
       identifiers = ["pods.eks.amazonaws.com"]
     }
   }
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [module.eks.oidc_provider_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${module.eks.oidc_provider}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${module.eks.oidc_provider}:sub"
+      values   = ["system:serviceaccount:${var.cart_namespace}:${var.cart_service_account}"]
+    }
 }
 
 resource "aws_iam_role" "cart_pod" {
