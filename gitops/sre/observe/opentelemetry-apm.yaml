@@ -76,7 +76,7 @@ data:
               "expr": "sum(traces_span_metrics_duration_milliseconds_count{job=\"retail-store-collector-collector\", span_kind=\"SPAN_KIND_SERVER\", service_name=\"$app\", span_name=~\"$route\"}) by(service_name)",
               "instant": true,
               "legendFormat": "{{service_name}}",
-              "range": true,
+              "range": false,
               "refId": "A"
             }
           ],
@@ -132,7 +132,7 @@ data:
               "format": "time_series",
               "instant": true,
               "legendFormat": "Success (OK)",
-              "range": true,
+              "range": false,
               "refId": "OK"
             },
             {
@@ -142,7 +142,7 @@ data:
               "format": "time_series",
               "instant": true,
               "legendFormat": "Errors",
-              "range": true,
+              "range": false,
               "refId": "ERR"
             }
           ],
