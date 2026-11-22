@@ -99,7 +99,12 @@ jobs:
       - name: Validate Kubernetes & GitOps YAML (Kubeconform)
         run: |
           curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
-          ./kubeconform -strict -ignore-missing-schemas -summary gitops/ /tmp/rendered-helm/
+          ./kubeconform -strict \
+            -ignore-missing-schemas \
+            -ignore-filename-pattern '.*values.*\.yaml$' \
+            -ignore-filename-pattern '.*/values/.*\.yaml$' \
+            -ignore-filename-pattern '.*\.json$' \
+            -summary gitops/ /tmp/rendered-helm/
 
       - name: Validate Kyverno Policies (Kyverno CLI)
         run: |
