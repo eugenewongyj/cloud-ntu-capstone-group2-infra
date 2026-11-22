@@ -21,18 +21,29 @@ jobs:
 
       - name: Auto-Tag Cluster-Owned Untagged Resources & Alert
         run: |
-          # Find untagged resources carrying EKS cluster ownership tags or group2-capstone naming
+          TAGGED_COUNT=$(aws resourcegroupstaggingapi get-resources \
+            --region ap-southeast-1 \
+            --tag-filters "Key=Project,Values=capstone-project-group-02" \
+            --query "length(ResourceTagMappingList)" \
+            --output text)
+
           UNTAGGED_ARNS=$(aws resourcegroupstaggingapi get-resources \
             --region ap-southeast-1 \
             --query "ResourceTagMappingList[?!Tags[?Key=='Project'] && (Tags[?Key=='kubernetes.io/cluster/group2-capstone-cluster'] || contains(ResourceARN, 'group2-capstone'))].ResourceARN" \
             --output text)
 
+          echo "## 🛡️ Pre-Sweep Tag Guard Report (05:30 SGT)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Verified Tagged Resources (`Project=capstone-project-group-02`):** ${TAGGED_COUNT}" >> "$GITHUB_STEP_SUMMARY"
+
           if [ -n "$UNTAGGED_ARNS" ]; then
-            echo "Found untagged cluster resources before 6 AM sweep: $UNTAGGED_ARNS"
+            echo "- **Status:** ⚠️ Auto-tagged untagged cluster resources before 06:00 SGT sweep:" >> "$GITHUB_STEP_SUMMARY"
+            for arn in $UNTAGGED_ARNS; do
+              echo "  - \`${arn}\`" >> "$GITHUB_STEP_SUMMARY"
+            done
             aws resourcegroupstaggingapi tag-resources \
               --region ap-southeast-1 \
               --resource-arn-list $UNTAGGED_ARNS \
               --tags Project=capstone-project-group-02,ManagedBy=TagGuard
           else
-            echo "All cluster-owned resources have Project=capstone-project-group-02."
+            echo "- **Status:** ✅ All cluster-owned resources already carry \`Project=capstone-project-group-02\`." >> "$GITHUB_STEP_SUMMARY"
           fi

@@ -384,6 +384,44 @@ resource "aws_iam_role_policy_attachment" "infra_scoped_attach_part2" {
   policy_arn = aws_iam_policy.infra_scoped_policy_part2.arn
 }
 
+resource "aws_iam_policy" "infra_tagging_guard_policy" {
+  name        = "group2-capstone-infra-deployer-tagging-guard"
+  description = "Allows Resource Groups Tagging API audit and remediation for capstone cluster resources"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "ResourceGroupsTaggingAuditAndRemediate"
+        Effect = "Allow"
+        Action = [
+          "tag:GetResources",
+          "tag:GetTagKeys",
+          "tag:GetTagValues",
+          "tag:TagResources"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "ServiceLevelTaggingForDynamicK8sAssets"
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateTags",
+          "ec2:DescribeTags",
+          "elasticloadbalancing:AddTags",
+          "elasticloadbalancing:DescribeTags"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "infra_tagging_guard_attach" {
+  role       = aws_iam_role.infra_deployer_role.name
+  policy_arn = aws_iam_policy.infra_tagging_guard_policy.arn
+}
+
 # ---------------------------------------------------------------------
 # Separate policy for application messaging (SQS).
 # Kept apart from infra_scoped_policy because IAM managed policies are
