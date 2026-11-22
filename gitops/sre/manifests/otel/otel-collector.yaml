@@ -71,6 +71,11 @@ spec:
           insecure: true
       prometheus:
         endpoint: 0.0.0.0:8889
+      # NEW: Forward native OTel SDK metrics to Prometheus OTLP endpoint
+      otlphttp/prometheus:
+        endpoint: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/otlp
+        tls:
+          insecure: true
     service:
       pipelines:
         traces:
@@ -81,3 +86,8 @@ spec:
           receivers: [spanmetrics]
           processors: [batch]
           exporters: [prometheus]
+        # NEW: Native OTel metrics pipeline for Dashboard 22784
+        metrics/otlp:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlphttp/prometheus]
