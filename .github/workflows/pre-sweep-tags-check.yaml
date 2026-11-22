@@ -24,8 +24,9 @@ jobs:
           TAGGED_COUNT=$(aws resourcegroupstaggingapi get-resources \
             --region ap-southeast-1 \
             --tag-filters "Key=Project,Values=capstone-project-group-02" \
-            --query "length(ResourceTagMappingList)" \
-            --output text)
+            --query "ResourceTagMappingList[*].ResourceARN" \
+            --output text | wc -w | tr -d ' ')
+        
 
           UNTAGGED_ARNS=$(aws resourcegroupstaggingapi get-resources \
             --region ap-southeast-1 \
