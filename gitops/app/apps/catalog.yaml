@@ -17,6 +17,17 @@ spec:
       valuesObject:
         nodeSelector:
           workload-tier: t3-medium-apps
+        # Aurora MySQL Serverless v2 (aurora-mysql.tf) instead of in-memory:
+        # products live in a managed database shared by all replicas.
+        # Same approach as orders -> Aurora PostgreSQL.
+        app:
+          persistence:
+            provider: mysql
+            endpoint: "group2-capstone-aurora-mysql.cluster-cnge2fzfx0rs.ap-southeast-1.rds.amazonaws.com:3306"
+            database: Catalog   # created by aurora-mysql.tf (var.aurora_db_name, capital C)
+            secret:
+              create: false     # credentials come from External Secrets (gitops/app/manifests/catalog-db)
+              name: catalog-db
         # Add the OTel instrumentation annotation here
         podAnnotations:
           # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
