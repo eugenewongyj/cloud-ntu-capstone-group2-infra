@@ -120,7 +120,7 @@ data:
                   "options": {
                     "match": "null",
                     "result": {
-                      "color": "rgb(222, 15, 43)",
+                      "color": "#3274D9",
                       "text": "0"
                     }
                   },
@@ -131,7 +131,7 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "rgb(222, 15, 43)",
+                    "color": "#3274D9",
                     "value": null
                   }
                 ]
@@ -346,6 +346,16 @@ data:
                     }
                   },
                   "type": "special"
+                },
+                {
+                  "options": {
+                    "100": {
+                      "color": "#3274D9",
+                      "index": 1,
+                      "text": "100% (All)"
+                    }
+                  },
+                  "type": "value"
                 }
               ],
               "max": 100,
@@ -514,7 +524,7 @@ data:
                 "uid": "${DS_LOKI}"
               },
               "editorMode": "code",
-              "expr": "sum(count_over_time({namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[$__interval])) by (pod) / $__interval_s",
+              "expr": "topk(10, sum(rate({namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[1m])) by (pod))",
               "legendFormat": "{{pod}}",
               "queryType": "range",
               "refId": "A"
