@@ -37,18 +37,6 @@ grafana:
         gnetId: 9578
         revision: 4
         datasource: Prometheus
-      Logging Dashboard via Loki:
-        gnetId: 12611
-        revision: 2
-        datasource: Loki
-      Loki stack monitoring:  
-        gnetId: 14055
-        revision: 1
-        datasource: 
-          - name: DS_PROMETHEUS
-            value: Prometheus
-          - name: DS_LOKI
-            value: Loki
       OpenTelemetry Collector:
         gnetId: 15983
         revision: 31
@@ -57,3 +45,7 @@ grafana:
         gnetId: 18309
         revision: 2
         datasource: Prometheus
+      Logging Dashboard via Loki:
+        gnetId: 12611
+        revision: 2
+        datasource: Loki
