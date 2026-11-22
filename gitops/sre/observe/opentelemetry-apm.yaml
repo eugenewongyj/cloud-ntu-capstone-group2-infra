@@ -118,7 +118,23 @@ data:
               },
               "unit": "short"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Errors"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 8,
@@ -152,12 +168,12 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_kind=\"SPAN_KIND_SERVER\", http_status_code=~\"^2.*\", span_name=~\"$route\"}) by(http_status_code)",
+              "expr": "sum(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_kind=\"SPAN_KIND_SERVER\", status_code!=\"STATUS_CODE_ERROR\", span_name=~\"$route\"})",
               "format": "time_series",
               "instant": true,
-              "legendFormat": "Http Status 2XX",
+              "legendFormat": "Success (OK)",
               "range": true,
-              "refId": "2XX"
+              "refId": "OK"
             },
             {
               "datasource": {
@@ -166,40 +182,12 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_kind=\"SPAN_KIND_SERVER\", http_status_code=~\"^3.*\", span_name=~\"$route\"}) by(http_status_code)",
+              "expr": "sum(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_kind=\"SPAN_KIND_SERVER\", status_code=\"STATUS_CODE_ERROR\", span_name=~\"$route\"}) or vector(0)",
               "format": "time_series",
               "instant": true,
-              "legendFormat": "Http Status 3XX",
+              "legendFormat": "Errors",
               "range": true,
-              "refId": "3XX"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "sum(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_kind=\"SPAN_KIND_SERVER\", http_status_code=~\"^4.*\", span_name=~\"$route\"}) by(http_status_code)",
-              "format": "time_series",
-              "instant": true,
-              "legendFormat": "Http Status 4XX",
-              "range": true,
-              "refId": "4XX"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "sum(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_kind=\"SPAN_KIND_SERVER\", http_status_code=~\"^5.*\", span_name=~\"$route\"}) by(http_status_code)",
-              "format": "time_series",
-              "instant": true,
-              "legendFormat": "Http Status 5XX",
-              "range": true,
-              "refId": "5XX"
+              "refId": "ERR"
             }
           ],
           "title": "Requests Count",
@@ -434,7 +422,7 @@ data:
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "percentage of HTTP status 5xx in all requests",
+          "description": "percentage of failed spans in all requests",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -499,7 +487,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(traces_span_metrics_duration_milliseconds_count{span_kind=\"SPAN_KIND_SERVER\", service_name=\"$app\", http_status_code=~\"5.*\", span_name=~\"$route\"})/sum(traces_span_metrics_duration_milliseconds_count{span_kind=\"SPAN_KIND_SERVER\", service_name=\"$app\", span_name=~\"$route\"})",
+              "expr": "(sum(traces_span_metrics_duration_milliseconds_count{span_kind=\"SPAN_KIND_SERVER\", service_name=\"$app\", status_code=\"STATUS_CODE_ERROR\", span_name=~\"$route\"}) or vector(0)) / sum(traces_span_metrics_duration_milliseconds_count{span_kind=\"SPAN_KIND_SERVER\", service_name=\"$app\", span_name=~\"$route\"})",
               "instant": false,
               "range": true,
               "refId": "A"
@@ -711,7 +699,7 @@ data:
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "by route and http status code",
+          "description": "by route",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -774,9 +762,9 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sort_desc(traces_span_metrics_duration_milliseconds_sum{span_kind=\"SPAN_KIND_SERVER\", service_name=\"$app\", http_status_code!=\"\", span_name=~\"$route\"} / traces_span_metrics_duration_milliseconds_count{span_kind=\"SPAN_KIND_SERVER\", service_name=\"$app\", http_status_code!=\"\", span_name=~\"$route\"})",
+              "expr": "sort_desc(sum(traces_span_metrics_duration_milliseconds_sum{span_kind=\"SPAN_KIND_SERVER\", service_name=\"$app\", span_name=~\"$route\"}) by (span_name) / sum(traces_span_metrics_duration_milliseconds_count{span_kind=\"SPAN_KIND_SERVER\", service_name=\"$app\", span_name=~\"$route\"}) by (span_name))",
               "instant": true,
-              "legendFormat": "[{{http_status_code}}] {{span_name}}",
+              "legendFormat": "{{span_name}}",
               "range": false,
               "refId": "A"
             }
@@ -918,7 +906,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_name=~\"$route\", span_kind=\"SPAN_KIND_SERVER\"}[3m])*60) by(service_name, http_method, span_name)",
+              "expr": "sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_name=~\"$route\", span_kind=\"SPAN_KIND_SERVER\"}[3m])*60) by(service_name, span_name)",
               "format": "time_series",
               "instant": false,
               "range": true,
@@ -930,7 +918,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "histogram_quantile(0.95, sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"$app\", span_name=~\"$route\", span_kind=\"SPAN_KIND_SERVER\"}[3m])) by (le, service_name, http_method, span_name))",
+              "expr": "histogram_quantile(0.95, sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"$app\", span_name=~\"$route\", span_kind=\"SPAN_KIND_SERVER\"}[3m])) by (le, service_name, span_name))",
               "instant": false,
               "range": true,
               "refId": "PR95"
@@ -942,7 +930,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_name=~\"$route\", span_kind=\"SPAN_KIND_SERVER\", http_status_code!~\"2.*|3.*\"}) by(service_name, http_method, span_name) / sum(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_name=~\"$route\", span_kind=\"SPAN_KIND_SERVER\"}) by(service_name, http_method, span_name)",
+              "expr": "(sum(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_name=~\"$route\", span_kind=\"SPAN_KIND_SERVER\", status_code=\"STATUS_CODE_ERROR\"}) by(service_name, span_name) or sum(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_name=~\"$route\", span_kind=\"SPAN_KIND_SERVER\"}) by(service_name, span_name) * 0) / sum(traces_span_metrics_duration_milliseconds_count{service_name=\"$app\", span_name=~\"$route\", span_kind=\"SPAN_KIND_SERVER\"}) by(service_name, span_name)",
               "format": "time_series",
               "instant": false,
               "range": true,
@@ -968,30 +956,22 @@ data:
                 "includeByName": {},
                 "indexByName": {
                   "Time": 0,
-                  "Trend #PR95 Trend": 7,
-                  "Trend #Request Rate Trend": 5,
-                  "Value #PR95": 8,
+                  "Trend #Error Rate": 5,
+                  "Trend #PR95": 4,
+                  "Trend #Request Rate": 3,
+                  "Value #Error Rate": 8,
+                  "Value #PR95": 7,
                   "Value #Request Rate": 6,
-                  "http_method": 3,
-                  "http_status_code": 4,
                   "service_name": 1,
                   "span_name": 2
                 },
                 "renameByName": {
-                  "Trend": "Request Rate Trend",
-                  "Trend #Error Rate": "Error Rate",
-                  "Trend #Error Rate Trend": "Error Rate Trend",
-                  "Trend #PR95": "PR95",
-                  "Trend #PR95 Trend": "PR95 Latency Trend",
-                  "Trend #Request Rate": "Request Rate",
-                  "Trend #Request Rate Trend": "Request Rate Trend",
-                  "Value": "Request Rate",
-                  "Value #A": "Error Rate",
+                  "Trend #Error Rate": "Error Rate Trend",
+                  "Trend #PR95": "PR95 Latency Trend",
+                  "Trend #Request Rate": "Request Rate Trend",
                   "Value #Error Rate": "Error Rate",
                   "Value #PR95": "PR95 Latency",
                   "Value #Request Rate": "Request Rate",
-                  "http_method": "Method",
-                  "http_status_code": "Status Code",
                   "service_name": "Application",
                   "span_name": "Route"
                 }
