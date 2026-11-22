@@ -514,7 +514,7 @@ data:
                 "uid": "${DS_LOKI}"
               },
               "editorMode": "code",
-              "expr": "sum(rate({namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[$__rate_interval])) by (pod)",
+              "expr": "sum(count_over_time({namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[$__interval])) by (pod) / $__interval_s",
               "legendFormat": "{{pod}}",
               "queryType": "range",
               "refId": "A"
