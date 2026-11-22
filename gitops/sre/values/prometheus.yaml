@@ -126,8 +126,8 @@ prometheus:
     # hosts:
     #   - group2-capstone-prometheus.sctp-sandbox.com
   prometheusSpec:
-    enableFeatures:
-      - otlp-write-receiver
+    enableOTLPReceiver: true
+    enableRemoteWriteReceiver: true
     additionalScrapeConfigs: []
     # For Prometheus v3+ / kube-prometheus-stack supporting otlp config:
     otlp:
@@ -150,7 +150,6 @@ prometheus:
         effect: NoSchedule
     webConfig:
       tlsConfig: null
-    enableRemoteWriteReceiver: true
     retention: 3d
     retentionSize: 5GB
     resources:
