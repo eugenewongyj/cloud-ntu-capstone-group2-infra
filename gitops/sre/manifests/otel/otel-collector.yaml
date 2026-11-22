@@ -56,6 +56,11 @@ spec:
       batch: {}
     connectors:
       spanmetrics:
+        dimensions:
+          - name: http.status_code
+          - name: http.response.status_code
+          - name: http.method
+          - name: http.request.method
         histogram:
           explicit:
             buckets: [5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s, 5s]
