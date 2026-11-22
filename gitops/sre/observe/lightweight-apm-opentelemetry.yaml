@@ -2134,55 +2134,19 @@ data:
           {
             "allowCustomValue": false,
             "current": {},
-            "description": "OpenTelemetry metrics.",
-            "label": "Metrics",
-            "name": "prometheus_datasource",
-            "options": [],
-            "query": "prometheus",
-            "refresh": 1,
-            "regex": "",
-            "type": "datasource"
-          },
-          {
-            "allowCustomValue": false,
-            "current": {},
-            "description": "OpenTelemetry traces",
-            "label": "Traces",
-            "name": "tempo_datasource",
-            "options": [],
-            "query": "tempo",
-            "refresh": 1,
-            "regex": "",
-            "type": "datasource"
-          },
-          {
-            "allowCustomValue": false,
-            "current": {},
-            "description": "OpenTelemetry logs.",
-            "label": "Logs",
-            "name": "loki_datasource",
-            "options": [],
-            "query": "loki",
-            "refresh": 1,
-            "regex": "",
-            "type": "datasource"
-          },
-          {
-            "allowCustomValue": false,
-            "current": {},
             "datasource": {
               "type": "prometheus",
               "uid": "${prometheus_datasource}"
             },
-            "definition": "label_values(target_info,deployment_environment_name)",
-            "description": "Deployment environment via `target_info`",
+            "definition": "label_values(http_server_request_duration_seconds_count,deployment_environment_name)",
+            "description": "Deployment environment",
             "includeAll": true,
             "label": "Environment",
             "name": "deployment_environment_name",
             "options": [],
             "query": {
               "qryType": 1,
-              "query": "label_values(target_info,deployment_environment_name)",
+              "query": "label_values(http_server_request_duration_seconds_count,deployment_environment_name)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             },
             "refresh": 1,
@@ -2196,15 +2160,15 @@ data:
               "type": "prometheus",
               "uid": "${prometheus_datasource}"
             },
-            "definition": "label_values(target_info{deployment_environment_name=~\"$deployment_environment_name\"},service_namespace)",
-            "description": "Service namespace via `target_info`",
+            "definition": "label_values(http_server_request_duration_seconds_count{deployment_environment_name=~\"$deployment_environment_name\"},service_namespace)",
+            "description": "Service namespace",
             "includeAll": true,
             "label": "Namespace",
             "name": "service_namespace",
             "options": [],
             "query": {
               "qryType": 1,
-              "query": "label_values(target_info{deployment_environment_name=~\"$deployment_environment_name\"},service_namespace)",
+              "query": "label_values(http_server_request_duration_seconds_count{deployment_environment_name=~\"$deployment_environment_name\"},service_namespace)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             },
             "refresh": 1,
@@ -2218,14 +2182,14 @@ data:
               "type": "prometheus",
               "uid": "${prometheus_datasource}"
             },
-            "definition": "label_values(target_info{service_namespace=~\"$service_namespace\", deployment_environment_name=~\"$deployment_environment_name\"},service_name)",
-            "description": "Service name via `target_info`.",
+            "definition": "label_values(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", deployment_environment_name=~\"$deployment_environment_name\"},service_name)",
+            "description": "Service name",
             "label": "Name",
             "name": "service_name",
             "options": [],
             "query": {
               "qryType": 1,
-              "query": "label_values(target_info{service_namespace=~\"$service_namespace\", deployment_environment_name=~\"$deployment_environment_name\"},service_name)",
+              "query": "label_values(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", deployment_environment_name=~\"$deployment_environment_name\"},service_name)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             },
             "refresh": 2,
