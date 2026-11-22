@@ -37,6 +37,10 @@ grafana:
         gnetId: 9578
         revision: 4
         datasource: Prometheus
+      Logging Dashboard via Loki:
+        gnetId: 12611
+        revision: 2
+        datasource: Loki
       Lightweight APM for OpenTelemetry:  
         gnetId: 23243
         revision: 1
