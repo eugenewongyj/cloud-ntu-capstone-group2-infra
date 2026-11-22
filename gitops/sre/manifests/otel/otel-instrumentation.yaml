@@ -14,5 +14,15 @@ spec:
     argument: "1.0"
   java:
     image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.32.0
+    env:
+      - name: OTEL_METRICS_EXPORTER
+        value: "none"
+      - name: OTEL_LOGS_EXPORTER
+        value: "none"
   nodejs:
     image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-nodejs:0.82.0-1
+    env:
+      - name: OTEL_METRICS_EXPORTER
+        value: "none"
+      - name: OTEL_LOGS_EXPORTER
+        value: "none"
