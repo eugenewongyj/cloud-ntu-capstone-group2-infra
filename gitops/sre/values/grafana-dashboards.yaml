@@ -49,3 +49,11 @@ grafana:
         gnetId: 12611
         revision: 2
         datasource: Loki
+      OpenTelemetry and Tempo:
+        gnetId: 23242
+        revision: 1
+        datasource: Prometheus
+      Opentelemetry 2:
+        gnetId: 19419
+        revision: 6
+        datasource: Prometheus
