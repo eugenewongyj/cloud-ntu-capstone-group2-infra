@@ -16,11 +16,11 @@ spec:
     helm:
       valuesObject:
         nodeSelector:
-          workload-tier: t3-medium-monitoring
+          workload-tier: t3-medium-platform
         tolerations:
           - key: workload
             operator: Equal
-            value: t3-medium-monitoring
+            value: t3-medium-platform
             effect: NoSchedule
         prometheus:
           # Points to your kube-prometheus-stack Prometheus service in the monitoring namespace
