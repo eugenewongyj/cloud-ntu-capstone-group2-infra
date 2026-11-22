@@ -2,18 +2,12 @@ name: Terraform CI
 run-name: Running Terraform CI by ${{ github.actor }}
 
 on:
-  # pull_request:
+  pull_request:
   #   paths:
   #     - 'terraform/**'
-  #   branches:
-  #     - main
+    branches:
+     - main
   workflow_dispatch:
-      inputs:
-          target_branch:
-            description: "Branch to checkout and run Terraform on"
-            required: true
-            default: "main"
-            type: string
 
 permissions:
   id-token: write         # For short-lived OIDC token generation
