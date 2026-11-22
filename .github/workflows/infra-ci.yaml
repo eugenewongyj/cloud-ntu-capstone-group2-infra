@@ -1,0 +1,161 @@
+name: Infra & GitOps CI
+run-name: Running Infra CI by ${{ github.actor }}
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write         # Short-lived AWS OIDC token
+  contents: read          # Read repo source
+
+jobs:
+  Initial-Checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Getting initiator name
+        run: echo "Workflow initiated by ${{ github.actor }} from branch ${{ github.ref_name }}"
+
+  terraform-checks:
+    runs-on: ubuntu-latest
+    needs: Initial-Checks
+    outputs:
+      status: ${{ job.status }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref }}
+          fetch-depth: 0
+
+      - name: Secret Leak Detection (TruffleHog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.OIDC_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - uses: terraform-linters/setup-tflint@v3
+        with:
+          tflint_version: latest
+
+      - name: Init TFLint
+        run: tflint --init
+
+      - name: Run TFLint
+        run: tflint -f compact
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color
+
+  gitops-and-scripts-checks:
+    runs-on: ubuntu-latest
+    needs: Initial-Checks
+    outputs:
+      status: ${{ job.status }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref }}
+
+      - name: Lint Shell Scripts (ShellCheck)
+        run: |
+          find . -name "*.sh" -print0 | xargs -0 -r shellcheck -x
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Lint Helm Charts & Render Templates
+        run: |
+          mkdir -p /tmp/rendered-helm
+          find . -name "Chart.yaml" -exec dirname {} \; | while read -r chart; do
+            echo "Linting $chart"
+            helm lint "$chart"
+            helm template "$(basename "$chart")" "$chart" > "/tmp/rendered-helm/$(basename "$chart").yaml"
+          done
+
+      - name: Validate Kubernetes & GitOps YAML (Kubeconform)
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+          ./kubeconform -strict -ignore-missing-schemas -summary gitops/ /tmp/rendered-helm/
+
+      - name: Validate Kyverno Policies (Kyverno CLI)
+        run: |
+          curl -sSL https://github.com/kyverno/kyverno/releases/download/v1.13.4/kyverno-cli_v1.13.4_linux_x86_64.tar.gz | tar xz
+          if [ -d "gitops" ]; then
+            find gitops/ -name "*policy*.yaml" -o -name "*guardrail*.yaml" | xargs -r -I{} ./kyverno validate {}
+          fi
+
+  snyk-checks:
+    runs-on: ubuntu-latest
+    needs: [terraform-checks, gitops-and-scripts-checks]
+    outputs:
+      status: ${{ job.status }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Setup Helm & Render Charts for Snyk IaC
+        uses: azure/setup-helm@v4
+      - run: |
+          mkdir -p rendered-manifests
+          find . -name "Chart.yaml" -exec dirname {} \; | while read -r chart; do
+            helm template "$(basename "$chart")" "$chart" > "rendered-manifests/$(basename "$chart").yaml"
+          done
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run Snyk IaC Test (Terraform, GitOps YAML & Rendered Helm)
+        run: snyk iac test --severity-threshold=high
+
+  summary:
+    needs: [terraform-checks, gitops-and-scripts-checks, snyk-checks]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Adding markdown
+        run: |
+          TF_STATUS=${{ needs.terraform-checks.outputs.status }}
+          GITOPS_STATUS=${{ needs.gitops-and-scripts-checks.outputs.status }}
+          SNYK_STATUS=${{ needs.snyk-checks.outputs.status }}
+
+          echo '## 🚀 Preparing Build Summary 🚀' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '| Job Name                 | Status |' >> $GITHUB_STEP_SUMMARY
+          echo '|--------------------------|--------|' >> $GITHUB_STEP_SUMMARY
+          echo "| tf-check                 | $TF_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "| gitops-and-scripts-check | $GITOPS_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "| snyk-check               | $SNYK_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '## Job ran by: ${{ github.actor }}' >> $GITHUB_STEP_SUMMARY
