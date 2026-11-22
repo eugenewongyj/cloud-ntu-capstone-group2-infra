@@ -37,23 +37,7 @@ grafana:
         gnetId: 9578
         revision: 4
         datasource: Prometheus
-      OpenTelemetry Collector:
-        gnetId: 15983
-        revision: 31
-        datasource: Prometheus
-      Opentelemetry Collector Data Flow:
-        gnetId: 18309
-        revision: 2
-        datasource: Prometheus
-      Logging Dashboard via Loki:
-        gnetId: 12611
-        revision: 2
-        datasource: Loki
       OpenTelemetry and Tempo:
         gnetId: 23242
         revision: 1
-        datasource: Prometheus
-      Opentelemetry 2:
-        gnetId: 19419
-        revision: 6
         datasource: Prometheus
