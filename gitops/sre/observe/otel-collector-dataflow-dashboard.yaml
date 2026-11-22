@@ -1,0 +1,477 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-otel-collector-dataflow
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  otel-collector-dataflow.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "OpenTelemetry Collector v0.114.0 Data Ingress/Egress & Scrape Health",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 100,
+          "title": "Process",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "OTel Collector Instance Count",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 80 }
+                ]
+              }
+            }
+          },
+          "gridPos": { "h": 4, "w": 3, "x": 0, "y": 1 },
+          "id": 6,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "count(count(otelcol_process_cpu_seconds_total{job=\"retail-store-collector-collector-monitoring\"}) by (service_instance_id))",
+              "instant": true,
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "Instance",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "otelcol_process_cpu_seconds_total",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 80 }
+                ]
+              },
+              "unit": "percent"
+            }
+          },
+          "gridPos": { "h": 4, "w": 3, "x": 3, "y": 1 },
+          "id": 24,
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "avg(rate(otelcol_process_cpu_seconds_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])*100) by (instance)",
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "CPU",
+          "type": "gauge"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "otelcol_process_memory_rss_bytes",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "max": 268435456,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 214748364 }
+                ]
+              },
+              "unit": "bytes"
+            }
+          },
+          "gridPos": { "h": 4, "w": 3, "x": 6, "y": 1 },
+          "id": 38,
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "avg(otelcol_process_memory_rss_bytes{job=\"retail-store-collector-collector-monitoring\"}) by (instance)",
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Memory",
+          "type": "gauge"
+        },
+        {
+          "gridPos": { "h": 4, "w": 15, "x": 9, "y": 1 },
+          "id": 32,
+          "options": {
+            "content": "## OpenTelemetry Collector Data Ingress/Egress\n\n`service_version:` ${service_version}\n\n`opentelemetry collector:` contrib v0.114.0",
+            "mode": "markdown"
+          },
+          "title": "",
+          "type": "text"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "id": 101,
+          "title": "Trace Pipeline",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Exported spans vs Accepted spans ratio",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "semi-dark-red", "value": null },
+                  { "color": "super-light-orange", "value": 0.4 },
+                  { "color": "dark-blue", "value": 0.9 },
+                  { "color": "super-light-orange", "value": 1.2 },
+                  { "color": "dark-red", "value": 2.1 }
+                ]
+              },
+              "unit": "percentunit"
+            }
+          },
+          "gridPos": { "h": 8, "w": 4, "x": 0, "y": 6 },
+          "id": 55,
+          "options": {
+            "orientation": "vertical",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "showThresholdMarkers": false
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(otelcol_exporter_sent_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) / sum(rate(otelcol_receiver_accepted_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval]))",
+              "instant": true,
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "Trace Export Ratio",
+          "type": "gauge"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Spans Accepted by Receiver and Transport",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "noValue": "0",
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 4, "w": 5, "x": 4, "y": 6 },
+          "id": 12,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(otelcol_receiver_accepted_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (receiver, transport)",
+              "legendFormat": "{{receiver}}-{{transport}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Accepted Spans",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Batch Send Size Rate",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 4, "w": 5, "x": 9, "y": 6 },
+          "id": 15,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(otelcol_processor_batch_batch_send_size_sum{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (processor)",
+              "legendFormat": "{{processor}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Batch Processed",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Spans Sent by Exporter (Tempo & Spanmetrics)",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 4, "w": 10, "x": 14, "y": 6 },
+          "id": 30,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(otelcol_exporter_sent_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (exporter)",
+              "legendFormat": "{{exporter}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Sent Spans",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Refused Spans by Receiver",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "noValue": "0",
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 4, "w": 10, "x": 4, "y": 10 },
+          "id": 17,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(otelcol_receiver_refused_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (receiver, transport)",
+              "legendFormat": "{{receiver}}-{{transport}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Refused Spans",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Failed Spans by Exporter",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "noValue": "0",
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 4, "w": 10, "x": 14, "y": 10 },
+          "id": 20,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(otelcol_exporter_send_failed_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (exporter)",
+              "legendFormat": "{{exporter}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Failed Spans",
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+          "id": 102,
+          "title": "Metrics Pipeline (Spanmetrics)",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Accepted Metric Points from Spanmetrics Connector",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "noValue": "0",
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 15 },
+          "id": 26,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(otelcol_receiver_accepted_metric_points_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (receiver)",
+              "legendFormat": "{{receiver}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Accepted Metric Points",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Metric Points Exported to Prometheus (:8889)",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "noValue": "0",
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 4, "w": 8, "x": 8, "y": 15 },
+          "id": 16,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(otelcol_exporter_sent_metric_points_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (exporter)",
+              "legendFormat": "{{exporter}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Sent Metric Points",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Prometheus Samples Scraped per Scrape",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "unit": "short"
+            }
+          },
+          "gridPos": { "h": 4, "w": 8, "x": 16, "y": 15 },
+          "id": 37,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "scrape_samples_scraped{namespace=\"opentelemetry-system\"}",
+              "legendFormat": "{{job}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Samples Scraped",
+          "type": "stat"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": [],
+      "templating": {
+        "list": [
+          {
+            "allowCustomValue": true,
+            "current": {},
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "definition": "label_values(otelcol_process_uptime_seconds_total{job=\"retail-store-collector-collector-monitoring\"}, service_version)",
+            "hide": 2,
+            "includeAll": false,
+            "label": "service_version",
+            "multi": false,
+            "name": "service_version",
+            "query": {
+              "qryType": 1,
+              "query": "label_values(otelcol_process_uptime_seconds_total{job=\"retail-store-collector-collector-monitoring\"}, service_version)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "type": "query"
+          }
+        ]
+      },
+      "time": { "from": "now-15m", "to": "now" },
+      "timezone": "browser",
+      "title": "OpenTelemetry Collector Data Flow (Retail Store)",
+      "uid": "otel-collector-dataflow-custom",
+      "version": 1
+    }
