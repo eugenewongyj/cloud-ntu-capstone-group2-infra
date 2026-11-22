@@ -71,7 +71,7 @@ spec:
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [otlp]
+          exporters: [otlp, spanmetrics]
         metrics:
           receivers: [spanmetrics]
           processors: [batch]
