@@ -61,7 +61,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "count(count(otelcol_process_cpu_seconds_total{job=\"retail-store-collector-collector-monitoring\"}) by (service_instance_id))",
+              "expr": "count(count(otelcol_process_cpu_seconds{job=\"retail-store-collector-collector-monitoring\"}) by (service_instance_id))",
               "instant": true,
               "range": false,
               "refId": "A"
@@ -72,7 +72,7 @@ data:
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "description": "otelcol_process_cpu_seconds_total",
+          "description": "otelcol_process_cpu_seconds",
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "continuous-BlYlRd" },
@@ -96,7 +96,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "avg(rate(otelcol_process_cpu_seconds_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])*100) by (instance)",
+              "expr": "avg(rate(otelcol_process_cpu_seconds{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])*100) by (instance)",
               "legendFormat": "{{instance}}",
               "range": true,
               "refId": "A"
@@ -107,7 +107,7 @@ data:
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "description": "otelcol_process_memory_rss_bytes",
+          "description": "otelcol_process_memory_rss",
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "continuous-BlYlRd" },
@@ -132,7 +132,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "avg(otelcol_process_memory_rss_bytes{job=\"retail-store-collector-collector-monitoring\"}) by (instance)",
+              "expr": "avg(otelcol_process_memory_rss{job=\"retail-store-collector-collector-monitoring\"}) by (instance)",
               "legendFormat": "{{instance}}",
               "range": true,
               "refId": "A"
@@ -145,7 +145,7 @@ data:
           "gridPos": { "h": 4, "w": 15, "x": 9, "y": 1 },
           "id": 32,
           "options": {
-            "content": "## OpenTelemetry Collector Data Ingress/Egress\n\n`service_version:` ${service_version}\n\n`opentelemetry collector:` contrib v0.114.0",
+            "content": "## OpenTelemetry Collector Data Ingress/Egress\n\n`service_version:` ${service_version}\n\n`opentelemetry collector:` contrib",
             "mode": "markdown"
           },
           "title": "",
@@ -189,7 +189,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "sum(rate(otelcol_exporter_sent_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) / sum(rate(otelcol_receiver_accepted_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval]))",
+              "expr": "sum(rate(otelcol_exporter_sent_spans{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) / sum(rate(otelcol_receiver_accepted_spans{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval]))",
               "instant": true,
               "range": false,
               "refId": "A"
@@ -219,7 +219,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "sum(rate(otelcol_receiver_accepted_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (receiver, transport)",
+              "expr": "sum(rate(otelcol_receiver_accepted_spans{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (receiver, transport)",
               "legendFormat": "{{receiver}}-{{transport}}",
               "range": true,
               "refId": "A"
@@ -277,7 +277,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "sum(rate(otelcol_exporter_sent_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (exporter)",
+              "expr": "sum(rate(otelcol_exporter_sent_spans{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (exporter)",
               "legendFormat": "{{exporter}}",
               "range": true,
               "refId": "A"
@@ -307,7 +307,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "sum(rate(otelcol_receiver_refused_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (receiver, transport)",
+              "expr": "sum(rate(otelcol_receiver_refused_spans{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (receiver, transport)",
               "legendFormat": "{{receiver}}-{{transport}}",
               "range": true,
               "refId": "A"
@@ -337,7 +337,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "sum(rate(otelcol_exporter_send_failed_spans_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (exporter)",
+              "expr": "sum(rate(otelcol_exporter_send_failed_spans{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (exporter)",
               "legendFormat": "{{exporter}}",
               "range": true,
               "refId": "A"
@@ -355,36 +355,6 @@ data:
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "description": "Accepted Metric Points from Spanmetrics Connector",
-          "fieldConfig": {
-            "defaults": {
-              "color": { "mode": "continuous-BlYlRd" },
-              "noValue": "0",
-              "unit": "ops"
-            }
-          },
-          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 15 },
-          "id": 26,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
-          },
-          "targets": [
-            {
-              "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "editorMode": "code",
-              "expr": "sum(rate(otelcol_receiver_accepted_metric_points_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (receiver)",
-              "legendFormat": "{{receiver}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Accepted Metric Points",
-          "type": "stat"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "description": "Metric Points Exported to Prometheus (:8889)",
           "fieldConfig": {
             "defaults": {
@@ -393,7 +363,7 @@ data:
               "unit": "ops"
             }
           },
-          "gridPos": { "h": 4, "w": 8, "x": 8, "y": 15 },
+          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 15 },
           "id": 16,
           "options": {
             "colorMode": "value",
@@ -404,13 +374,43 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "sum(rate(otelcol_exporter_sent_metric_points_total{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (exporter)",
+              "expr": "sum(rate(otelcol_exporter_sent_metric_points{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (exporter)",
               "legendFormat": "{{exporter}}",
               "range": true,
               "refId": "A"
             }
           ],
           "title": "Sent Metric Points",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Failed Metric Points Exported",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "continuous-BlYlRd" },
+              "noValue": "0",
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 4, "w": 8, "x": 8, "y": 15 },
+          "id": 50,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(otelcol_exporter_send_failed_metric_points{job=\"retail-store-collector-collector-monitoring\"}[$__rate_interval])) by (exporter)",
+              "legendFormat": "{{exporter}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Failed Metric Points",
           "type": "stat"
         },
         {
@@ -434,7 +434,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "scrape_samples_scraped{namespace=\"opentelemetry-system\"}",
+              "expr": "scrape_samples_scraped{namespace=\"opentelemetry-system\", job=~\"retail-store-collector-collector|retail-store-collector-collector-monitoring\"}",
               "legendFormat": "{{job}}",
               "range": true,
               "refId": "A"
@@ -453,7 +453,7 @@ data:
             "allowCustomValue": true,
             "current": {},
             "datasource": { "type": "prometheus", "uid": "prometheus" },
-            "definition": "label_values(otelcol_process_uptime_seconds_total{job=\"retail-store-collector-collector-monitoring\"}, service_version)",
+            "definition": "label_values(target_info{job=\"retail-store-collector-collector-monitoring\"}, service_version)",
             "hide": 2,
             "includeAll": false,
             "label": "service_version",
@@ -461,7 +461,7 @@ data:
             "name": "service_version",
             "query": {
               "qryType": 1,
-              "query": "label_values(otelcol_process_uptime_seconds_total{job=\"retail-store-collector-collector-monitoring\"}, service_version)",
+              "query": "label_values(target_info{job=\"retail-store-collector-collector-monitoring\"}, service_version)",
               "refId": "StandardVariableQuery"
             },
             "refresh": 1,
