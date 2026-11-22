@@ -97,3 +97,27 @@ resource "aws_rds_cluster_instance" "aurora" {
     component   = "apps"
   }
 }
+
+# 5. Catalog -> Aurora MySQL credentials (same approach as orders -> Aurora PostgreSQL)
+#    The master password above is created by AWS in Secrets Manager. External Secrets
+#    copies it into the K8s Secret "catalog-db" (gitops/app/manifests/catalog-db),
+#    which the catalog app reads.
+#    This only ADDS a permission to the shared External Secrets role (aws_iam_role.eso,
+#    defined in aurora-postgres.tf). Finding the secret by tag (ListSecrets /
+#    BatchGetSecretValue) is already allowed there.
+#    Least privilege: ESO may READ only this Aurora MySQL secret.
+resource "aws_iam_role_policy" "eso_read_catalog_db" {
+  name = "${var.project_name}-eso-read-catalog-db"
+  role = aws_iam_role.eso.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid      = "ReadCatalogDbSecretOnly"
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+        Resource = aws_rds_cluster.aurora.master_user_secret[0].secret_arn
+      }
+    ]
+  })
+}
