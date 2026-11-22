@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opentelemetry-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: sre-project
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    targetRevision: main
+    path: gitops/sre/manifests/otel
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: opentelemetry-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true
