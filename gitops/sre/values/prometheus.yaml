@@ -126,6 +126,21 @@ prometheus:
     # hosts:
     #   - group2-capstone-prometheus.sctp-sandbox.com
   prometheusSpec:
+    enableFeatures:
+      - otlp-write-receiver
+    additionalScrapeConfigs: []
+    # For Prometheus v3+ / kube-prometheus-stack supporting otlp config:
+    otlp:
+      keepIdentifyingResourceAttributes: true
+      promoteResourceAttributes:
+        - service.instance.id
+        - service.name
+        - service.namespace
+        - deployment.environment.name
+        - service.version
+        - k8s.cluster.name
+        - k8s.namespace.name
+        - k8s.pod.name
     nodeSelector:
       workload-tier: t3-medium-monitoring
     tolerations:
