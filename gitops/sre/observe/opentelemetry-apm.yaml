@@ -1065,7 +1065,7 @@ data:
       },
       "timepicker": {},
       "timezone": "browser",
-      "title": "OpenTelemetry APM (Custom)",
+      "title": "OpenTelemetry APM",
       "uid": "opentelemetry-apm-custom",
       "version": 1
     }
