@@ -40,6 +40,13 @@ alertmanager:
 # 1. Grafana configuration + Ingress
 grafana:
   enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   nodeSelector:
     workload-tier: t3-medium-monitoring
   tolerations:
@@ -130,12 +137,14 @@ prometheus:
       tlsConfig: null
     enableRemoteWriteReceiver: true
     retention: 3d
+    retentionSize: 5GB
     resources:
       requests:
-        cpu: 100m
-        memory: 1100Mi
+        cpu: 250m
+        memory: 768Mi
       limits:
-        memory: 1500Mi
+        cpu: 1000m
+        memory: 1152Mi
     storageSpec:
       volumeClaimTemplate:
         spec:
