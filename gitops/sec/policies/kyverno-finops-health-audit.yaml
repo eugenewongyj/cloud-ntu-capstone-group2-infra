@@ -56,10 +56,32 @@ spec:
                 - opentelemetry-system
       validate:
         message: "Application containers must define both livenessProbe and readinessProbe."
-        pattern:
-          spec:
-            containers:
-              - livenessProbe:
-                  "?*": "?*"
-                readinessProbe:
-                  "?*": "?*"
+        anyPattern:
+          - spec:
+              containers:
+                - livenessProbe:
+                    httpGet:
+                      path: "?*"
+                      port: "*"
+                  readinessProbe:
+                    httpGet:
+                      path: "?*"
+                      port: "*"
+          - spec:
+              containers:
+                - livenessProbe:
+                    tcpSocket:
+                      port: "*"
+                  readinessProbe:
+                    tcpSocket:
+                      port: "*"
+          - spec:
+              containers:
+                - livenessProbe:
+                    exec:
+                      command:
+                        - "?*"
+                  readinessProbe:
+                    exec:
+                      command:
+                        - "?*"
