@@ -26,6 +26,11 @@ spec:
   replicas: 1
   serviceAccount: retail-store-collector
   image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.114.0
+  ports:
+    - name: prometheus
+      port: 8889
+      targetPort: 8889
+      protocol: TCP
   nodeSelector:
     workload-tier: t3-medium-logging
   tolerations:
@@ -49,14 +54,25 @@ spec:
             endpoint: 0.0.0.0:4318
     processors:
       batch: {}
+    connectors:
+      spanmetrics:
+        histogram:
+          explicit:
+            buckets: [5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s, 5s]
     exporters:
       otlp:
         endpoint: "tempo.logging.svc.cluster.local:4317"
         tls:
           insecure: true
+      prometheus:
+        endpoint: 0.0.0.0:8889
     service:
       pipelines:
         traces:
           receivers: [otlp]
           processors: [batch]
           exporters: [otlp]
+        metrics:
+          receivers: [spanmetrics]
+          processors: [batch]
+          exporters: [prometheus]

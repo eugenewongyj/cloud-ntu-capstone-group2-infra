@@ -16,7 +16,32 @@ spec:
     matchLabels:
       app.kubernetes.io/component: opentelemetry-collector
       app.kubernetes.io/instance: opentelemetry-system.retail-store-collector
+      operator.opentelemetry.io/collector-service-type: monitoring
   endpoints:
     - port: monitoring
+      interval: 30s
+      path: /metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: retail-store-collector-spanmetrics
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  namespaceSelector:
+    matchNames:
+      - opentelemetry-system
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: opentelemetry-collector
+      app.kubernetes.io/instance: opentelemetry-system.retail-store-collector
+      operator.opentelemetry.io/collector-service-type: base
+  endpoints:
+    - port: prometheus
       interval: 30s
       path: /metrics
