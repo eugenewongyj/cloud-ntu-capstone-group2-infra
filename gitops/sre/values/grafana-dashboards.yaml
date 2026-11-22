@@ -49,3 +49,11 @@ grafana:
             value: Prometheus
           - name: DS_LOKI
             value: Loki
+      OpenTelemetry Collector:
+        gnetId: 15983
+        revision: 31
+        datasource: Prometheus
+      Opentelemetry Collector Data Flow:
+        gnetId: 18309
+        revision: 2
+        datasource: Prometheus
