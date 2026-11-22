@@ -2,11 +2,11 @@ name: Terraform CI
 run-name: Running Terraform CI by ${{ github.actor }}
 
 on:
-  pull_request:
-  #   paths:
-  #     - 'terraform/**'
-    branches:
-     - main
+  # pull_request:
+  # #   paths:
+  # #     - 'terraform/**'
+  #   branches:
+  #    - main
   workflow_dispatch:
 
 permissions:

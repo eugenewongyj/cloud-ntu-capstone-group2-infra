@@ -26,11 +26,11 @@ echo "=========================================="
 aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
 
 # Helper to remove finalizers safely on macOS and Linux
-strip_finalizers() {
+trip_finalizers() {
   local kind=$1
   local ns=$2
-  local ns_arg=""
-  [ -n "${ns}" ] && ns_arg="-n ${ns}"
+  local ns_args=()
+  [ -n "${ns}" ] && ns_args=(-n "${ns}")
 
   if [ -z "${ns}" ]; then
     kubectl get "${kind}" -A -o jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}' 2>/dev/null | while read -r item_ns item_name; do
@@ -43,8 +43,8 @@ strip_finalizers() {
       fi
     done
   else
-    for item in $(kubectl get "${kind}" ${ns_arg} -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
-      kubectl patch "${kind}" "${item}" ${ns_arg} --type=merge -p '{"metadata":{"finalizers":[]}}' 2>/dev/null || true
+    for item in $(kubectl get "${kind}" "${ns_args[@]}" -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
+      kubectl patch "${kind}" "${item}" "${ns_args[@]}" --type=merge -p '{"metadata":{"finalizers":[]}}' 2>/dev/null || true
     done
   fi
 }
@@ -88,10 +88,9 @@ for crd in opentelemetrycollectors.opentelemetry.io instrumentations.opentelemet
   fi
 done
 
-echo "--> [5/10] Uninstalling Helm Releases..."
-helm list -A --no-headers 2>/dev/null | awk '{print $1 " -n " $2}' | while read -r release; do
-  if [ -n "$release" ]; then
-    helm uninstall $release --no-hooks --wait=false 2>/dev/null || true
+helm list -A --no-headers 2>/dev/null | awk '{print $1, $2}' | while read -r rel_name rel_ns; do
+  if [ -n "${rel_name}" ]; then
+    helm uninstall "${rel_name}" -n "${rel_ns}" --no-hooks --wait=false 2>/dev/null || true
   fi
 done
 

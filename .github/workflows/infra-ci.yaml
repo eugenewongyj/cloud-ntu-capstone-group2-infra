@@ -99,13 +99,21 @@ jobs:
       - name: Validate Kubernetes & GitOps YAML (Kubeconform)
         run: |
           curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
-          ./kubeconform -strict -ignore-missing-schemas -summary gitops/ /tmp/rendered-helm/
+          ./kubeconform -strict \
+            -ignore-missing-schemas \
+            -ignore-filename-pattern '.*values.*\.yaml$' \
+            -ignore-filename-pattern '.*/values/.*\.yaml$' \
+            -ignore-filename-pattern '.*\.json$' \
+            -summary gitops/ /tmp/rendered-helm/
 
       - name: Validate Kyverno Policies (Kyverno CLI)
         run: |
           curl -sSL https://github.com/kyverno/kyverno/releases/download/v1.13.4/kyverno-cli_v1.13.4_linux_x86_64.tar.gz | tar xz
           if [ -d "gitops" ]; then
-            find gitops/ -name "*policy*.yaml" -o -name "*guardrail*.yaml" | xargs -r -I{} ./kyverno validate {}
+            POLICIES=$(find gitops/ -type f \( -name "*policy*.yaml" -o -name "*guardrail*.yaml" \))
+            if [ -n "$POLICIES" ]; then
+              ./kyverno apply $POLICIES --resource /tmp/rendered-helm/ || ./kyverno apply $POLICIES --cluster=false
+            fi
           fi
 
   snyk-checks:

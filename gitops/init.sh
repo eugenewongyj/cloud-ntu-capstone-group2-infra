@@ -6,7 +6,6 @@ cd "$SCRIPT_DIR"
 
 CLUSTER_NAME="group2-capstone-cluster"
 AWS_REGION="ap-southeast-1"
-REPO_URL="https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git"
 VALUES_FILE="bootstrap/common-infra/argocd-values.yaml"
 NODEPOOL_DIR="bootstrap/common-infra/nodepool"
 
@@ -43,10 +42,8 @@ fi
 
 # 3.  Pre-create core namespaces
 echo "--> [3/7] Applying pre-creating core namespaces..."
+kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 
-for ns in argocd ; do
-  kubectl create namespace "${ns}" --dry-run=client -o yaml | kubectl apply -f -
-done
 
 # 4. Bootstrap Argo CD via Helm
 echo "--> [4/7] Deploying Argo CD Helm chart with custom values..."

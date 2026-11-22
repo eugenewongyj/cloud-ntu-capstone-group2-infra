@@ -88,7 +88,7 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
           "eks:CreateAccessEntry", "eks:DeleteAccessEntry", "eks:DescribeAccessEntry",
           "eks:AssociateAccessPolicy", "eks:DisassociateAccessPolicy",
           "eks:CreatePodIdentityAssociation", "eks:DeletePodIdentityAssociation", "eks:DescribePodIdentityAssociation",
-          "eks:ListPodIdentityAssociations", "eks:ListAssociatedAccessPolicies", "eks:ListAccessEntries"]
+        "eks:ListPodIdentityAssociations", "eks:ListAssociatedAccessPolicies", "eks:ListAccessEntries"]
         Resource = "*"
       },
       {
@@ -134,8 +134,8 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
           "ec2:DeleteRouteTable", "ec2:CreateRoute", "ec2:DeleteRoute", "ec2:AssociateRouteTable",
           "ec2:DisassociateRouteTable", "ec2:ReplaceRouteTableAssociation",
           "ec2:DeleteInternetGateway", "ec2:AttachInternetGateway",
-          "ec2:DetachInternetGateway", "ec2:DeleteNatGateway", "ec2:DeleteSecurityGroup", 
-          "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress", 
+          "ec2:DetachInternetGateway", "ec2:DeleteNatGateway", "ec2:DeleteSecurityGroup",
+          "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress",
           "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
           "ec2:TerminateInstances"
         ]
@@ -145,27 +145,27 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
             "aws:ResourceTag/Project" : var.project
           }
         }
-      },{
+        }, {
         # NEW BLOCK: For actions that target untaggable network associations 
         # or shared EKS security groups that lack the Prefix tag
         Sid    = "EC2UntaggableResources"
         Effect = "Allow"
         Action = [
-          "ec2:CreateTags", 
+          "ec2:CreateTags",
           "ec2:DeleteTags",
-          "ec2:AllocateAddress", 
-          "ec2:ReleaseAddress", 
+          "ec2:AllocateAddress",
+          "ec2:ReleaseAddress",
           "ec2:AssociateAddress",
           "ec2:DisassociateAddress"
         ]
         Resource = "*"
-      },{
+        }, {
         # 1. Authorize the creation of the new tagged resources
         Sid    = "EC2NetworkingCreateTaggedResources"
         Effect = "Allow"
         Action = [
           "ec2:CreateVpc", "ec2:CreateSubnet", "ec2:CreateRouteTable",
-          "ec2:CreateInternetGateway", "ec2:CreateNatGateway", "ec2:AllocateAddress", 
+          "ec2:CreateInternetGateway", "ec2:CreateNatGateway", "ec2:AllocateAddress",
           "ec2:CreateSecurityGroup", "ec2:RunInstances"
         ]
         Resource = [
@@ -182,7 +182,7 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
         ]
         Condition = {
           StringEquals = {
-            "aws:RequestTag/Project": var.project
+            "aws:RequestTag/Project" : var.project
           }
         }
       },
@@ -203,7 +203,7 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
         ]
         Condition = {
           StringEquals = {
-            "aws:ResourceTag/Project": var.project 
+            "aws:ResourceTag/Project" : var.project
           }
         }
       },
