@@ -103,7 +103,7 @@ grafana:
       providers:
         - name: 'favourite'
           orgId: 1
-          folder: 'favourite'
+          folder: 'Favourite'
           type: file
           disableDeletion: false
           editable: true
