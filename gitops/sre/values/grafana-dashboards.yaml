@@ -41,6 +41,14 @@ grafana:
         gnetId: 12611
         revision: 2
         datasource: Loki
+      Loki stack monitoring:  
+        gnetId: 23243
+        revision: 1
+        datasource: 
+          - name: DS_PROMETHEUS
+            value: Prometheus
+          - name: DS_LOKI
+            value: Loki
       Lightweight APM for OpenTelemetry:  
         gnetId: 23243
         revision: 1
