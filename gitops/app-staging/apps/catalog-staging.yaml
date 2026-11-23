@@ -17,6 +17,11 @@ spec:
       valuesObject:
         nodeSelector:
           workload-tier: t3-medium-apps-staging
+        tolerations:
+          - key: workload
+            operator: Equal
+            value: t3-medium-apps-staging
+            effect: NoSchedule
         # Aurora MySQL Serverless v2 (aurora-mysql.tf) instead of in-memory:
         # products live in a managed database shared by all replicas.
         # Same approach as orders -> Aurora PostgreSQL.
