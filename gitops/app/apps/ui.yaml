@@ -56,6 +56,8 @@ spec:
           endpoints:
             catalog: http://catalog:80
             carts: http://carts:80
+            checkout: http://checkout:80   # real checkout service (without this the UI uses a built-in fake checkout)
+            orders: http://orders:80
   destination:
     server: https://kubernetes.default.svc
     namespace: retail-store
