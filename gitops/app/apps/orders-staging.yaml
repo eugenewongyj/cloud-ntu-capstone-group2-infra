@@ -13,7 +13,7 @@ spec:
     path: src/orders/chart
     helm:
       releaseName: orders
-      valuesObject:
+      #valuesObject:
         #nodeSelector:
           #workload-tier: t3-medium-apps
         # Our own image from ECR (built + scanned by CI), not the public upstream image
