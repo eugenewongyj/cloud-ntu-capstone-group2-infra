@@ -14,7 +14,7 @@ spec:
     path: src/catalog/chart
     helm:
       releaseName: catalog
-      valuesObject:
+      #valuesObject:
         #nodeSelector:
           #workload-tier: t3-medium-apps
         # Aurora MySQL Serverless v2 (aurora-mysql.tf) instead of in-memory:

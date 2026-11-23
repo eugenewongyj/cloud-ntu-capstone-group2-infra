@@ -17,7 +17,7 @@ spec:
       parameters:
         - name: fullnameOverride
           value: carts
-      valuesObject:
+      #valuesObject:
         #nodeSelector:
           #workload-tier: t3-medium-apps
         # Service account name must match the Pod Identity association in dynamodb-dax.tf
