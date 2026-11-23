@@ -18,6 +18,12 @@ spec:
     helm:
       releaseName: ui
       valuesObject:
+        nodeSelector:
+          workload-tier: t3-medium-apps-staging
+        # Add the OTel instrumentation annotation here
+        podAnnotations:
+          # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
+          instrumentation.opentelemetry.io/inject-java: "retail-store-instrumentation"
 
         # Custom-built UI image in ECR
         image:
@@ -32,7 +38,7 @@ spec:
         autoscaling:
           enabled: true
           minReplicas: 1
-          maxReplicas: 5
+          maxReplicas: 3
           targetCPUUtilizationPercentage: 70
 
         # Keep the existing resource requirements

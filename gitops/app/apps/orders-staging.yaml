@@ -13,9 +13,9 @@ spec:
     path: src/orders/chart
     helm:
       releaseName: orders
-      #valuesObject:
-        #nodeSelector:
-          #workload-tier: t3-medium-apps
+      valuesObject:
+        nodeSelector:
+          workload-tier: t3-medium-apps-staging
         # Our own image from ECR (built + scanned by CI), not the public upstream image
         #image:
           #repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-orders
@@ -44,30 +44,30 @@ spec:
               #create: false     # credentials come from External Secrets (gitops/app/manifests/orders-db)
               #name: orders-db
         # Add the OTel instrumentation annotation here
-        #podAnnotations:
+        podAnnotations:
           # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
-          #instrumentation.opentelemetry.io/inject-java: "retail-store-instrumentation"
+          instrumentation.opentelemetry.io/inject-java: "retail-store-instrumentation"
         # Set the Pod Size (Requests and Limits)
-        #resources:
-          #requests:
-            #cpu: 250m
-            #memory: 384Mi
-          #limits:
-            #cpu: 1000m
-            #memory: 768Mi
-        #autoscaling:
-          #enabled: true
-          #minReplicas: 1
-          #maxReplicas: 5
-          #targetCPUUtilizationPercentage: 70
+        resources:
+          requests:
+            cpu: 250m
+            memory: 384Mi
+          limits:
+            cpu: 1000m
+            memory: 768Mi
+        autoscaling:
+          enabled: true
+          minReplicas: 1
+          maxReplicas: 3
+          targetCPUUtilizationPercentage: 70
         # Add this block to enable Prometheus scraping
-        #metrics:
-          #enabled: true
-        #serviceMonitor:
-          #enabled: true
+        metrics:
+          enabled: true
+        serviceMonitor:
+          enabled: true
           # This label is critical: it tells Prometheus to pick up this monitor
-          #additionalLabels:
-            #release: kube-prometheus-stack
+          additionalLabels:
+            release: kube-prometheus-stack
   destination:
     server: https://kubernetes.default.svc
     namespace: retail-staging
