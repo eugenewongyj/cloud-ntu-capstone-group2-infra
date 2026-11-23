@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cart
+  name: cart-staging
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "6"
