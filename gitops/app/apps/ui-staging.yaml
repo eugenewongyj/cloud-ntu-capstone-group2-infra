@@ -1,4 +1,3 @@
-
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 
@@ -22,8 +21,9 @@ spec:
 
         # Custom-built UI image in ECR
         image:
-          repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-ui
-          tag: "554ad763b1ad3a26325d415d020d4c0ef180f96b"
+          repository: 
+            255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-ui
+          tag: "1a028f087da2aee94eaeeb028d94c0d139f25a85"
           pullPolicy: IfNotPresent
 
         # Single replica for initial staging
@@ -64,4 +64,4 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+    - CreateNamespace=true
