@@ -27,6 +27,7 @@ if [ -d "${NODEPOOL_DIR}" ]; then
   kubectl apply -f "${NODEPOOL_DIR}/platform-nodepool.yaml"
   kubectl apply -f "${NODEPOOL_DIR}/apps-nodepool.yaml"
   kubectl apply -f "${NODEPOOL_DIR}/apps-staging-nodepool.yaml"
+  kubectl apply -f "${NODEPOOL_DIR}/system-nodepool.yaml"
 
   kubectl wait --for=condition=Ready nodeclass/default --timeout=60s || true
   for np in \
@@ -35,6 +36,7 @@ if [ -d "${NODEPOOL_DIR}" ]; then
     t3-medium-security-nodepool \
     t3-medium-platform-nodepool \
     t3-medium-apps-nodepool \
+    t3-medium-system-nodepool \
     t3-medium-apps-staging-nodepool; do
     kubectl wait --for=condition=Ready "nodepool/${np}" --timeout=60s || true
   done
