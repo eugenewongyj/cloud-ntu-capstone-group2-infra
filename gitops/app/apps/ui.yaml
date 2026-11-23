@@ -14,7 +14,7 @@ spec:
     helm:
       releaseName: ui
       valuesObject:
-        NodeSelector:
+        nodeSelector:
           workload-tier: t3-medium-apps
         # Add the OTel instrumentation annotation here
         podAnnotations:

@@ -13,9 +13,9 @@ spec:
     path: src/checkout/chart
     helm:
       releaseName: checkout
-      #valuesObject:
-        #nodeSelector:
-          #workload-tier: t3-medium-apps
+      valuesObject:
+        nodeSelector:
+          workload-tier: t3-medium-apps-staging
       # Our own image from ECR (built + scanned by CI), not the public upstream image
         #image:
           #repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-checkout
@@ -32,30 +32,30 @@ spec:
               #endpoint: "group2-capstone-checkout-gc2iuw.serverless.apse1.cache.amazonaws.com:6379"
               #tls: true   # Serverless always requires TLS (rediss://)
         # Add the OTel instrumentation annotation here
-        #podAnnotations:
+        podAnnotations:
           # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
-          #instrumentation.opentelemetry.io/inject-nodejs: "retail-store-instrumentation"
+          instrumentation.opentelemetry.io/inject-nodejs: "retail-store-instrumentation"
         # Set the Pod Size (Requests and Limits)
-        #resources:
-          #requests:
-            #cpu: 125m
-            #memory: 256Mi
-          #limits:
-            #cpu: 250m
-            #memory: 512Mi
-        #autoscaling:
-          #enabled: true
-          #minReplicas: 1
-          #maxReplicas: 5
-          #targetCPUUtilizationPercentage: 70
+        resources:
+          requests:
+            cpu: 125m
+            memory: 256Mi
+          limits:
+            cpu: 250m
+            memory: 512Mi
+        autoscaling:
+          enabled: true
+          minReplicas: 1
+          maxReplicas: 3
+          targetCPUUtilizationPercentage: 70
         # Add this block to enable Prometheus scraping
-        #metrics:
-          #enabled: true
-        #serviceMonitor:
-          #enabled: true
+        metrics:
+          enabled: true
+        serviceMonitor:
+          enabled: true
           # This label is critical: it tells Prometheus to pick up this monitor
-          #additionalLabels:
-            #release: kube-prometheus-stack
+          additionalLabels:
+            release: kube-prometheus-stack
   destination:
     server: https://kubernetes.default.svc
     namespace: retail-staging

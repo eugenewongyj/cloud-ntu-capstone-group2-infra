@@ -14,9 +14,9 @@ spec:
     path: src/catalog/chart
     helm:
       releaseName: catalog
-      #valuesObject:
-        #nodeSelector:
-          #workload-tier: t3-medium-apps
+      valuesObject:
+        nodeSelector:
+          workload-tier: t3-medium-apps-staging
         # Aurora MySQL Serverless v2 (aurora-mysql.tf) instead of in-memory:
         # products live in a managed database shared by all replicas.
         # Same approach as orders -> Aurora PostgreSQL.
@@ -29,30 +29,30 @@ spec:
               #create: false     # credentials come from External Secrets (gitops/app/manifests/catalog-db)
               #name: catalog-db
         # Add the OTel instrumentation annotation here
-        #podAnnotations:
+        podAnnotations:
           # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
-          #instrumentation.opentelemetry.io/inject-sdk: "retail-store-instrumentation"
+          instrumentation.opentelemetry.io/inject-sdk: "retail-store-instrumentation"
         # Set the Pod Size (Requests and Limits)
-        #resources:
-          #requests:
-            #cpu: 125m
-            #memory: 256Mi
-          #limits:
-            #cpu: 250m
-            #memory: 512Mi
-        #autoscaling:
-          #enabled: true
-          #minReplicas: 1
-          #maxReplicas: 5
-          #targetCPUUtilizationPercentage: 70
+        resources:
+          requests:
+            cpu: 125m
+            memory: 256Mi
+          limits:
+            cpu: 250m
+            memory: 512Mi
+        autoscaling:
+          enabled: true
+          minReplicas: 1
+          maxReplicas: 3
+          targetCPUUtilizationPercentage: 70
         # Add this block to enable Prometheus scraping
-        #metrics:
-          #enabled: true
-        #serviceMonitor:
-          #enabled: true
+        metrics:
+          enabled: true
+        serviceMonitor:
+          enabled: true
           # This label is critical: it tells Prometheus to pick up this monitor
-          #additionalLabels:
-            #release: kube-prometheus-stack
+          additionalLabels:
+            release: kube-prometheus-stack
 
   destination:
     server: https://kubernetes.default.svc
