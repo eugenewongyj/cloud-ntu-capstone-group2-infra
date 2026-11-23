@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: app-staging-project
+  namespace: argocd
+spec:
+  description: Workload microservices
+  sourceRepos:
+    - https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    - https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app.git
+  destinations:
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+    - namespace: retail-staging
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: ResourceQuota
+    - group: ""
+      kind: LimitRange

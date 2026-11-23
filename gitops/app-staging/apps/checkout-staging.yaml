@@ -1,60 +1,48 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: orders-staging
+  name: checkout-staging
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "6"
 spec:
-  project: app-project
+  project: app-staging-project
   source:
     repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app.git
     targetRevision: main
-    path: src/orders/chart
+    path: src/checkout/chart
     helm:
-      releaseName: orders
+      releaseName: checkout
       valuesObject:
         nodeSelector:
           workload-tier: t3-medium-apps-staging
-        # Our own image from ECR (built + scanned by CI), not the public upstream image
+      # Our own image from ECR (built + scanned by CI), not the public upstream image
         #image:
-          #repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-orders
+          #repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-checkout
           #tag: "5641ed5f5ed2ce4991149e9507e497ab80366fa1"
-          # Service account name must match the Pod Identity association in sqs.tf
-        #serviceAccount:
-          #create: true
-          #name: orders
-        # Publish order events to SQS (IAM role via Pod Identity, no credentials stored)
+          # Checkout submits orders to the orders service
         #app:
-          #messaging:
-            #provider: sqs
-            #sqs:
-              #topic: group2-capstone-orders-events
-              #region: ap-southeast-1
-            #rabbitmq:
-              #secret:
-                #create: false   # not using RabbitMQ: don't create an empty secret
-          # Aurora PostgreSQL Serverless v2 (aurora-postgres.tf): orders survive restarts
-          # and are shared by all replicas (needed for autoscaling)
+          #endpoints:
+            #orders: http://orders:80
+                  # ElastiCache Serverless (elasticache.tf): checkout sessions survive restarts
+          # and are shared by all checkout replicas (needed for autoscaling)
           #persistence:
-            #provider: postgres
-            #endpoint: "group2-capstone-orders-pg.cluster-cnge2fzfx0rs.ap-southeast-1.rds.amazonaws.com:5432"
-            #database: orders
-            #secret:
-              #create: false     # credentials come from External Secrets (gitops/app/manifests/orders-db)
-              #name: orders-db
+            #provider: redis
+            #redis:
+              #endpoint: "group2-capstone-checkout-gc2iuw.serverless.apse1.cache.amazonaws.com:6379"
+              #tls: true   # Serverless always requires TLS (rediss://)
         # Add the OTel instrumentation annotation here
         podAnnotations:
           # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
-          instrumentation.opentelemetry.io/inject-java: "retail-store-instrumentation"
+          instrumentation.opentelemetry.io/inject-nodejs: "retail-store-instrumentation"
         # Set the Pod Size (Requests and Limits)
         resources:
           requests:
-            cpu: 250m
-            memory: 384Mi
+            cpu: 125m
+            memory: 256Mi
           limits:
-            cpu: 1000m
-            memory: 768Mi
+            cpu: 250m
+            memory: 512Mi
         autoscaling:
           enabled: true
           minReplicas: 1

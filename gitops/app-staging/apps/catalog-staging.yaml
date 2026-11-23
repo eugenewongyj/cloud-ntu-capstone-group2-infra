@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "6"
 spec:
-  project: app-project
+  project: app-staging-project
 
   source:
     repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app.git
