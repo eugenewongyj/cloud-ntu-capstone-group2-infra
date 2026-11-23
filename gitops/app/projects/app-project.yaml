@@ -13,8 +13,6 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: retail-store
       server: https://kubernetes.default.svc
-    - namespace: retail-staging
-      server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
