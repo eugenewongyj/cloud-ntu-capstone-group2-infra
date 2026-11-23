@@ -30,7 +30,7 @@ data:
           }
         ]
       },
-      "description": "OpenTelemetry LGTM Observability dashboard adapted for Kubernetes services.",
+      "description": "OpenTelemetry LGTM Observability dashboard with Namespace and Service Name selectors.",
       "editable": true,
       "fiscalYearStartMonth": 0,
       "gnetId": 23958,
@@ -91,7 +91,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "count(target_info{service_name=\"$service_name\"})",
+              "expr": "count(target_info{service_namespace=~\"$service_namespace\", service_name=\"$service_name\"})",
               "instant": true,
               "interval": "",
               "legendFormat": "",
@@ -155,7 +155,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum by (http_request_method, http_route) (increase(http_server_request_duration_seconds_count{service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__range]))",
+              "expr": "sum by (http_request_method, http_route) (increase(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__range]))",
               "instant": true,
               "interval": "",
               "legendFormat": "{{http_request_method}} {{http_route}}",
@@ -232,7 +232,7 @@ data:
                 "uid": "${prometheus_ds}"
               },
               "exemplar": true,
-              "expr": "sum by(http_request_method, http_route) (rate(http_server_request_duration_seconds_sum{service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval])) / sum by(http_request_method, http_route) (rate(http_server_request_duration_seconds_count{service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval]))",
+              "expr": "sum by(http_request_method, http_route) (rate(http_server_request_duration_seconds_sum{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval])) / sum by(http_request_method, http_route) (rate(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval]))",
               "interval": "",
               "legendFormat": "{{http_request_method}} {{http_route}}",
               "refId": "A"
@@ -294,7 +294,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(increase(http_server_request_duration_seconds_count{service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__range]))",
+              "expr": "sum(increase(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__range]))",
               "instant": true,
               "interval": "",
               "legendFormat": "",
@@ -365,7 +365,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(increase(http_server_request_duration_seconds_count{service_name=\"$service_name\", http_response_status_code=~\"5.*\"}[$__range])) or vector(0)",
+              "expr": "sum(increase(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_response_status_code=~\"5.*\"}[$__range])) or vector(0)",
               "instant": true,
               "interval": "",
               "legendFormat": "",
@@ -465,7 +465,7 @@ data:
                 "uid": "${prometheus_ds}"
               },
               "exemplar": true,
-              "expr": "sum by(http_route) (rate(http_server_request_duration_seconds_count{service_name=\"$service_name\", http_response_status_code=~\"2.*\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval])) / sum by(http_route) (rate(http_server_request_duration_seconds_count{service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval]))",
+              "expr": "sum by(http_route) (rate(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_response_status_code=~\"2.*\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval])) / sum by(http_route) (rate(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval]))",
               "interval": "",
               "legendFormat": "{{http_route}}",
               "refId": "A"
@@ -563,7 +563,7 @@ data:
                 "uid": "${prometheus_ds}"
               },
               "exemplar": true,
-              "expr": "(sum by(http_route) (rate(http_server_request_duration_seconds_count{service_name=\"$service_name\", http_response_status_code=~\"5.*\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval])) / sum by(http_route) (rate(http_server_request_duration_seconds_count{service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval]))) or (0 * sum by(http_route) (rate(http_server_request_duration_seconds_count{service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval])))",
+              "expr": "(sum by(http_route) (rate(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_response_status_code=~\"5.*\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval])) / sum by(http_route) (rate(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval]))) or (0 * sum by(http_route) (rate(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval])))",
               "interval": "",
               "legendFormat": "{{http_route}}",
               "refId": "A"
@@ -660,7 +660,7 @@ data:
                 "uid": "${prometheus_ds}"
               },
               "exemplar": true,
-              "expr": "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval])) by(http_route, le))",
+              "expr": "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval])) by(http_route, le))",
               "interval": "",
               "legendFormat": "{{http_route}}",
               "refId": "A"
@@ -756,7 +756,7 @@ data:
                 "uid": "${prometheus_ds}"
               },
               "exemplar": true,
-              "expr": "sum by(pod) (http_server_active_requests{service_name=\"$service_name\"})",
+              "expr": "sum by(pod) (http_server_active_requests{service_namespace=~\"$service_namespace\", service_name=\"$service_name\"})",
               "interval": "",
               "legendFormat": "{{pod}}",
               "refId": "A"
@@ -853,7 +853,7 @@ data:
                 "uid": "${prometheus_ds}"
               },
               "exemplar": true,
-              "expr": "sum by(http_route) (rate(http_server_request_duration_seconds_count{service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval]))",
+              "expr": "sum by(http_route) (rate(http_server_request_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\", http_route!~\"/actuator.*|/health.*\"}[$__rate_interval]))",
               "interval": "",
               "legendFormat": "{{http_route}}",
               "refId": "A"
@@ -925,7 +925,7 @@ data:
               },
               "limit": 20,
               "metricsQueryType": "range",
-              "query": "{resource.service.name=\"$service_name\"}",
+              "query": "{resource.service.namespace=~\"$service_namespace\" && resource.service.name=\"$service_name\"}",
               "queryType": "traceql",
               "refId": "A",
               "tableType": "traces"
@@ -1020,7 +1020,7 @@ data:
                 "type": "loki",
                 "uid": "${loki_ds}"
               },
-              "expr": "sum by(pod) (rate({namespace=~\"retail-store|retails-staging\", container=\"$service_name\"} |~ \"(?i)$log_keyword\"[1m]))",
+              "expr": "sum by(pod) (rate({namespace=~\"$service_namespace\", container=\"$service_name\"} |~ \"(?i)$log_keyword\"[1m]))",
               "legendFormat": "{{pod}}",
               "refId": "A"
             }
@@ -1059,7 +1059,7 @@ data:
               },
               "direction": "backward",
               "editorMode": "code",
-              "expr": "{namespace=~\"retail-store|retails-staging\", container=\"$service_name\"} |~ \"(?i)$log_keyword\"",
+              "expr": "{namespace=~\"$service_namespace\", container=\"$service_name\"} |~ \"(?i)$log_keyword\"",
               "hide": false,
               "queryType": "range",
               "refId": "A"
@@ -1121,7 +1121,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(asyncio_process_duration_seconds_count{service_name=\"$service_name\"})",
+              "expr": "sum(asyncio_process_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\"})",
               "instant": true,
               "interval": "",
               "legendFormat": "",
@@ -1190,7 +1190,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "asyncio_process_duration_seconds_count{service_name=\"$service_name\"}",
+              "expr": "asyncio_process_duration_seconds_count{service_namespace=~\"$service_namespace\", service_name=\"$service_name\"}",
               "format": "table",
               "instant": true,
               "interval": "",
@@ -1288,7 +1288,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(db_client_connections_usage{service_name=\"$service_name\"})",
+              "expr": "sum(db_client_connections_usage{service_namespace=~\"$service_namespace\", service_name=\"$service_name\"})",
               "instant": true,
               "interval": "",
               "legendFormat": "",
@@ -1357,7 +1357,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "db_client_connections_usage{service_name=\"$service_name\"}",
+              "expr": "db_client_connections_usage{service_namespace=~\"$service_namespace\", service_name=\"$service_name\"}",
               "format": "table",
               "instant": true,
               "interval": "",
@@ -1445,21 +1445,44 @@ data:
             "type": "datasource"
           },
           {
+            "allowCustomValue": false,
             "current": {},
             "datasource": {
               "type": "prometheus",
               "uid": "${prometheus_ds}"
             },
-            "definition": "label_values(target_info{service_namespace=~\"retail-store|retails-staging\"}, service_name)",
+            "definition": "label_values(target_info{service_namespace!=\"\"}, service_namespace)",
+            "description": "Filter by Kubernetes / OTel service namespace",
+            "includeAll": true,
+            "label": "Namespace",
+            "multi": false,
+            "name": "service_namespace",
+            "options": [],
+            "query": {
+              "query": "label_values(target_info{service_namespace!=\"\"}, service_namespace)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "sort": 1,
+            "type": "query"
+          },
+          {
+            "current": {},
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${prometheus_ds}"
+            },
+            "definition": "label_values(target_info{service_namespace=~\"$service_namespace\"}, service_name)",
             "includeAll": false,
             "label": "Service Name",
             "name": "service_name",
             "options": [],
             "query": {
-              "query": "label_values(target_info{service_namespace=~\"retail-store|retails-staging\"}, service_name)",
+              "query": "label_values(target_info{service_namespace=~\"$service_namespace\"}, service_name)",
               "refId": "StandardVariableQuery"
             },
-            "refresh": 1,
+            "refresh": 2,
             "regex": "",
             "sort": 1,
             "type": "query"
