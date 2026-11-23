@@ -1,1 +1,67 @@
-# To be used for staging environment
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: ui-staging
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+
+spec:
+  project: app-project
+
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app.git
+    targetRevision: main
+    path: src/ui/chart
+
+    helm:
+      releaseName: ui
+      valuesObject:
+
+        # Custom-built UI image in ECR
+        image:
+          repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-ui
+          tag: "554ad763b1ad3a26325d415d020d4c0ef180f96b"
+          pullPolicy: IfNotPresent
+
+        # Single replica for initial staging
+        replicaCount: 1
+
+        autoscaling:
+          enabled: false
+
+        # Keep the existing resource requirements
+        resources:
+          requests:
+            cpu: 250m
+            memory: 384Mi
+          limits:
+            cpu: 1000m
+            memory: 768Mi
+
+        # Disable public ingress initially
+        ingress:
+          enabled: false
+
+        # Disable optional monitoring initially
+        serviceMonitor:
+          enabled: false
+
+        # Connect to existing catalog/cart services
+        #app:
+          #endpoints:
+            #catalog: http://catalog.retail-store.svc.cluster.local:80
+            #carts: http://carts.retail-store.svc.cluster.local:80
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: retail-staging
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
