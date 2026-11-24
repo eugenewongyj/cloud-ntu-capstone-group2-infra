@@ -1,13 +1,13 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ui-pdb
+  name: carts-pdb
   namespace: retail-store
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: ui
+      app.kubernetes.io/name: carts
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -23,13 +23,13 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: carts-pdb
+  name: checkout-pdb
   namespace: retail-store
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: carts
+      app.kubernetes.io/name: checkout
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -45,10 +45,10 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: checkout-pdb
+  name: ui-pdb
   namespace: retail-store
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: checkout
+      app.kubernetes.io/name: ui
