@@ -57,7 +57,16 @@ spec:
 
         # Disable public ingress initially
         ingress:
-          enabled: false
+          enabled: true
+          className: alb
+          annotations:
+            alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+            alb.ingress.kubernetes.io/ssl-redirect: "443"
+            # Attach the WAF by NAME (from waf.tf), not ARN: the ARN changes on every daily rebuild
+            #alb.ingress.kubernetes.io/wafv2-acl-name: group2-capstone-web-acl
+          hosts: 
+            - group2-retail-staging.sctp-sandbox.com
+          tls: []
 
         # Disable optional monitoring initially
         serviceMonitor:
