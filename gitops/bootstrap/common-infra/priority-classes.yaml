@@ -1,0 +1,17 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: prod-critical
+value: 500000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Production workloads in retail-store namespace."
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: staging-low
+value: 1000
+globalDefault: false
+preemptionPolicy: Never
+description: "Low-priority workloads in retail-staging namespace; evicted first under pressure."

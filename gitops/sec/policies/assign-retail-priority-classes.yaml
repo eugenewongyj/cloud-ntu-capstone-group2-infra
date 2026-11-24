@@ -1,0 +1,27 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: assign-retail-priority-classes
+spec:
+  failurePolicy: Ignore
+  rules:
+    - name: prod-critical-retail-store
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["retail-store"]
+      mutate:
+        patchStrategicMerge:
+          spec:
+            priorityClassName: prod-critical
+    - name: staging-low-retail-staging
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["retail-staging"]
+      mutate:
+        patchStrategicMerge:
+          spec:
+            priorityClassName: staging-low
