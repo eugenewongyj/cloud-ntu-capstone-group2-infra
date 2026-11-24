@@ -65,6 +65,7 @@ spec:
         podDisruptionBudget:
           enabled: true
           minAvailable: 1
+          maxUnavailable: null
         # Add this block to enable Prometheus scraping
         metrics:
           enabled: true
