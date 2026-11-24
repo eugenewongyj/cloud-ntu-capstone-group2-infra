@@ -168,6 +168,13 @@ prometheus:
             requests:
               storage: 20Gi
 prometheusOperator:
+  nodeSelector:
+    workload-tier: t3-medium-monitoring
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: t3-medium-monitoring
+      effect: NoSchedule
   admissionWebhooks:
     patch:
       nodeSelector:
