@@ -17,6 +17,31 @@ spec:
       valuesObject:
         config:
           preserve: false
+        crds:
+          migration:
+            nodeSelector:
+              workload-tier: t3-medium-security
+            tolerations:
+              - key: workload
+                operator: Equal
+                value: t3-medium-security
+                effect: NoSchedule
+        webhooksCleanup:
+          nodeSelector:
+            workload-tier: t3-medium-security
+          tolerations:
+            - key: workload
+              operator: Equal
+              value: t3-medium-security
+              effect: NoSchedule
+        policyReportsCleanup:
+          nodeSelector:
+            workload-tier: t3-medium-security
+          tolerations:
+            - key: workload
+              operator: Equal
+              value: t3-medium-security
+              effect: NoSchedule
         admissionController:
           replicas: 2
           podDisruptionBudget:
