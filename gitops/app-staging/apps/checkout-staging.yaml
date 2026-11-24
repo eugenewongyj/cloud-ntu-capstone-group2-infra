@@ -21,21 +21,20 @@ spec:
             operator: Equal
             value: t3-medium-apps-staging
             effect: NoSchedule
-      # Our own image from ECR (built + scanned by CI), not the public upstream image
-        #image:
-          #repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-checkout
-          #tag: "5641ed5f5ed2ce4991149e9507e497ab80366fa1"
-          # Checkout submits orders to the orders service
-        #app:
-          #endpoints:
-            #orders: http://orders:80
-                  # ElastiCache Serverless (elasticache.tf): checkout sessions survive restarts
-          # and are shared by all checkout replicas (needed for autoscaling)
-          #persistence:
-            #provider: redis
-            #redis:
-              #endpoint: "group2-capstone-checkout-gc2iuw.serverless.apse1.cache.amazonaws.com:6379"
-              #tls: true   # Serverless always requires TLS (rediss://)
+        # Our own image from ECR (built + scanned by CI). Tag updated automatically by a PR from build-orders-checkout.yaml
+        image:
+          repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-checkout
+          tag: "5641ed5f5ed2ce4991149e9507e497ab80366fa1"
+        app:
+          # orders = the orders service in retail-staging (same namespace), not prod
+          endpoints:
+            orders: http://orders:80
+          # STAGING Valkey cache (staging-orders-checkout.tf): separate from prod sessions
+          persistence:
+            provider: redis
+            redis:
+              endpoint: "group2-capstone-checkout-staging-gc2iuw.serverless.apse1.cache.amazonaws.com:6379"
+              tls: true   # Serverless always requires TLS (rediss://)
         # Add the OTel instrumentation annotation here
         podAnnotations:
           # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language

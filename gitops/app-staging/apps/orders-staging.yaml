@@ -21,33 +21,32 @@ spec:
             operator: Equal
             value: t3-medium-apps-staging
             effect: NoSchedule
-        # Our own image from ECR (built + scanned by CI), not the public upstream image
-        #image:
-          #repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-orders
-          #tag: "5641ed5f5ed2ce4991149e9507e497ab80366fa1"
-          # Service account name must match the Pod Identity association in sqs.tf
-        #serviceAccount:
-          #create: true
-          #name: orders
-        # Publish order events to SQS (IAM role via Pod Identity, no credentials stored)
-        #app:
-          #messaging:
-            #provider: sqs
-            #sqs:
-              #topic: group2-capstone-orders-events
-              #region: ap-southeast-1
-            #rabbitmq:
-              #secret:
-                #create: false   # not using RabbitMQ: don't create an empty secret
-          # Aurora PostgreSQL Serverless v2 (aurora-postgres.tf): orders survive restarts
-          # and are shared by all replicas (needed for autoscaling)
-          #persistence:
-            #provider: postgres
-            #endpoint: "group2-capstone-orders-pg.cluster-cnge2fzfx0rs.ap-southeast-1.rds.amazonaws.com:5432"
-            #database: orders
-            #secret:
-              #create: false     # credentials come from External Secrets (gitops/app/manifests/orders-db)
-              #name: orders-db
+        # Our own image from ECR (built + scanned by CI). Tag updated automatically by a PR from build-orders-checkout.yaml
+        image:
+          repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-orders
+          tag: "5641ed5f5ed2ce4991149e9507e497ab80366fa1"
+        # Service account name must match the STAGING Pod Identity association (staging-orders-checkout.tf)
+        serviceAccount:
+          create: true
+          name: orders
+        app:
+          # STAGING queue: the staging IAM role can only send here, never to the prod queue
+          messaging:
+            provider: sqs
+            sqs:
+              topic: group2-capstone-orders-events-staging
+              region: ap-southeast-1
+            rabbitmq:
+              secret:
+                create: false   # not using RabbitMQ: don't create an empty secret
+          # STAGING Aurora PostgreSQL (staging-orders-checkout.tf): separate from prod data
+          persistence:
+            provider: postgres
+            endpoint: "group2-capstone-orders-pg-staging.cluster-cnge2fzfx0rs.ap-southeast-1.rds.amazonaws.com:5432"
+            database: orders
+            secret:
+              create: false     # credentials come from External Secrets (gitops/app-staging/manifests/orders-db-staging)
+              name: orders-db
         # Add the OTel instrumentation annotation here
         podAnnotations:
           # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
