@@ -18,7 +18,10 @@ spec:
         config:
           preserve: false
         admissionController:
-          replicas: 1
+          replicas: 2
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 1
           nodeSelector:
             workload-tier: t3-medium-security
           tolerations:

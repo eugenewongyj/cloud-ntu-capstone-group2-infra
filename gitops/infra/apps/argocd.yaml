@@ -22,6 +22,10 @@ spec:
               value: t3-medium-platform
               effect: NoSchedule
         controller:
+          replicas: 2
+          pdb:
+            enabled: true
+            minAvailable: 1
           resources:
             requests:
               cpu: 300m
@@ -53,6 +57,10 @@ spec:
               additionalLabels:
                 release: kube-prometheus-stack
         server:
+          replicas: 2
+          pdb:
+            enabled: true
+            minAvailable: 1
           resources:
             requests:
               cpu: 100m
@@ -75,6 +83,10 @@ spec:
               additionalLabels:
                 release: kube-prometheus-stack
         repoServer:
+          replicas: 2
+          pdb:
+            enabled: true
+            minAvailable: 1
           resources:
             requests:
               cpu: 500m
