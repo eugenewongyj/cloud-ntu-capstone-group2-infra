@@ -1,0 +1,25 @@
+# STAGING: deploys the orders-db ExternalSecret into retail-staging
+# (gitops/app-staging/manifests/orders-db-staging). Same pattern as prod orders-db.yaml.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: orders-db-staging
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"   # before orders-staging (wave 6)
+spec:
+  project: app-staging-project
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    targetRevision: main
+    path: gitops/app-staging/manifests/orders-db-staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: retail-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true
