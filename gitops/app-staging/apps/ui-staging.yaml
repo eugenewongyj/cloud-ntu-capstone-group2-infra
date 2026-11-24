@@ -78,6 +78,9 @@ spec:
             #catalog: http://catalog.retail-store.svc.cluster.local:80
             #carts: http://carts.retail-store.svc.cluster.local:80
 
+        smokeTest:
+          enabled: true
+
   destination:
     server: https://kubernetes.default.svc
     namespace: retail-staging
