@@ -15,7 +15,6 @@ spec:
         name: default
       taints:
         - key: CriticalAddonsOnly
-          value: "true"
           effect: NoSchedule
       requirements:
         - key: node.kubernetes.io/instance-type
@@ -35,8 +34,8 @@ spec:
           values:
             - on-demand
   limits:
-    cpu: "4"
-    memory: 8Gi
+    cpu: "6"
+    memory: 12Gi
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
     consolidateAfter: 30s
