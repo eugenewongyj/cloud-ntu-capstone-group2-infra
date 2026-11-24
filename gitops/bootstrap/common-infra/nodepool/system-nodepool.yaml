@@ -38,4 +38,4 @@ spec:
     memory: 12Gi
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
-    consolidateAfter: 30
+    consolidateAfter: 30s
