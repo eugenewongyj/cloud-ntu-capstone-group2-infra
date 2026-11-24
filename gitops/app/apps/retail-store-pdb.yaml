@@ -1,0 +1,23 @@
+# Deploys PodDisruptionBudgets for all retail-store microservices (gitops/app/manifests/pdb)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: retail-store-pdb
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: app-project
+  source:
+    repoURL: https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra.git
+    targetRevision: main
+    path: gitops/app/manifests/pdb
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: retail-store
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
