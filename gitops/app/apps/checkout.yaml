@@ -50,9 +50,19 @@ spec:
             memory: 512Mi
         autoscaling:
           enabled: true
-          minReplicas: 1
-          maxReplicas: 5
+          minReplicas: 2
+          maxReplicas: 6
           targetCPUUtilizationPercentage: 70
+        topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: checkout
+        podDisruptionBudget:
+          enabled: true
+          minAvailable: 1
         # Add this block to enable Prometheus scraping
         metrics:
           enabled: true

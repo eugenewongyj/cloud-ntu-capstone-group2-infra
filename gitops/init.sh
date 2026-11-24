@@ -8,6 +8,7 @@ CLUSTER_NAME="group2-capstone-cluster"
 AWS_REGION="ap-southeast-1"
 VALUES_FILE="bootstrap/common-infra/argocd-values.yaml"
 NODEPOOL_DIR="bootstrap/common-infra/nodepool"
+PRIORITY_CLASSES_FILE="bootstrap/common-infra/priority-classes.yaml"
 
 echo "=========================================="
 echo " Starting GitOps Cluster Bootstrap"
@@ -15,11 +16,11 @@ echo " Cluster: ${CLUSTER_NAME} (${AWS_REGION})"
 echo "=========================================="
 
 # 1. Update Kubeconfig
-echo "--> [1/7] Updating kubeconfig..."
+echo "--> [1/8] Updating kubeconfig..."
 aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
 
 # 2. Apply EKS Auto Mode Tiered t3.medium NodePools BEFORE ArgoCD
-echo "--> [2/7] Applying EKS Auto Mode tiered t3.medium NodePools..."
+echo "--> [2/8] Applying EKS Auto Mode tiered t3.medium NodePools..."
 if [ -d "${NODEPOOL_DIR}" ]; then
   kubectl apply -f "${NODEPOOL_DIR}/logging-nodepool.yaml"
   kubectl apply -f "${NODEPOOL_DIR}/monitoring-nodepool.yaml"
@@ -44,13 +45,21 @@ else
   echo "Warning: ${NODEPOOL_DIR} not found; relying on built-in EKS Auto Mode NodePools."
 fi
 
-# 3.  Pre-create core namespaces
-echo "--> [3/7] Applying pre-creating core namespaces..."
+# 3. Apply Cluster PriorityClasses BEFORE ArgoCD & Workloads
+echo "--> [3/8] Applying Cluster PriorityClasses..."
+if [ -f "${PRIORITY_CLASSES_FILE}" ]; then
+  kubectl apply -f "${PRIORITY_CLASSES_FILE}"
+  kubectl get priorityclasses platform-critical prod-critical staging-low
+else
+  echo "Warning: ${PRIORITY_CLASSES_FILE} not found; skipping PriorityClass creation."
+fi
+
+# 4. Pre-create core namespaces
+echo "--> [4/8] Applying pre-creating core namespaces..."
 kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 
-
-# 4. Bootstrap Argo CD via Helm
-echo "--> [4/7] Deploying Argo CD Helm chart with custom values..."
+# 5. Bootstrap Argo CD via Helm
+echo "--> [5/8] Deploying Argo CD Helm chart with custom values..."
 helm repo add argo https://argoproj.github.io/argo-helm 2>/dev/null || true
 helm repo update argo
 
@@ -64,20 +73,20 @@ helm upgrade --install argocd argo/argo-cd \
 echo "Waiting for Argo CD API server deployment rollout..."
 kubectl rollout status deployment/argocd-server -n argocd --timeout=180s
 
-# 5. Apply AppProjects
-echo "--> [5/7] Applying Argo CD AppProjects..."
+# 6. Apply AppProjects
+echo "--> [6/8] Applying Argo CD AppProjects..."
 kubectl apply -f infra/projects/infra-project.yaml
 kubectl apply -f sre/projects/sre-project.yaml
 kubectl apply -f app/projects/app-project.yaml
 kubectl apply -f app-staging/projects/app-staging-project.yaml
 kubectl apply -f sec/projects/sec-project.yaml
 
-# 6. GitOps Handoff (App-of-Apps Root Deployments)
-echo "--> [6/7] Applying Root GitOps Applications..."
+# 7. GitOps Handoff (App-of-Apps Root Deployments)
+echo "--> [7/8] Applying Root GitOps Applications..."
 kubectl apply -f bootstrap/root.yaml
 
-# 7. Print Credentials and Access URL
-echo "--> [7/7] Retrieving initial admin credentials..."
+# 8. Print Credentials and Access URL
+echo "--> [8/8] Retrieving initial admin credentials..."
 ADMIN_PWD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" 2>/dev/null | base64 -d || true)
 
 echo "=========================================="
