@@ -17,14 +17,15 @@ spec:
         nodeSelector:
           workload-tier: t3-medium-apps-staging
         tolerations:
-          - key: workload
-            operator: Equal
-            value: t3-medium-apps-staging
-            effect: NoSchedule
+        - key: workload
+          operator: Equal
+          value: t3-medium-apps-staging
+          effect: NoSchedule
         # Our own image from ECR (built + scanned by CI). Tag updated automatically by a PR from build-orders-checkout.yaml
         image:
-          repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-checkout
-          tag: "5641ed5f5ed2ce4991149e9507e497ab80366fa1"
+          repository: 
+            255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-checkout
+          tag: "391c872f88991ca610ea554f7a56d8880a620f7b"
         app:
           # orders = the orders service in retail-staging (same namespace), not prod
           endpoints:
@@ -68,9 +69,9 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+    - CreateNamespace=true
   ignoreDifferences:
-    - group: apps
-      kind: Deployment
-      jsonPointers:
-        - /spec/replicas
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas
