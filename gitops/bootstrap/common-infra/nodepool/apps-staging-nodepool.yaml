@@ -14,7 +14,7 @@ spec:
         name: default
       taints:
         - key: workload
-          value: t3-medium-apps
+          value: t3-medium-apps-staging
           effect: NoSchedule
       requirements:
         - key: node.kubernetes.io/instance-type
