@@ -10,18 +10,22 @@ resource "aws_db_subnet_group" "aurora" {
   }
 }
 
-# 2. Security Group (MySQL access from anywhere inside the VPC)
+# 2. Security Group (MySQL access only from the EKS cluster, same as orders_db)
+#    The top-level description below is out of date but is left unchanged on
+#    purpose: changing a security group's description forces AWS to replace
+#    the whole group, which fails while the Aurora cluster is attached to it.
 resource "aws_security_group" "aurora" {
   name        = "${var.project_name}-aurora-sg"
   description = "Allow MySQL access from within the VPC"
   vpc_id      = aws_vpc.main.id
 
+  # DevSecOps: only the EKS cluster SG may connect (not the whole VPC)
   ingress {
-    description = "MySQL from VPC"
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
+    description     = "MySQL from EKS pods"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [module.eks.cluster_primary_security_group_id]
   }
 
   egress {
