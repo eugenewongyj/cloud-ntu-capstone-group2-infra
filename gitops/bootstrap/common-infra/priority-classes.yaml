@@ -23,4 +23,4 @@ metadata:
 value: 1000
 globalDefault: false
 preemptionPolicy: Never
-description: "Low-priority workloads in retail-staging namespace; evicted first under pressure."
+description: "Low-priority workloads in retail-staging namespace; evicted first under pressure." 
