@@ -824,3 +824,74 @@ resource "aws_iam_role_policy_attachment" "infra_waf_attach" {
   role       = aws_iam_role.infra_deployer_role.name
   policy_arn = aws_iam_policy.infra_waf_policy.arn
 }
+
+# ---------------------------------------------------------------------
+# CloudFront (cloudfront.tf, ADR-0006): let the infra pipeline manage the
+# shop CDN and its CloudFront-scope WAF (both live in us-east-1).
+# - Its certificate is covered by the ACM statement above (Resource "*").
+# - Its log bucket (group2-capstone-cdn-logs-*) is covered by S3ScopedAccess.
+# - WAF list/check calls are covered by WafRead in the WAF policy above.
+# ---------------------------------------------------------------------
+resource "aws_iam_policy" "infra_cloudfront_policy" {
+  name        = "${var.prefix}-infra-deployer-cloudfront"
+  description = "Allow the infra pipeline to manage the shop CloudFront distribution and its WAF"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "CloudFrontDistributionScoped"
+        Effect = "Allow"
+        Action = [
+          "cloudfront:CreateDistribution",
+          "cloudfront:CreateDistributionWithTags",
+          "cloudfront:GetDistribution",
+          "cloudfront:GetDistributionConfig",
+          "cloudfront:UpdateDistribution",
+          "cloudfront:DeleteDistribution",
+          "cloudfront:TagResource",
+          "cloudfront:UntagResource",
+          "cloudfront:ListTagsForResource"
+        ]
+        Resource = "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:distribution/*"
+      },
+      {
+        # List / read calls for AWS managed policies (no resource-level scoping)
+        Sid    = "CloudFrontRead"
+        Effect = "Allow"
+        Action = [
+          "cloudfront:ListDistributions",
+          "cloudfront:GetCachePolicy",
+          "cloudfront:ListCachePolicies",
+          "cloudfront:GetOriginRequestPolicy",
+          "cloudfront:ListOriginRequestPolicies"
+        ]
+        Resource = "*"
+      },
+      {
+        # CloudFront-scope WAF Web ACL (always in us-east-1, "global" in the ARN)
+        Sid    = "CloudFrontWafScoped"
+        Effect = "Allow"
+        Action = [
+          "wafv2:CreateWebACL",
+          "wafv2:UpdateWebACL",
+          "wafv2:DeleteWebACL",
+          "wafv2:GetWebACL",
+          "wafv2:TagResource",
+          "wafv2:UntagResource",
+          "wafv2:ListTagsForResource"
+        ]
+        Resource = [
+          "arn:aws:wafv2:us-east-1:${data.aws_caller_identity.current.account_id}:global/webacl/${var.prefix}-*/*",
+          # AWS managed rule groups used inside the Web ACL (checked against OUR account id)
+          "arn:aws:wafv2:us-east-1:${data.aws_caller_identity.current.account_id}:global/managedruleset/*/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "infra_cloudfront_attach" {
+  role       = aws_iam_role.infra_deployer_role.name
+  policy_arn = aws_iam_policy.infra_cloudfront_policy.arn
+}

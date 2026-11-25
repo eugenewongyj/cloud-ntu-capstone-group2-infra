@@ -47,3 +47,16 @@ provider "aws" {
 provider "awscc" {
   region = var.aws_region
 }
+
+# Second AWS provider for us-east-1 (N. Virginia).
+# CloudFront only accepts certificates and WAF Web ACLs from us-east-1
+# (cloudfront.tf). No customer data lives there.
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+  default_tags {
+    tags = {
+      Project = var.project
+    }
+  }
+}
