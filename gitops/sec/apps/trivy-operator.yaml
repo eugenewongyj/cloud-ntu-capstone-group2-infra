@@ -22,15 +22,14 @@ spec:
             operator: Equal
             value: t3-medium-security
             effect: NoSchedule
+        nodeCollector:
+          enabled: false
         operator:
-          nodeCollector:
-            enabled: false
+          concurrentScanJobsLimit: 2
           scanJobTolerations:
             - operator: Exists
-        # Ignore vulnerabilities that do not have a known fix yet to reduce noise
         trivy:
           ignoreUnfixed: true
-        # Send vulnerability metrics to Prometheus
         serviceMonitor:
           enabled: true
           labels:
