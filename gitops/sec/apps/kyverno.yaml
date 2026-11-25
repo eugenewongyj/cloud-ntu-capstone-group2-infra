@@ -44,6 +44,7 @@ spec:
               effect: NoSchedule
         admissionController:
           replicas: 2
+          priorityClassName: platform-critical
           podDisruptionBudget:
             enabled: true
             minAvailable: 1
@@ -74,6 +75,7 @@ spec:
               release: kube-prometheus-stack
         backgroundController:
           replicas: 1
+          priorityClassName: platform-critical
           nodeSelector:
             workload-tier: t3-medium-security
           tolerations:
@@ -87,6 +89,7 @@ spec:
               release: kube-prometheus-stack
         reportsController:
           replicas: 1
+          priorityClassName: platform-critical
           nodeSelector:
             workload-tier: t3-medium-security
           tolerations:
@@ -100,6 +103,7 @@ spec:
               release: kube-prometheus-stack
         cleanupController:
           replicas: 1
+          priorityClassName: platform-critical
           nodeSelector:
             workload-tier: t3-medium-security
           tolerations:

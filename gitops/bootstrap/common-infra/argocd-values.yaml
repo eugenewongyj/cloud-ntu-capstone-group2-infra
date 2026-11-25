@@ -1,4 +1,5 @@
 global:
+  priorityClassName: platform-critical
   nodeSelector:
     workload-tier: t3-medium-platform
   tolerations:
