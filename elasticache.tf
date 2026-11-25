@@ -58,28 +58,30 @@ variable "checkout_cache_snapshot_retention_days" {
 }
 
 # ---------------------------------------------------------------------
-# 1. Security group: only traffic from inside the VPC
+# 1. Security group: only traffic from the EKS cluster (same as orders_db)
 #    6379 = read/write endpoint, 6380 = read-only (reader) endpoint
+#    The top-level description below is out of date but is left unchanged on
+#    purpose: changing a security group's description forces AWS to replace
+#    the whole group, which fails while the cache is attached to it.
 # ---------------------------------------------------------------------
 resource "aws_security_group" "checkout_cache" {
   name        = "${var.project_name}-checkout-cache-sg"
   description = "Allow Valkey/Redis access to the checkout cache from within the VPC"
   vpc_id      = aws_vpc.main.id
 
+  # DevSecOps: only the EKS cluster SG may connect (not the whole VPC)
   ingress {
-    description = "Valkey (read/write + reader) from VPC"
-    from_port   = 6379
-    to_port     = 6380
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
+    description     = "Valkey (read/write + reader) from EKS pods"
+    from_port       = 6379
+    to_port         = 6380
+    protocol        = "tcp"
+    security_groups = [module.eks.cluster_primary_security_group_id]
   }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # No outbound rules: the cache only answers connections, it never starts
+  # them. "egress = []" makes Terraform remove the default allow-all rule
+  # (leaving the egress block out would keep it).
+  egress = []
 
   tags = {
     Name        = "${var.project_name}-checkout-cache-sg"
