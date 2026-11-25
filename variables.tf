@@ -88,7 +88,7 @@ variable "project" {
 }
 
 variable "waf_rate_limit_per_ip" {
-  description = "Max requests one IP may send in 5 minutes before the WAF blocks it"
+  description = "Max requests one IP may send in 5 minutes before the CloudFront WAF blocks it (cloudfront.tf)"
   type        = number
   default     = 2000
 }
