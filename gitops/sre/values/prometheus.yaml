@@ -195,5 +195,7 @@ kube-state-metrics:
       effect: NoSchedule
 
 prometheus-node-exporter:
+  hostNetwork: true
+  hostPID: true
   tolerations:
     - operator: Exists
