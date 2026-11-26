@@ -23,7 +23,7 @@ data:
       ],
       "editable": true,
       "schemaVersion": 39,
-      "version": 1,
+      "version": 2,
       "timezone": "Asia/Singapore",
       "refresh": "10s",
       "time": {
@@ -141,8 +141,248 @@ data:
           },
           "options": {
             "mode": "markdown",
-            "content": "## NORMAL DAY → 11.11 FLASH SALE → RECOVERY\n**Production shopper URL:** `https://group2-shop.sctp-sandbox.com` → **CloudFront WAF** → protected **ALB WAF** → **EKS retail-store**. The ALB-origin URL returns HTTP 403 when accessed directly **by design**.\n\n**How to demo:** select `retail-store`, set time range covering **both** tests, choose `All` assessment runs and profiles. For a precise comparison, select one run at a time and preserve its time window. **The dashboard never fabricates purchases or capacity changes.** Missing metrics show **No data**, not zero.\n\n🟢 Green = within threshold · 🟠 Orange = degraded/approaching limit · 🔴 Red = threshold breached · **No data = telemetry not yet available**."
+            "content": "## NORMAL DAY → 11.11 FLASH SALE → RECOVERY\n**Production shopper URL:** `https://group2-shop.sctp-sandbox.com` → **CloudFront WAF** → protected **ALB WAF** → **EKS retail-store**. The ALB-origin URL returns HTTP 403 when accessed directly **by design**.\n\n**How to demo:** select `retail-store`, set time range covering **both** tests, choose `All` assessment runs and profiles. For a precise comparison, select one run at a time and preserve its time window. **The dashboard never fabricates purchases or capacity changes.** Missing metrics show **No data**, not zero.\n\n🟢 Green = within threshold · 🟠 Orange = degraded/approaching limit · 🔴 Red = threshold breached · **No data = telemetry not yet available**.\n\n**PRESENTATION RUNBOOK:** Expand sections 00A–00H below in sequence. Copy each command into WSL. All presenters must compare repository revisions before starting. Only one operator runs load tests.\n\n[Flash Sale p95 Latency & SLO Health](/d/p95-slo-health)"
           }
+        },
+        {
+          "id": 62,
+          "type": "row",
+          "title": "00A — Synchronise GitHub repositories",
+          "collapsed": true,
+          "gridPos": {
+            "x": 0,
+            "y": 6,
+            "w": 24,
+            "h": 1
+          },
+          "panels": [
+            {
+              "id": 63,
+              "type": "text",
+              "title": "Instructions and expected evidence",
+              "transparent": false,
+              "gridPos": {
+                "x": 0,
+                "y": 7,
+                "w": 24,
+                "h": 39
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### Start every presentation from a clean, shared source baseline.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\n(\nset -euo pipefail\n\nmkdir -p ~/capstone-presentation\ncd ~/capstone-presentation\n\nfor REPO in \\\n  cloud-ntu-capstone-group2-infra \\\n  cloud-ntu-capstone-group2-app\ndo\n  if [[ ! -d \"$REPO/.git\" ]]; then\n    git clone \\\n      \"https://github.com/eugenewongyj/$REPO.git\"\n  fi\n\n  (\n    cd \"$REPO\"\n    test -z \"$(git status --porcelain)\"\n    git switch main\n    git pull --ff-only origin main\n\n    echo \"===== $REPO =====\"\n    git log -1 --oneline\n    git rev-parse HEAD\n\n    test \"$(git rev-parse HEAD)\" = \\\n      \"$(git rev-parse origin/main)\"\n  )\ndone\n)\n```\n\n**Expected evidence:** Both repositories synchronised. Compare full commit SHAs across all group members. Agree on fixed revisions if main changes."
+              }
+            }
+          ]
+        },
+        {
+          "id": 64,
+          "type": "row",
+          "title": "00B — Initialise AWS and EKS",
+          "collapsed": true,
+          "gridPos": {
+            "x": 0,
+            "y": 7,
+            "w": 24,
+            "h": 1
+          },
+          "panels": [
+            {
+              "id": 65,
+              "type": "text",
+              "title": "Instructions and expected evidence",
+              "transparent": false,
+              "gridPos": {
+                "x": 0,
+                "y": 8,
+                "w": 24,
+                "h": 17
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### Use your own authorised AWS credentials.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\naws sts get-caller-identity\n\naws eks update-kubeconfig \\\n  --name group2-capstone-cluster \\\n  --region ap-southeast-1\n\nkubectl config current-context\nkubectl get nodes\n```\n\n**Expected evidence:** Correct AWS account and EKS cluster. All expected nodes Ready."
+              }
+            }
+          ]
+        },
+        {
+          "id": 66,
+          "type": "row",
+          "title": "00C — Verify GitOps deployment",
+          "collapsed": true,
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 24,
+            "h": 1
+          },
+          "panels": [
+            {
+              "id": 67,
+              "type": "text",
+              "title": "Instructions and expected evidence",
+              "transparent": false,
+              "gridPos": {
+                "x": 0,
+                "y": 9,
+                "w": 24,
+                "h": 18
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### Confirm that GitHub changes have reached the cluster.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\nkubectl get applications -n argocd\n\nkubectl get application capstone-monitoring \\\n  -n argocd -o json |\njq '{\n  revision: .status.sync.revision,\n  sync: .status.sync.status,\n  health: .status.health.status\n}'\n```\n\n**Expected evidence:** Synced and Healthy. Compare the deployed monitoring revision with the agreed infrastructure SHA."
+              }
+            }
+          ]
+        },
+        {
+          "id": 68,
+          "type": "row",
+          "title": "00D — Verify application health",
+          "collapsed": true,
+          "gridPos": {
+            "x": 0,
+            "y": 9,
+            "w": 24,
+            "h": 1
+          },
+          "panels": [
+            {
+              "id": 69,
+              "type": "text",
+              "title": "Instructions and expected evidence",
+              "transparent": false,
+              "gridPos": {
+                "x": 0,
+                "y": 10,
+                "w": 24,
+                "h": 12
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### Establish the production health baseline.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\nkubectl get deployments,pods,hpa \\\n  -n retail-store\n```\n\n**Expected evidence:** Five healthy microservices. Available replicas equal desired replicas. Observe the configured HPA targets."
+              }
+            }
+          ]
+        },
+        {
+          "id": 70,
+          "type": "row",
+          "title": "00E — Validate storefront and security",
+          "collapsed": true,
+          "gridPos": {
+            "x": 0,
+            "y": 10,
+            "w": 24,
+            "h": 1
+          },
+          "panels": [
+            {
+              "id": 71,
+              "type": "text",
+              "title": "Instructions and expected evidence",
+              "transparent": false,
+              "gridPos": {
+                "x": 0,
+                "y": 11,
+                "w": 24,
+                "h": 17
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### Open the production storefront and complete a demonstration purchase.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\nfor HOST in group2-shop group2-retail; do\n  echo \"===== $HOST =====\"\n\n  curl -sS --max-time 20 \\\n    -o /dev/null \\\n    -w 'HTTP: %{http_code}\\n' \\\n    \"https://${HOST}.sctp-sandbox.com/catalog\"\ndone\n```\n\n**Expected evidence:** Public storefront HTTP 200. Protected origin HTTP 403 by design. Show the manual order confirmation."
+              }
+            }
+          ]
+        },
+        {
+          "id": 72,
+          "type": "row",
+          "title": "00F — Normal-day assessment",
+          "collapsed": true,
+          "gridPos": {
+            "x": 0,
+            "y": 11,
+            "w": 24,
+            "h": 1
+          },
+          "panels": [
+            {
+              "id": 73,
+              "type": "text",
+              "title": "Instructions and expected evidence",
+              "transparent": false,
+              "gridPos": {
+                "x": 0,
+                "y": 12,
+                "w": 24,
+                "h": 16
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### Catalogue workload; not an automated purchase.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\ncd ~/capstone-presentation/cloud-ntu-capstone-group2-infra\n\nif [[ -f gitops/sre/validate/capstone-demo.sh ]]; then\n  bash gitops/sre/validate/capstone-demo.sh baseline\nelse\n  echo \"Shared assessment runner not yet integrated\"\nfi\n```\n\n**Expected evidence:** Select retail-store and the assessment run in Grafana. Measure p95, throughput and failures."
+              }
+            }
+          ]
+        },
+        {
+          "id": 74,
+          "type": "row",
+          "title": "00G — 11.11 flash sale",
+          "collapsed": true,
+          "gridPos": {
+            "x": 0,
+            "y": 12,
+            "w": 24,
+            "h": 1
+          },
+          "panels": [
+            {
+              "id": 75,
+              "type": "text",
+              "title": "Instructions and expected evidence",
+              "transparent": false,
+              "gridPos": {
+                "x": 0,
+                "y": 13,
+                "w": 24,
+                "h": 17
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### Only one designated operator executes load testing. Verify the runner and agreed load limits first.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\ncd ~/capstone-presentation/cloud-ntu-capstone-group2-infra\n\nif [[ -f gitops/sre/validate/capstone-demo.sh ]]; then\n  CAPSTONE_LOAD_APPROVED=YES \\\n    bash gitops/sre/validate/capstone-demo.sh flash-demo\nelse\n  echo \"Shared assessment runner not yet integrated\"\nfi\n```\n\n**Expected evidence:** Observe demand, latency, errors, HPA and CloudWatch. Stop on sustained degradation. Scaling is not guaranteed."
+              }
+            }
+          ]
+        },
+        {
+          "id": 76,
+          "type": "row",
+          "title": "00H — Recovery assessment",
+          "collapsed": true,
+          "gridPos": {
+            "x": 0,
+            "y": 13,
+            "w": 24,
+            "h": 1
+          },
+          "panels": [
+            {
+              "id": 77,
+              "type": "text",
+              "title": "Instructions and expected evidence",
+              "transparent": false,
+              "gridPos": {
+                "x": 0,
+                "y": 14,
+                "w": 24,
+                "h": 15
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### Observe recovery after the synthetic workload stops.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\nkubectl get hpa,deployments,pods \\\n  -n retail-store\n\nkubectl get events \\\n  -n retail-store \\\n  --sort-by=.lastTimestamp\n```\n\n**Expected evidence:** Observe recovery for at least five minutes. Preserve the assessment run ID and absolute dashboard time range."
+              }
+            }
+          ]
         },
         {
           "id": 2,
@@ -151,7 +391,7 @@ data:
           "collapsed": false,
           "gridPos": {
             "x": 0,
-            "y": 6,
+            "y": 14,
             "w": 24,
             "h": 1
           },
@@ -167,7 +407,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 7,
+            "y": 15,
             "w": 24,
             "h": 2
           },
@@ -184,7 +424,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 9,
+            "y": 17,
             "w": 6,
             "h": 5
           },
@@ -248,7 +488,7 @@ data:
           },
           "gridPos": {
             "x": 6,
-            "y": 9,
+            "y": 17,
             "w": 6,
             "h": 5
           },
@@ -312,7 +552,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 9,
+            "y": 17,
             "w": 6,
             "h": 5
           },
@@ -376,7 +616,7 @@ data:
           },
           "gridPos": {
             "x": 18,
-            "y": 9,
+            "y": 17,
             "w": 6,
             "h": 5
           },
@@ -440,7 +680,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 14,
+            "y": 22,
             "w": 6,
             "h": 5
           },
@@ -512,7 +752,7 @@ data:
           },
           "gridPos": {
             "x": 6,
-            "y": 14,
+            "y": 22,
             "w": 6,
             "h": 5
           },
@@ -580,7 +820,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 14,
+            "y": 22,
             "w": 6,
             "h": 5
           },
@@ -648,7 +888,7 @@ data:
           },
           "gridPos": {
             "x": 18,
-            "y": 14,
+            "y": 22,
             "w": 6,
             "h": 5
           },
@@ -720,7 +960,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 19,
+            "y": 27,
             "w": 12,
             "h": 8
           },
@@ -782,7 +1022,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 19,
+            "y": 27,
             "w": 12,
             "h": 8
           },
@@ -844,7 +1084,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 27,
+            "y": 35,
             "w": 12,
             "h": 8
           },
@@ -916,7 +1156,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 27,
+            "y": 35,
             "w": 12,
             "h": 8
           },
@@ -984,7 +1224,7 @@ data:
           "collapsed": false,
           "gridPos": {
             "x": 0,
-            "y": 35,
+            "y": 43,
             "w": 24,
             "h": 1
           },
@@ -1000,7 +1240,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 36,
+            "y": 44,
             "w": 24,
             "h": 2
           },
@@ -1017,7 +1257,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 38,
+            "y": 46,
             "w": 6,
             "h": 5
           },
@@ -1081,7 +1321,7 @@ data:
           },
           "gridPos": {
             "x": 6,
-            "y": 38,
+            "y": 46,
             "w": 6,
             "h": 5
           },
@@ -1152,7 +1392,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 38,
+            "y": 46,
             "w": 6,
             "h": 5
           },
@@ -1220,7 +1460,7 @@ data:
           },
           "gridPos": {
             "x": 18,
-            "y": 38,
+            "y": 46,
             "w": 6,
             "h": 5
           },
@@ -1288,7 +1528,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 44,
+            "y": 52,
             "w": 12,
             "h": 9
           },
@@ -1362,7 +1602,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 44,
+            "y": 52,
             "w": 12,
             "h": 9
           },
@@ -1436,7 +1676,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 53,
+            "y": 61,
             "w": 12,
             "h": 8
           },
@@ -1510,7 +1750,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 53,
+            "y": 61,
             "w": 12,
             "h": 8
           },
@@ -1580,7 +1820,7 @@ data:
           "collapsed": false,
           "gridPos": {
             "x": 0,
-            "y": 61,
+            "y": 69,
             "w": 24,
             "h": 1
           },
@@ -1596,7 +1836,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 62,
+            "y": 70,
             "w": 24,
             "h": 2
           },
@@ -1613,7 +1853,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 64,
+            "y": 72,
             "w": 6,
             "h": 5
           },
@@ -1677,7 +1917,7 @@ data:
           },
           "gridPos": {
             "x": 6,
-            "y": 64,
+            "y": 72,
             "w": 6,
             "h": 5
           },
@@ -1745,7 +1985,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 64,
+            "y": 72,
             "w": 6,
             "h": 5
           },
@@ -1817,7 +2057,7 @@ data:
           },
           "gridPos": {
             "x": 18,
-            "y": 64,
+            "y": 72,
             "w": 6,
             "h": 5
           },
@@ -1885,7 +2125,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 69,
+            "y": 77,
             "w": 24,
             "h": 8
           },
@@ -1982,7 +2222,7 @@ data:
           "collapsed": false,
           "gridPos": {
             "x": 0,
-            "y": 77,
+            "y": 85,
             "w": 24,
             "h": 1
           },
@@ -1998,7 +2238,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 78,
+            "y": 86,
             "w": 24,
             "h": 2
           },
@@ -2015,7 +2255,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 80,
+            "y": 88,
             "w": 6,
             "h": 5
           },
@@ -2086,7 +2326,7 @@ data:
           },
           "gridPos": {
             "x": 6,
-            "y": 80,
+            "y": 88,
             "w": 6,
             "h": 5
           },
@@ -2158,7 +2398,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 80,
+            "y": 88,
             "w": 6,
             "h": 5
           },
@@ -2226,7 +2466,7 @@ data:
           },
           "gridPos": {
             "x": 18,
-            "y": 80,
+            "y": 88,
             "w": 6,
             "h": 5
           },
@@ -2294,7 +2534,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 85,
+            "y": 93,
             "w": 6,
             "h": 5
           },
@@ -2366,7 +2606,7 @@ data:
           },
           "gridPos": {
             "x": 6,
-            "y": 85,
+            "y": 93,
             "w": 6,
             "h": 5
           },
@@ -2438,7 +2678,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 85,
+            "y": 93,
             "w": 6,
             "h": 5
           },
@@ -2510,7 +2750,7 @@ data:
           },
           "gridPos": {
             "x": 18,
-            "y": 85,
+            "y": 93,
             "w": 6,
             "h": 5
           },
@@ -2570,7 +2810,7 @@ data:
           "collapsed": false,
           "gridPos": {
             "x": 0,
-            "y": 90,
+            "y": 98,
             "w": 24,
             "h": 1
           },
@@ -2586,7 +2826,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 91,
+            "y": 99,
             "w": 24,
             "h": 2
           },
@@ -2603,7 +2843,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 93,
+            "y": 101,
             "w": 6,
             "h": 5
           },
@@ -2667,7 +2907,7 @@ data:
           },
           "gridPos": {
             "x": 6,
-            "y": 93,
+            "y": 101,
             "w": 6,
             "h": 5
           },
@@ -2731,7 +2971,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 93,
+            "y": 101,
             "w": 6,
             "h": 5
           },
@@ -2795,7 +3035,7 @@ data:
           },
           "gridPos": {
             "x": 18,
-            "y": 93,
+            "y": 101,
             "w": 6,
             "h": 5
           },
@@ -2863,7 +3103,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 98,
+            "y": 106,
             "w": 12,
             "h": 9
           },
@@ -2950,7 +3190,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 98,
+            "y": 106,
             "w": 12,
             "h": 9
           },
@@ -3037,7 +3277,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 107,
+            "y": 115,
             "w": 12,
             "h": 8
           },
@@ -3111,7 +3351,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 107,
+            "y": 115,
             "w": 12,
             "h": 8
           },
@@ -3169,7 +3409,7 @@ data:
           "collapsed": false,
           "gridPos": {
             "x": 0,
-            "y": 115,
+            "y": 123,
             "w": 24,
             "h": 1
           },
@@ -3185,7 +3425,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 116,
+            "y": 124,
             "w": 24,
             "h": 2
           },
@@ -3202,7 +3442,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 118,
+            "y": 126,
             "w": 12,
             "h": 8
           },
@@ -3276,7 +3516,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 118,
+            "y": 126,
             "w": 12,
             "h": 8
           },
@@ -3354,7 +3594,7 @@ data:
           "collapsed": false,
           "gridPos": {
             "x": 0,
-            "y": 126,
+            "y": 134,
             "w": 24,
             "h": 1
           },
@@ -3371,7 +3611,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 127,
+            "y": 135,
             "w": 8,
             "h": 5
           },
@@ -3439,7 +3679,7 @@ data:
           },
           "gridPos": {
             "x": 8,
-            "y": 127,
+            "y": 135,
             "w": 8,
             "h": 5
           },
@@ -3507,7 +3747,7 @@ data:
           },
           "gridPos": {
             "x": 16,
-            "y": 127,
+            "y": 135,
             "w": 8,
             "h": 5
           },
@@ -3570,7 +3810,7 @@ data:
           "title": "Incident triage: golden signals → logs → traces → AWS",
           "gridPos": {
             "x": 0,
-            "y": 132,
+            "y": 140,
             "w": 24,
             "h": 8
           },
