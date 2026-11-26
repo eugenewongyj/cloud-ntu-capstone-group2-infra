@@ -988,3 +988,59 @@ resource "aws_iam_role_policy_attachment" "infra_cloudfront_attach" {
   role       = aws_iam_role.infra_deployer_role.name
   policy_arn = aws_iam_policy.infra_cloudfront_policy.arn
 }
+
+# ---------------------------------------------------------------------
+# Separate policy for AWS DevOps Agent Lambda Relay (devops-agent-relay.tf).
+# Kept apart for the 6,144-character managed policy limit.
+# ---------------------------------------------------------------------
+resource "aws_iam_policy" "infra_lambda_relay_policy" {
+  name        = "${var.prefix}-infra-deployer-lambda-relay"
+  description = "Allow the infra pipeline to manage the DevOps Agent webhook relay Lambda and Function URL"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "LambdaRelayManagement"
+        Effect = "Allow"
+        Action = [
+          "lambda:CreateFunction",
+          "lambda:DeleteFunction",
+          "lambda:GetFunction",
+          "lambda:GetFunctionConfiguration",
+          "lambda:GetFunctionCodeSigningConfig",
+          "lambda:UpdateFunctionCode",
+          "lambda:UpdateFunctionConfiguration",
+          "lambda:ListVersionsByFunction",
+          "lambda:CreateFunctionUrlConfig",
+          "lambda:DeleteFunctionUrlConfig",
+          "lambda:GetFunctionUrlConfig",
+          "lambda:UpdateFunctionUrlConfig",
+          "lambda:AddPermission",
+          "lambda:RemovePermission",
+          "lambda:GetPolicy",
+          "lambda:TagResource",
+          "lambda:UntagResource",
+          "lambda:ListTags"
+        ]
+        Resource = "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:${var.prefix}-*"
+      },
+      {
+        Sid      = "PassRoleToLambda"
+        Effect   = "Allow"
+        Action   = ["iam:PassRole"]
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-*"
+        Condition = {
+          StringEquals = {
+            "iam:PassedToService" = "lambda.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "infra_lambda_relay_attach" {
+  role       = aws_iam_role.infra_deployer_role.name
+  policy_arn = aws_iam_policy.infra_lambda_relay_policy.arn
+}
