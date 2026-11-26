@@ -16,9 +16,9 @@ spec:
   data:
     - secretKey: webhook-url
       remoteRef:
-        key: group2-capstone/devops-agent-webhook
+        key: group2-capstone/sre/devops-agent-webhook
         property: webhook-url
     - secretKey: hmac-secret
       remoteRef:
-        key: group2-capstone/devops-agent-webhook
+        key: group2-capstone/sre/devops-agent-webhook
         property: hmac-secret
