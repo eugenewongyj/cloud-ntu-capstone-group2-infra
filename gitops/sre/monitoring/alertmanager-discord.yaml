@@ -7,39 +7,26 @@ metadata:
     release: kube-prometheus-stack
 spec:
   route:
-    groupBy: ['namespace', 'severity']
-    groupWait: 30s
-    groupInterval: 5m
-    repeatInterval: 4h
-    receiver: 'discord-notifications'
+    groupBy: ['alertname', 'namespace', 'pod', 'deployment']
+    groupWait: 10s
+    groupInterval: 1m
+    repeatInterval: 1h
+    receiver: 'null-receiver'
     routes:
-      - matchers:
+      - receiver: 'devops-agent-webhook'
+        matchers:
+          - name: severity
+            value: critical
+            matchType: '='
           - name: alertname
-            value: Watchdog
-            matchType: '='
-        receiver: 'null-receiver'
-
-      # 1. Trigger AWS DevOps Agent RCA within 10s, then continue to Discord
-      - matchers:
-          - name: severity
-            value: critical
-            matchType: '='
-        groupBy: ['alertname', 'namespace', 'pod', 'deployment']
-        groupWait: 10s
-        groupInterval: 1m
-        repeatInterval: 1h
-        receiver: 'devops-agent-webhook'
+            value: AlertmanagerClusterFailedToSendAlerts
+            matchType: '!='
         continue: true
-
-      # 2. Send immediate Discord notification for critical alerts
-      - matchers:
+      - receiver: 'discord-notifications'
+        matchers:
           - name: severity
-            value: critical
-            matchType: '='
-        groupBy: ['namespace', 'alertname']
-        groupWait: 10s
-        repeatInterval: 1h
-        receiver: 'discord-notifications'
+            value: 'critical|warning'
+            matchType: '=~'
 
   receivers:
     - name: 'null-receiver'
