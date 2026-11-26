@@ -1,6 +1,6 @@
 # 1. IAM Role assumed by the AWS DevOps Agent Space
 resource "aws_iam_role" "devops_agent_space" {
-  name = "${var.prefix}-devops-agent-space-role"
+  name = "${var.project_name}-devops-agent-space-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -28,7 +28,7 @@ resource "aws_iam_role_policy_attachment" "devops_agent_space_policy" {
 
 # 2. IAM Role for the DevOps Agent Operator Web App
 resource "aws_iam_role" "devops_agent_operator" {
-  name = "${var.prefix}-devops-agent-operator-role"
+  name = "${var.project_name}-devops-agent-operator-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -65,8 +65,8 @@ resource "time_sleep" "wait_for_devops_agent_iam" {
 
 # 3. AWS DevOps Agent Space (via Cloud Control API)
 resource "awscc_devopsagent_agent_space" "capstone" {
-  name        = "${var.prefix}-agent-space"
-  description = "Automated root-cause investigation space for ${var.prefix} EKS and retail-store"
+  name        = "${var.project_name}-agent-space"
+  description = "Automated root-cause investigation space for ${var.project_name} EKS and retail-store"
 
   depends_on = [time_sleep.wait_for_devops_agent_iam]
 }
@@ -87,7 +87,6 @@ resource "awscc_devopsagent_association" "aws_account" {
 
 # 5. Grant Kubernetes API Read/Diagnostic Access on EKS to the Agent Role
 resource "aws_eks_access_entry" "devops_agent" {
-  # Use module.eks.cluster_name (or aws_eks_cluster.<name>.name) so Terraform waits for EKS creation
   cluster_name  = module.eks.cluster_name
   principal_arn = aws_iam_role.devops_agent_space.arn
   type          = "STANDARD"
