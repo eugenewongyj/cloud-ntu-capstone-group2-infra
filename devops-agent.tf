@@ -103,16 +103,6 @@ resource "aws_eks_access_policy_association" "devops_agent" {
   }
 }
 
-resource "aws_eks_access_policy_association" "devops_agent" {
-  cluster_name  = aws_eks_access_entry.devops_agent.cluster_name
-  principal_arn = aws_eks_access_entry.devops_agent.principal_arn
-  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonAIOpsAssistantPolicy"
-
-  access_scope {
-    type = "cluster"
-  }
-}
-
 output "devops_agent_space_id" {
   value = awscc_devopsagent_agent_space.capstone.agent_space_id
 }
