@@ -938,3 +938,4 @@ resource "aws_iam_role_policy_attachment" "infra_cloudfront_attach" {
   role       = aws_iam_role.infra_deployer_role.name
   policy_arn = aws_iam_policy.infra_cloudfront_policy.arn
 }
+
