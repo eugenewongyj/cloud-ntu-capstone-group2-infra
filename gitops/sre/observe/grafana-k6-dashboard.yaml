@@ -20,7 +20,7 @@ data:
         "load-testing",
         "gitops"
       ],
-      "editable": false,
+      "editable": true,
       "schemaVersion": 39,
       "version": 1,
       "timezone": "browser",
@@ -34,23 +34,29 @@ data:
           {
             "name": "namespace",
             "label": "Environment",
-            "type": "query",
-            "datasource": {
-              "type": "prometheus",
-              "uid": "prometheus"
+            "type": "custom",
+            "query": "retail-staging,retail-store",
+            "multi": true,
+            "includeAll": true,
+            "allValue": "retail-staging|retail-store",
+            "hide": 0,
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
             },
-            "definition": "label_values(k6_vus, namespace)",
-            "query": {
-              "query": "label_values(k6_vus, namespace)",
-              "refId": "VariableQuery"
-            },
-            "refresh": 2,
-            "sort": 2,
-            "multi": false,
-            "includeAll": false,
-            "options": [],
-            "current": {},
-            "hide": 0
+            "options": [
+              {
+                "text": "retail-staging",
+                "value": "retail-staging",
+                "selected": false
+              },
+              {
+                "text": "retail-store",
+                "value": "retail-store",
+                "selected": false
+              }
+            ]
           },
           {
             "name": "assessment_run",
@@ -68,10 +74,15 @@ data:
             "refresh": 2,
             "sort": 2,
             "multi": false,
-            "includeAll": false,
+            "includeAll": true,
             "options": [],
-            "current": {},
-            "hide": 0
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            },
+            "hide": 0,
+            "allValue": ".*"
           }
         ]
       },
@@ -521,8 +532,8 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum by (assessment_run) (rate(k6_http_reqs_total{namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\"}[1m]))",
-              "legendFormat": "{{assessment_run}}",
+              "expr": "sum by (namespace, assessment_run, test_profile) (rate(k6_http_reqs_total{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\"}[2m]))",
+              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
               "refId": "A",
               "instant": false,
               "range": true
@@ -549,7 +560,7 @@ data:
                 "lineInterpolation": "linear",
                 "lineWidth": 2,
                 "fillOpacity": 12,
-                "showPoints": "never",
+                "showPoints": "always",
                 "spanNulls": false,
                 "axisPlacement": "auto",
                 "scaleDistribution": {
@@ -557,8 +568,10 @@ data:
                 },
                 "thresholdsStyle": {
                   "mode": "off"
-                }
-              }
+                },
+                "pointSize": 4
+              },
+              "decimals": 2
             },
             "overrides": []
           },
@@ -1646,8 +1659,8 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "max by (namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_target_metric{namespace=~\"${namespace:regex}\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
-              "legendFormat": "{{horizontalpodautoscaler}}",
+              "expr": "max by (namespace, horizontalpodautoscaler) (\r\n  kube_horizontalpodautoscaler_status_target_metric{\r\n    namespace=~\"${namespace:regex}\",\r\n    metric_name=\"cpu\",\r\n    metric_target_type=\"utilization\"\r\n  }\r\n)",
+              "legendFormat": "{{namespace}} / {{horizontalpodautoscaler}}",
               "refId": "A",
               "instant": false,
               "range": true
@@ -1726,7 +1739,7 @@ data:
               },
               "editorMode": "code",
               "expr": "max by (namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_spec_target_metric{namespace=~\"${namespace:regex}\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
-              "legendFormat": "{{horizontalpodautoscaler}}",
+              "legendFormat": "{{namespace}} / {{horizontalpodautoscaler}}",
               "refId": "A",
               "instant": false,
               "range": true
@@ -1805,7 +1818,7 @@ data:
               },
               "editorMode": "code",
               "expr": "max by (namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_current_replicas{namespace=~\"${namespace:regex}\"})",
-              "legendFormat": "{{horizontalpodautoscaler}}",
+              "legendFormat": "{{namespace}} / {{horizontalpodautoscaler}}",
               "refId": "A",
               "instant": false,
               "range": true
@@ -1884,7 +1897,7 @@ data:
               },
               "editorMode": "code",
               "expr": "max by (namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_desired_replicas{namespace=~\"${namespace:regex}\"})",
-              "legendFormat": "{{horizontalpodautoscaler}}",
+              "legendFormat": "{{namespace}} / {{horizontalpodautoscaler}}",
               "refId": "A",
               "instant": false,
               "range": true

@@ -40,6 +40,10 @@ alertmanager:
 # 1. Grafana configuration + Ingress
 grafana:
   enabled: true
+  sidecar:
+    dashboards:
+      provider:
+        allowUiUpdates: true
   resources:
     requests:
       cpu: 100m
