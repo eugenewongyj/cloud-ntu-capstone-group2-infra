@@ -18,17 +18,41 @@ spec:
             value: Watchdog
             matchType: '='
         receiver: 'null-receiver'
+
+      # 1. Trigger AWS DevOps Agent RCA within 10s, then continue to Discord
+      - matchers:
+          - name: severity
+            value: critical
+            matchType: '='
+        groupBy: ['alertname', 'namespace', 'pod', 'deployment']
+        groupWait: 10s
+        groupInterval: 1m
+        repeatInterval: 1h
+        receiver: 'devops-agent-webhook'
+        continue: true
+
+      # 2. Send immediate Discord notification for critical alerts
       - matchers:
           - name: severity
             value: critical
             matchType: '='
         groupBy: ['namespace', 'alertname']
-        groupWait: 15s
+        groupWait: 10s
         repeatInterval: 1h
         receiver: 'discord-notifications'
 
   receivers:
     - name: 'null-receiver'
+    - name: 'devops-agent-webhook'
+      webhookConfigs:
+        - urlSecret:
+            name: devops-agent-webhook
+            key: webhook-url
+          sendResolved: true
+          httpConfig:
+            bearerTokenSecret:
+              name: devops-agent-webhook
+              key: hmac-secret
     - name: 'discord-notifications'
       discordConfigs:
         - apiURL:

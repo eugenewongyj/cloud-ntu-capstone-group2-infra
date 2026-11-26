@@ -1,0 +1,22 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: devops-agent-webhook
+  namespace: monitoring
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secretsmanager   # Match the ClusterSecretStore name used by sre-monitoring-discord-webhook
+    kind: ClusterSecretStore
+  target:
+    name: devops-agent-webhook
+    creationPolicy: Owner
+  data:
+    - secretKey: webhook-url
+      remoteRef:
+        key: group2-capstone/devops-agent-webhook
+        property: webhook-url
+    - secretKey: hmac-secret
+      remoteRef:
+        key: group2-capstone/devops-agent-webhook
+        property: hmac-secret
