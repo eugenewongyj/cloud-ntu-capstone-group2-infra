@@ -1,4 +1,4 @@
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: devops-agent-webhook
@@ -8,7 +8,7 @@ metadata:
 spec:
   refreshInterval: 1h
   secretStoreRef:
-    name: aws-secretsmanager   # Match the ClusterSecretStore name used by sre-monitoring-discord-webhook
+    name: aws-secrets-manager
     kind: ClusterSecretStore
   target:
     name: devops-agent-webhook
