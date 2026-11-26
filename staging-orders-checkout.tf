@@ -120,20 +120,20 @@ resource "aws_security_group" "checkout_cache_staging" {
   description = "Valkey access to the checkout-staging cache from within the VPC"
   vpc_id      = aws_vpc.main.id
 
+  # DevSecOps (H2-stg): only the EKS cluster SG may connect, not the whole VPC.
+  # Same fix as prod in elasticache.tf (PR #325). The description above is left
+  # unchanged on purpose: changing it would force AWS to replace the group.
   ingress {
-    description = "Valkey (read/write + reader) from VPC"
-    from_port   = 6379
-    to_port     = 6380
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
+    description     = "Valkey (read/write + reader) from EKS pods"
+    from_port       = 6379
+    to_port         = 6380
+    protocol        = "tcp"
+    security_groups = [module.eks.cluster_primary_security_group_id]
   }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # No outbound rules: the cache only answers connections, it never starts them.
+  # "egress = []" makes Terraform remove the default allow-all rule.
+  egress = []
 
   tags = {
     Name        = "${var.project_name}-checkout-cache-staging-sg"
