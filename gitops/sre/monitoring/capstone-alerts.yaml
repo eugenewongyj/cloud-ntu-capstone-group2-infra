@@ -19,7 +19,7 @@ spec:
             severity: critical
           annotations:
             summary: "Pod {{ $labels.pod }} is crash-looping in retail-store"
-            description: "Container {{ $labels.container }} in pod {{ $labels.pod }} has restarted repeatedly over the last 1 minutes."
+            description: "Container {{ $labels.container }} in pod {{ $labels.pod }} has restarted repeatedly over the last 1 minute."
 
         - alert: RetailStoreDeploymentUnavailable
           expr: |
@@ -60,7 +60,7 @@ spec:
             severity: warning
           annotations:
             summary: "HPA {{ $labels.horizontalpodautoscaler }} reached max replicas"
-            description: "Deployment {{ $labels.horizontalpodautoscaler }} has been pinned at its max replica ceiling ({{ $value }}) for 1 minutes."
+            description: "Deployment {{ $labels.horizontalpodautoscaler }} has been pinned at its max replica ceiling ({{ $value }}) for 1 minute."
 
         - alert: RetailStoreHighMemoryUsage
           expr: |
@@ -78,7 +78,13 @@ spec:
 
         - alert: RetailStoreContainerOOMKilled
           expr: |
-            kube_pod_container_status_last_terminated_reason{namespace="retail-store", reason="OOMKilled"} == 1
+            (
+              kube_pod_container_status_last_terminated_reason{namespace="retail-store", reason="OOMKilled"} == 1
+            )
+            and on(namespace, pod, container)
+            (
+              increase(kube_pod_container_status_restarts_total{namespace="retail-store"}[5m]) > 0
+            )
           for: 1m
           labels:
             severity: critical
@@ -137,7 +143,7 @@ spec:
             severity: warning
           annotations:
             summary: "Core Prometheus scrape target {{ $labels.job }} is down"
-            description: "Prometheus cannot scrape {{ $labels.instance }} (job={{ $labels.job }}) for more than 1 minutes."
+            description: "Prometheus cannot scrape {{ $labels.instance }} (job={{ $labels.job }}) for more than 1 minute."
 
         - alert: KubernetesNodeNotReady
           expr: kube_node_status_condition{condition="Ready", status="true"} == 0
@@ -146,10 +152,10 @@ spec:
             severity: critical
           annotations:
             summary: "Kubernetes node {{ $labels.node }} is NotReady"
-            description: "EKS worker node {{ $labels.node }} has been in NotReady state for more than 1 minutes."
+            description: "EKS worker node {{ $labels.node }} has been in NotReady state for more than 1 minute."
 
-     # =========================================================================
-    # CPU & MEMORY SATURATION (Containers + EKS Nodes)
+    # =========================================================================
+    # 5. CPU & MEMORY SATURATION (Containers + EKS Nodes)
     # =========================================================================
     - name: sre.compute.rules
       rules:
@@ -159,7 +165,7 @@ spec:
               sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{namespace="retail-store", container!="", container!="POD"}[5m]))
               /
               sum by (namespace, pod, container) (kube_pod_container_resource_limits{namespace="retail-store", resource="cpu"})
-            ) > 0.50
+            ) > 0.85
           for: 3m
           labels:
             severity: warning
@@ -215,4 +221,4 @@ spec:
             severity: critical
           annotations:
             summary: "EKS node {{ $labels.instance }} memory critical (>95%)"
-            description: "Worker node {{ $labels.instance }} is at {{ $value | humanizePercentage }} memory usage; kubelet pod eviction is imminent."       
+            description: "Worker node {{ $labels.instance }} is at {{ $value | humanizePercentage }} memory usage; kubelet pod eviction is imminent."
