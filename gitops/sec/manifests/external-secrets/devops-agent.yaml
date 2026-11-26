@@ -3,6 +3,8 @@ kind: ExternalSecret
 metadata:
   name: devops-agent-webhook
   namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   refreshInterval: 1h
   secretStoreRef:
