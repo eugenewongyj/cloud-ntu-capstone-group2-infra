@@ -25,7 +25,7 @@ data "aws_iam_policy_document" "infra_trust" {
     }
 
     condition {
-      test     = "StringLike"
+      test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
         "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_infra_repository_name}@${var.github_infra_repo_id}:ref:refs/heads/main",
@@ -336,11 +336,16 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
           ArnLike = {
             "iam:PolicyARN" = [
               "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/${var.prefix}-*",
-              "arn:aws:iam::aws:policy/AmazonEKS*",
+              "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
+              "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+              "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+              "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController",
               "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
               "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy",
               "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+              "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
+              "arn:aws:iam::aws:policy/AIDevOpsAgentAccessPolicy",
+              "arn:aws:iam::aws:policy/AIDevOpsOperatorAppAccessPolicy"
             ]
           }
         }
@@ -371,7 +376,8 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
             "iam:PassedToService" : [
               "eks.amazonaws.com",
               "ec2.amazonaws.com",
-              "pods.eks.amazonaws.com"
+              "pods.eks.amazonaws.com",
+              "aidevops.amazonaws.com"
             ]
           }
         }
@@ -501,6 +507,45 @@ resource "aws_iam_role_policy_attachment" "infra_messaging_attach" {
 }
 
 # ---------------------------------------------------------------------
+# Separate policy for AWS DevOps Agent (devops-agent.tf).
+# Kept apart for the 6,144-character managed policy limit.
+# ---------------------------------------------------------------------
+resource "aws_iam_policy" "infra_devops_agent_policy" {
+  name        = "${var.prefix}-infra-deployer-devops-agent"
+  description = "Allow the infra pipeline to manage AWS DevOps Agent Space and account associations"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "DevOpsAgentManagement"
+        Effect = "Allow"
+        Action = [
+          "devops-agent:*",
+          "aidevops:*"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid      = "DevOpsAgentServiceLinkedRole"
+        Effect   = "Allow"
+        Action   = ["iam:CreateServiceLinkedRole"]
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/aidevops.amazonaws.com/*"
+        Condition = {
+          StringEquals = {
+            "iam:AWSServiceName" = "aidevops.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "infra_devops_agent_attach" {
+  role       = aws_iam_role.infra_deployer_role.name
+  policy_arn = aws_iam_policy.infra_devops_agent_policy.arn
+}
+# ---------------------------------------------------------------------
 # Separate policy for OpenSearch Serverless (catalog search, opensearch.tf).
 # Kept apart for the same 6,144-character managed policy limit.
 # ---------------------------------------------------------------------
@@ -593,7 +638,7 @@ data "aws_iam_policy_document" "app_trust" {
     }
 
     condition {
-      test     = "StringLike"
+      test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
         "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_app_repository_name}@${var.github_app_repo_id}:ref:refs/heads/main",
