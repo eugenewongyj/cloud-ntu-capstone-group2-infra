@@ -28,7 +28,8 @@ data "aws_iam_policy_document" "infra_trust" {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
-        "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_infra_repository_name}@${var.github_infra_repo_id}:ref:refs/heads/main"
+        "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_infra_repository_name}@${var.github_infra_repo_id}:ref:refs/heads/main",
+        "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_infra_repository_name}@${var.github_infra_repo_id}:pull_request"
       ]
     }
   }
