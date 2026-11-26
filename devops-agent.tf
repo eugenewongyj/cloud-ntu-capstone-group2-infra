@@ -109,3 +109,48 @@ output "devops_agent_space_id" {
 output "devops_agent_space_arn" {
   value = awscc_devopsagent_agent_space.capstone.arn
 }
+
+resource "terraform_data" "enable_operator_app" {
+  triggers_replace = [
+    awscc_devopsagent_agent_space.capstone.agent_space_id,
+    aws_iam_role.devops_agent_operator.arn
+  ]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws devops-agent enable-operator-app \
+        --agent-space-id "${awscc_devopsagent_agent_space.capstone.agent_space_id}" \
+        --auth-flow iam \
+        --operator-app-role-arn "${aws_iam_role.devops_agent_operator.arn}" \
+        --region "${var.aws_region}"
+    EOT
+  }
+
+  depends_on = [
+    awscc_devopsagent_agent_space.capstone,
+    time_sleep.wait_for_devops_agent_iam
+  ]
+}
+
+resource "aws_iam_role_policy" "devops_agent_operator_agentspace_access" {
+  name = "${var.project_name}-devops-agent-operator-agentspace-policy"
+  role = aws_iam_role.devops_agent_operator.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowOperatorAppAgentSpaceTasks"
+        Effect = "Allow"
+        Action = [
+          "aidevops:*",
+          "devops-agent:*"
+        ]
+        Resource = [
+          awscc_devopsagent_agent_space.capstone.arn,
+          "${awscc_devopsagent_agent_space.capstone.arn}/*"
+        ]
+      }
+    ]
+  })
+}

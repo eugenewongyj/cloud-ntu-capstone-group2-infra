@@ -91,7 +91,8 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
           "eks:CreateAccessEntry", "eks:DeleteAccessEntry", "eks:DescribeAccessEntry",
           "eks:AssociateAccessPolicy", "eks:DisassociateAccessPolicy",
           "eks:CreatePodIdentityAssociation", "eks:DeletePodIdentityAssociation", "eks:DescribePodIdentityAssociation",
-        "eks:ListPodIdentityAssociations", "eks:ListAssociatedAccessPolicies", "eks:ListAccessEntries"]
+          "eks:ListPodIdentityAssociations", "eks:ListAssociatedAccessPolicies", "eks:ListAccessEntries"
+        ]
         Resource = "*"
       },
       {
@@ -148,9 +149,10 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
             "aws:ResourceTag/Project" : var.project
           }
         }
-        }, {
-        # NEW BLOCK: For actions that target untaggable network associations 
-        # or shared EKS security groups that lack the Prefix tag
+      },
+      {
+        # For actions that target untaggable network associations
+        # or shared EKS security groups that lack the Project tag
         Sid    = "EC2UntaggableResources"
         Effect = "Allow"
         Action = [
@@ -162,7 +164,8 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
           "ec2:DisassociateAddress"
         ]
         Resource = "*"
-        }, {
+      },
+      {
         # 1. Authorize the creation of the new tagged resources
         Sid    = "EC2NetworkingCreateTaggedResources"
         Effect = "Allow"
@@ -433,7 +436,7 @@ resource "aws_iam_role_policy_attachment" "infra_scoped_attach_part2" {
 }
 
 resource "aws_iam_policy" "infra_tagging_guard_policy" {
-  name        = "group2-capstone-infra-deployer-tagging-guard"
+  name        = "${var.prefix}-infra-deployer-tagging-guard"
   description = "Allows Resource Groups Tagging API audit and remediation for capstone cluster resources"
 
   policy = jsonencode({
@@ -495,7 +498,7 @@ resource "aws_iam_policy" "infra_messaging_policy" {
           "sqs:UntagQueue",
           "sqs:ListQueueTags"
         ]
-        Resource = "arn:aws:sqs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:group2-capstone-*"
+        Resource = "arn:aws:sqs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${var.prefix}-*"
       }
     ]
   })
@@ -545,6 +548,7 @@ resource "aws_iam_role_policy_attachment" "infra_devops_agent_attach" {
   role       = aws_iam_role.infra_deployer_role.name
   policy_arn = aws_iam_policy.infra_devops_agent_policy.arn
 }
+
 # ---------------------------------------------------------------------
 # Separate policy for OpenSearch Serverless (catalog search, opensearch.tf).
 # Kept apart for the same 6,144-character managed policy limit.
@@ -797,7 +801,6 @@ resource "aws_iam_role_policy_attachment" "infra_cart_data_attach" {
   policy_arn = aws_iam_policy.infra_cart_data_policy.arn
 }
 
-
 # ---------------------------------------------------------------------
 # Infra pipeline: ElastiCache Serverless for the checkout service (elasticache.tf).
 # Separate policy because IAM managed policies are limited to 6,144 characters.
@@ -985,6 +988,3 @@ resource "aws_iam_role_policy_attachment" "infra_cloudfront_attach" {
   role       = aws_iam_role.infra_deployer_role.name
   policy_arn = aws_iam_policy.infra_cloudfront_policy.arn
 }
-
-
-
