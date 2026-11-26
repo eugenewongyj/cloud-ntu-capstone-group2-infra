@@ -119,6 +119,471 @@ syncPolicy:
 
 # Part II — Capstone: Verified End-to-End Code Traceability
 
+> **Current implementation baseline — 26 November 2026**
+>
+> Source revision: `c88875400c4c7049217852b761f76ff5739c1858`.
+> Part I is TK's original platform documentation and is preserved
+> verbatim. The following sections describe subsequent architectural
+> developments and verified SRE implementation.
+>
+> The historical code review remains available below for traceability.
+> Where configurations differ, use the current source files as the
+> authoritative desired state.
+
+## A. Current end-to-end platform architecture
+
+```mermaid
+flowchart TB
+    subgraph SOURCE["Source of truth"]
+        INFRA["GitHub infrastructure repository"]
+        APP["GitHub application repository"]
+    end
+
+    subgraph AWS["AWS ap-southeast-1"]
+        TF["Terraform"]
+        EKS["Amazon EKS Auto Mode"]
+        ALB["Application Load Balancer"]
+        RDS["Aurora databases"]
+        CW["Amazon CloudWatch"]
+    end
+
+    subgraph GITOPS["GitOps orchestration"]
+        ARGO["Argo CD"]
+        ROOT["App of Apps"]
+        RI["Infrastructure"]
+        RS["SRE"]
+        SEC["Security"]
+        PROD["Production"]
+        STG["Staging"]
+    end
+
+    INFRA --> TF
+    TF --> EKS
+    INFRA --> ARGO
+    APP --> ARGO
+    ARGO --> ROOT
+    ROOT --> RI
+    ROOT --> RS
+    ROOT --> SEC
+    ROOT --> PROD
+    ROOT --> STG
+
+    RI --> EKS
+    SEC --> EKS
+    PROD --> EKS
+    STG --> EKS
+
+    CF["CloudFront and WAF"] --> ALB
+    ALB --> EKS
+    EKS --> RDS
+
+    K6["WSL / Grafana k6"] -->|"Approved staging HTTP traffic"| ALB
+
+    subgraph OBS["SRE observability"]
+        PROM["Prometheus"]
+        ALLOY["Grafana Alloy"]
+        LOKI["Loki"]
+        OTEL["OpenTelemetry Collector"]
+        TEMPO["Tempo"]
+        HPA["Kubernetes HPA"]
+        AM["Alertmanager"]
+        CM["Dashboard ConfigMaps"]
+        SC["Grafana sidecar"]
+        GRAFANA["Official Grafana"]
+    end
+
+    RS --> PROM
+    RS --> ALLOY
+    RS --> OTEL
+    RS --> CM
+
+    EKS -->|"Kubernetes and workload metrics"| PROM
+    EKS -->|"Pod logs"| ALLOY
+    EKS -->|"Instrumented telemetry"| OTEL
+
+    ALLOY --> LOKI
+    OTEL --> TEMPO
+    OTEL -->|"OTLP metrics"| PROM
+
+    K6 -->|"Prometheus remote write"| PROM
+    HPA -->|"Scaling status via kube-state-metrics"| PROM
+    HPA -->|"Adjust desired replicas"| EKS
+
+    ALB --> CW
+    RDS --> CW
+    CF --> CW
+
+    PROM --> GRAFANA
+    LOKI --> GRAFANA
+    TEMPO --> GRAFANA
+    CW -->|"AWS API queries via IRSA"| GRAFANA
+
+    CM --> SC
+    SC -->|"Automatic dashboard reload"| GRAFANA
+
+    PROM -->|"Rule evaluation"| AM
+    AM --> DISCORD["Discord notifications"]
+```
+
+The diagram combines declared architecture with verified runtime
+components. It does not imply that every telemetry path, scaling
+event or notification has completed end-to-end validation.
+
+## B. Current GitOps root applications
+
+| Application | Sync wave | Source path |
+|---|---:|---|
+| root-infra | -2 | `gitops/infra/apps` |
+| root-sec | -2 | `gitops/sec/apps` |
+| root-sre | -1 | `gitops/sre/apps` |
+| root-app | 0 | `gitops/app/apps` |
+| root-app-staging | 0 | `gitops/app-staging/apps` |
+
+All five root definitions target the infrastructure repository.
+
+Source: [Root Applications](root/).
+
+Sync waves order resources within a synchronization operation.
+They do not independently guarantee readiness across separately
+reconciled child Applications.
+
+## C. Current environment boundaries
+
+| Environment | Namespace | Storefront |
+|---|---|---|
+| Production | `retail-store` | [Production UI](https://group2-shop.sctp-sandbox.com/) |
+| Staging | `retail-staging` | [Staging UI](https://group2-retail-staging.sctp-sandbox.com/) |
+| Monitoring | `monitoring` | [Official Grafana](https://group2-capstone-grafana.sctp-sandbox.com/) |
+| Logging | `logging` | Internal telemetry services |
+| GitOps | `argocd` | [Argo CD](https://group2-capstone-argocd.sctp-sandbox.com/) |
+
+The retail workloads comprise UI, Catalog, Carts, Orders and
+Checkout services. Synthetic load testing is directed to the
+approved staging endpoint.
+
+## D. Current SRE source-to-runtime register
+
+| Source | Runtime responsibility |
+|---|---|
+| [root-sre.yaml](root/root-sre.yaml) | Discovers SRE child Applications |
+| [prometheus-crds.yaml](sre/apps/prometheus-crds.yaml) | Monitoring CRDs |
+| [prometheus-stack.yaml](sre/apps/prometheus-stack.yaml) | Helm-based monitoring deployment |
+| [prometheus.yaml](sre/values/prometheus.yaml) | Prometheus, Grafana and Alertmanager configuration |
+| [grafana-dashboards.yaml](sre/values/grafana-dashboards.yaml) | Helm-managed imported dashboards |
+| [alloy.yaml](sre/apps/alloy.yaml) | Kubernetes pod log collection |
+| [loki.yaml](sre/apps/loki.yaml) | Log aggregation and storage |
+| [tempo.yaml](sre/apps/tempo.yaml) | Distributed trace storage |
+| [OpenTelemetry manifests](sre/manifests/otel/) | Instrumentation and collector configuration |
+| [monitoring-app.yaml](sre/apps/monitoring-app.yaml) | Reconciles observability YAML |
+| [grafana-hpa-dashboard.yaml](sre/observe/grafana-hpa-dashboard.yaml) | HPA dashboard |
+| [grafana-k6-dashboard.yaml](sre/observe/grafana-k6-dashboard.yaml) | k6 dashboard |
+| [capstone-alerts.yaml](sre/monitoring/capstone-alerts.yaml) | Prometheus alert rules |
+| [alertmanager-discord.yaml](sre/monitoring/alertmanager-discord.yaml) | Discord notification routing |
+| [iam_grafana.tf](../iam_grafana.tf) | Grafana CloudWatch IAM authorization |
+| [product-listing.js](sre/validate/k6/product-listing.js) | Synthetic HTTP workload |
+| [run.sh](sre/validate/k6/run.sh) | k6 execution and optional remote write |
+
+## E. Current monitoring configuration
+
+| Configuration | Declared implementation |
+|---|---|
+| Monitoring Helm chart | kube-prometheus-stack 93.1.1 |
+| Helm values | External values through Argo CD multi-source |
+| Prometheus ingress | Disabled |
+| Prometheus remote-write receiver | Enabled |
+| Prometheus OTLP receiver | Enabled |
+| Prometheus retention | 3 days / 5GB |
+| Prometheus storage request | 20Gi gp3 |
+| Alloy Helm chart | 1.15.0 |
+| Alloy controller | DaemonSet |
+| Alloy responsibility | Kubernetes pod logs |
+| Loki Helm chart | 7.5.0 |
+| Loki storage | S3-backed object storage |
+| Grafana CloudWatch authentication | IAM Roles for Service Accounts |
+| Grafana dashboard discovery | ConfigMap label `grafana_dashboard: "1"` |
+
+Prometheus handles metrics collection. Alloy handles Kubernetes
+pod logs. OpenTelemetry provides instrumented telemetry.
+These responsibilities must not be conflated.
+
+## F. Verified dashboard deployment automation
+
+```mermaid
+flowchart LR
+    G["GitHub main"] --> A["Argo CD"]
+    A --> C["Kubernetes ConfigMap"]
+    C --> S["Grafana dashboard sidecar"]
+    S --> R["Provisioning reload API"]
+    R --> D["Official Grafana"]
+    P["Prometheus"] --> D
+```
+
+The k6 dashboard deployment was verified on 26 November 2026:
+
+- GitHub revision: `c888754`.
+- Argo CD: Synced / Healthy.
+- Automatic reconciliation: 21:46:26 SGT.
+- ConfigMap: `capstone-k6-dashboard`.
+- Dashboard file: `/tmp/dashboards/capstone-k6.json`.
+- Grafana reload: HTTP 200 OK.
+- Dashboard UID: `capstone-k6`.
+- Dashboard provisioning: `true`.
+- Datasource UID: `prometheus`.
+- Panel count: 24.
+
+No forced synchronization, manual Grafana import or deployment
+restart was required.
+
+### Official custom dashboards
+
+| Dashboard | Panels | Status |
+|---|---:|---|
+| [Kubernetes HPA and Autoscaling](https://group2-capstone-grafana.sctp-sandbox.com/d/capstone-hpa) | 11 | Provisioned |
+| [k6 Load Testing and Performance](https://group2-capstone-grafana.sctp-sandbox.com/d/capstone-k6) | 24 | Provisioned |
+
+These dashboards provide 35 additional GitOps-managed panels.
+
+## G. k6 performance and HPA correlation
+
+```mermaid
+flowchart LR
+    K["k6 workload"] -->|"GET /catalog"| S["Staging storefront"]
+    S --> W["Retail workloads"]
+    W --> M["CPU and memory consumption"]
+    M --> H["HPA controller"]
+    H -->|"Desired replicas"| W
+    K -->|"Remote write"| P["Prometheus"]
+    H -->|"kube-state-metrics"| P
+    W -->|"Workload metrics"| P
+    P --> G["Grafana"]
+```
+
+### Validated k6 metrics
+
+| Metric | Meaning |
+|---|---|
+| `k6_http_reqs_total` | HTTP request counter |
+| `k6_http_req_duration_p95` | Exported interval p95 latency in seconds |
+| `k6_http_req_failed_rate` | HTTP failure ratio |
+| `k6_checks_rate` | Check success ratio |
+| `k6_vus` | Active virtual users |
+| `k6_vus_max` | Configured maximum virtual users |
+| `k6_capstone_product_listing_duration_p95` | Product-listing latency |
+| `k6_capstone_product_listing_failed_rate` | Product-listing failure ratio |
+
+The assessment runner adds `namespace` and `assessment_run`
+labels to distinguish test executions.
+
+### Example PromQL
+
+```promql
+# Product-listing p95 latency in milliseconds
+1000 * k6_capstone_product_listing_duration_p95{
+  namespace="retail-staging"
+}
+```
+
+```promql
+# Synthetic HTTP throughput
+sum(rate(k6_http_reqs_total{
+  namespace="retail-staging"
+}[1m]))
+```
+
+```promql
+# HPA current CPU utilization percentage
+kube_horizontalpodautoscaler_status_target_metric{
+  namespace="retail-staging",
+  metric_name="cpu",
+  metric_target_type="utilization"
+}
+```
+
+```promql
+# HPA target CPU utilization percentage
+kube_horizontalpodautoscaler_spec_target_metric{
+  namespace="retail-staging",
+  metric_name="cpu",
+  metric_target_type="utilization"
+}
+```
+
+The staging HPAs were observed with a 70% CPU utilization target.
+A successful k6 test does not by itself demonstrate autoscaling:
+actual current and desired replica changes must be observed.
+
+## H. AWS CloudWatch integration
+
+Grafana is configured to query CloudWatch using AWS API access
+through its Kubernetes service account and IAM role.
+
+```mermaid
+flowchart LR
+    CF["CloudFront"] --> CW["CloudWatch"]
+    WAF["AWS WAF"] --> CW
+    ALB["Application Load Balancer"] --> CW
+    RDS["Aurora"] --> CW
+    G["Grafana service account"] --> IAM["IAM role via IRSA"]
+    IAM -->|"Authorized AWS API queries"| CW
+    CW --> G
+```
+
+The intended AWS monitoring scope includes CloudFront requests
+and errors, WAF allowed and blocked requests, ALB request volume
+and target latency, and RDS resource utilization.
+
+CloudFront metrics use `us-east-1`; regional infrastructure
+metrics use `ap-southeast-1`.
+
+The existing CloudWatch datasource and IAM configuration should
+be reused. No separate Firehose metric stream is required for
+the current direct-query architecture.
+
+Dedicated CloudWatch dashboard panels and their live queries
+remain subject to operational validation.
+
+## I. Operational validation status
+
+| Capability | Status on 26 November 2026 |
+|---|---|
+| EKS cluster availability | Verified |
+| Kubernetes node readiness | 11 Ready nodes observed |
+| Production workloads | Five deployments observed ready |
+| Staging workloads | Five deployments observed ready |
+| Prometheus scrape targets | 83/83 active targets observed up |
+| HPA dashboard queries | 30/30 checks passed across both environments |
+| HPA dashboard provisioning | Verified |
+| k6 remote-write ingestion | Verified |
+| k6 dashboard queries | 24/24 checks passed |
+| k6 dashboard provisioning | Verified |
+| Alloy and Loki workload readiness | Verified at observation time |
+| CloudWatch datasource configuration | Verified |
+| Dedicated CloudWatch panel validation | Pending |
+| Full trace-to-log correlation | Pending |
+| Prometheus rule to Discord delivery | Requires final end-to-end evidence |
+| HPA scale-out and recovery | Requires observed scaling evidence |
+| Daily infrastructure restoration | Requires final repeatability validation |
+
+These are dated observations, not guarantees of continuous
+availability or future cluster state.
+
+## J. Documentation and deployment safeguards
+
+- [SRE implementation documentation](sre/README.md)
+- [Validation procedures](sre/validate/README.md)
+- [Operational health report](sre/validate/health-report.md)
+
+Active Argo CD source paths must remain stable. In particular,
+`gitops/sre/observe` uses a non-recursive YAML directory source.
+Relocating manifests without coordinated source changes can
+cause resources to be omitted or automatically pruned.
+
+Infrastructure recreation is a team-controlled operation.
+Refresh the EKS kubeconfig and verify the current cluster
+before performing operational checks.
+
+Do not expose credentials, decoded Kubernetes secrets,
+webhook URLs or sensitive Terraform state in assessment
+recordings or evidence archives.
+
+## K. Upstream architecture reconciliation — 26 November 2026
+
+**Reconciled source revision:** `4d7cba52913080f342273512180aa18090e90eea` (PR #342).
+
+Sections A-J retain their earlier source baseline `c88875400c4c7049217852b761f76ff5739c1858`.
+Where alerting, relay or priority-policy details differ, this
+section and SRE Section S.12 describe the newer desired state.
+
+Historical operational observations are not retroactively changed.
+
+### K.1 Upstream implementation changes
+
+| Component | Earlier baseline | Reconciled desired state |
+|---|---|---|
+| Container CPU warning | Above 50% of CPU limit | Above 85% for 3 minutes |
+| OOMKilled | Last termination reason | Last termination reason plus recent restart |
+| Default notification receiver | Discord | Null receiver |
+| Discord | Default receiver and explicit critical route | Explicit critical or warning route |
+| DevOps Agent | Critical webhook route | Eligible critical alerts via Lambda relay |
+| Default group wait | 30 seconds | 10 seconds |
+| Default group interval | 5 minutes | 1 minute |
+| Default repeat interval | 4 hours | 1 hour |
+| ExternalSecret | Earlier manifest location | `gitops/sec/apps/devops-agent.yaml` |
+
+The newer grouping keys are alertname, namespace, pod and
+deployment. Child routes inherit the configured parent timings.
+
+Sources:
+
+- [`gitops/sre/monitoring/capstone-alerts.yaml:79-93`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/4d7cba52913080f342273512180aa18090e90eea/gitops/sre/monitoring/capstone-alerts.yaml#L79-L93)
+- [`gitops/sre/monitoring/capstone-alerts.yaml:162-174`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/4d7cba52913080f342273512180aa18090e90eea/gitops/sre/monitoring/capstone-alerts.yaml#L162-L174)
+- [`gitops/sre/monitoring/alertmanager-discord.yaml:9-51`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/4d7cba52913080f342273512180aa18090e90eea/gitops/sre/monitoring/alertmanager-discord.yaml#L9-L51)
+- [`gitops/sec/apps/devops-agent.yaml:1-20`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/4d7cba52913080f342273512180aa18090e90eea/gitops/sec/apps/devops-agent.yaml#L1-L20)
+
+### K.2 Notification and incident architecture
+
+```mermaid
+flowchart TD
+    EKS[EKS workloads and nodes] --> P[Prometheus]
+    RULES[PrometheusRule] --> P
+    P --> AM[Alertmanager]
+    P --> G[Grafana]
+    AM --> R{Severity and alert name}
+    R -->|Critical or warning| D[Discord]
+    R -->|Eligible critical| L[Lambda relay]
+    R -->|Unmatched| N[Null receiver]
+    SM[AWS Secrets Manager] --> ESO[External Secrets Operator]
+    ESO --> KS[Kubernetes webhook Secret]
+    KS -. Relay URL .-> AM
+    SM -->|Destination and signing secret| L
+    L -->|Signed incident request| A[AWS DevOps Agent]
+    D --> SRE[SRE operational response]
+    A --> SRE
+```
+
+This is a configured architecture. Successful notification
+delivery and incident investigation require runtime evidence.
+
+### K.3 Retail workload priority
+
+The Kyverno policy matches Pod CREATE operations:
+
+- `retail-store`: assigns `priorityClassName: prod-critical`.
+- `retail-staging`: assigns `priorityClassName: staging-low`.
+
+PriorityClass values and preemption behavior must be verified
+from their actual definitions. The mutation does not establish
+retroactive changes to existing pods.
+
+The policy uses `failurePolicy: Ignore`; admission webhook
+failures may therefore allow creation without mutation.
+
+Source: [`gitops/sec/policies/assign-retail-priority-classes.yaml:1-29`](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/blob/4d7cba52913080f342273512180aa18090e90eea/gitops/sec/policies/assign-retail-priority-classes.yaml#L1-L29)
+
+### K.4 Change isolation
+
+This reconciliation is documentation-only. It does not replace
+the team's functional configuration, relocate manifests, alter
+Terraform state, change notification receivers or authorize
+infrastructure recreation.
+
+See [SRE Section S.12](sre/README.md) for source-level details
+and [validation procedures](sre/validate/README.md) for evidence
+requirements.
+
+
+---
+
+## Historical code traceability archive
+
+The following material is retained from the previous Part II
+for engineering history and source-level traceability.
+Its pinned revisions, proposed configurations, line numbers
+and historical observations must not be interpreted as the
+current deployment state.
+
+
+
 > **Evidence and revision scope:** The original code review is pinned to commit `2c38f631246c2cf9361fd1784c8b14b85b76f0ba` and its line links remain historical evidence. The Alloy subsection and architecture diagrams below describe the **subsequent proposed Alloy log-only consolidation** from the local `refactor/sre-alloy-consolidation` working tree. All other pinned excerpts describe the historical snapshot unless explicitly marked otherwise. **Source declarations are not proof of live cluster health.** TK's Part I is preserved unchanged.
 
 ## 1. Source-anchored execution map
