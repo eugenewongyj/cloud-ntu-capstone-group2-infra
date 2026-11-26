@@ -2,9 +2,14 @@ name: Terraform CD
 run-name: Running Terraform CD by ${{ github.actor }}
 
 on:
-  # push:
-  #   branches: [ "main" ]
-  workflow_dispatch:
+  push:
+    branches:
+      - "main"
+    paths-ignore:
+      - "github-oidc-bootstrap/**"
+      - "gitops/**"
+      - "docs/**"
+      - "**.md"
 
 permissions:
   id-token: write       # Required for OIDC
