@@ -78,8 +78,8 @@ resource "awscc_devopsagent_association" "aws_account" {
 
   configuration = {
     aws = {
-      account_id   = data.aws_caller_identity.current.account_id
-      account_type = "monitor"
+      account_id         = data.aws_caller_identity.current.account_id
+      account_type       = "monitor"
       assumable_role_arn = aws_iam_role.devops_agent_space.arn
     }
   }
