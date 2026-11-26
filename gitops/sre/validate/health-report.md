@@ -1,3 +1,111 @@
+# Capstone — SRE operational health update
+
+**Report date:** 26 November 2026 (SGT)
+**Source baseline:** `c88875400c4c7049217852b761f76ff5739c1858`
+**Region:** `ap-southeast-1`
+**Overall assessment:** Core monitoring and dashboard provisioning demonstrated; full operational assessment remains incomplete.
+
+This is a dated snapshot, not a live health guarantee. Earlier observations may precede the pinned revision. The original report is preserved below. See [architecture](../README.md) and [assessment procedure](README.md).
+
+## 1. Observed platform readiness
+
+| Capability | Observation on 26 November | Status |
+|---|---|---|
+| EKS | ACTIVE; Kubernetes 1.37; 11 Ready nodes | PASS (snapshot) |
+| Production | Five deployments, two replicas each | PASS (snapshot) |
+| Staging | Five deployments, one replica each | PASS (snapshot) |
+| Prometheus | Receiver and query access demonstrated | PASS |
+| Grafana | Official dashboard provisioning demonstrated | PASS |
+| Alloy/Loki/Tempo | Running components observed; end-to-end persistence and correlation not established by readiness alone | REVIEW |
+| External Secrets | Earlier preflight reported degraded application and devops-agent-webhook sync error | REVIEW; recheck current state |
+| Storage | Prometheus 20Gi; Loki backend/write 10Gi each observed bound | PASS (binding only) |
+
+## 2. Performance evidence
+
+Assessment run `20261126-211420`, staging catalog GET `/catalog`, one observed virtual user. Smoke observation: HTTP p95 78.65 ms, five requests, zero HTTP failures and five successful checks. Later remote-write samples included 136 cumulative requests, p95 approximately 65.34 ms, failure ratio zero and check ratio one. These are different observations, not interchangeable whole-run statistics.
+
+| Criterion | Evidence / interpretation |
+|---|---|
+| HTTP p95 target | Below 500 ms in observed smoke and later sample |
+| HTTP failure target | Below 1% in observed samples |
+| Product listing content | Expected marker checked; not a full browser/customer journey |
+| Remote write | 18 k6 metric names discovered; current-run samples queryable |
+| Dashboard query validation | Reported 24 PASS, 0 EMPTY, 0 FAIL for k6 queries |
+| Peak-load test | No complete approved flash-test result established here |
+| Recovery | No complete post-flash recovery evidence established here |
+
+Exported p95 values are interval statistics in seconds; multiply by 1000 for milliseconds. Do not average interval percentiles to derive a whole-run percentile. Use the k6 summary for whole-run thresholds. Counters can reset between executions; use distinct run labels for future profiles.
+
+## 3. Autoscaling evidence
+
+Staging HPA bounds 1–3 replicas; production 2–6; CPU target 70%. Observed staging CPU remained below target (reported 0–14% during query validation), with current and desired replicas at one. This demonstrates visibility, not actual scale-out or scale-in. CPU utilization is relative to requests. Confirm the live resource metrics API provider before attributing scaling to the adapter.
+
+## 4. GitOps to Grafana evidence
+
+- HPA dashboard: `capstone-hpa`, 11 panels, reported 30 successful query checks across both namespaces.
+- k6 dashboard: `capstone-k6`, 24 panels, revision `c88875400c4c7049217852b761f76ff5739c1858`.
+- Argo CD `capstone-monitoring` reported Synced/Healthy; reconciliation at 13:46:26 UTC.
+- Grafana sidecar wrote `capstone-k6.json` and received HTTP 200 on dashboard reload at 13:46:30 UTC (21:46:30 SGT).
+- Provisioning and query checks are distinct from visual verification of every panel.
+
+Official dashboards: [HPA](https://group2-capstone-grafana.sctp-sandbox.com/d/capstone-hpa) and [k6](https://group2-capstone-grafana.sctp-sandbox.com/d/capstone-k6).
+
+## 5. Remaining assessment evidence
+
+| Pipeline | Status | Required evidence |
+|---|---|---|
+| CloudWatch to Grafana | REVIEW | Actual metric values via official datasource; current resource dimensions and region |
+| Alloy to Loki | REVIEW | Timestamped relevant log query and separate S3 persistence verification |
+| OTel to Tempo/Prometheus | REVIEW | Queryable traces and metrics; staging coverage independently established |
+| HPA scale-out/in | NOT DEMONSTRATED | Approved load, CPU and replica timeline, recovery |
+| Prometheus to Discord | REVIEW | Rule pending/firing, routing, delivered notification, resolved state |
+| DevOps Agent | REVIEW | Recheck webhook secret and actual delivery |
+| Full assessment archive | REVIEW | Sanitized timestamped outputs and screen recording |
+
+The supplied application ServiceMonitors and Instrumentation select production `retail-store`; staging load does not prove production application telemetry. A direct synthetic Alertmanager test bypasses Prometheus rule evaluation. AWS CLI access does not prove Grafana IRSA access. Shared ALB metrics are not necessarily staging-specific.
+
+## 6. Evidence retention and handover
+
+Retain the actual k6 summaries, query outputs, Argo reconciliation evidence, dashboard provisioning logs, screenshots and notification timestamps with the assessment run identifier. Do not commit credentials, webhook URLs, tokens or sensitive application logs. Revalidate after any daily infrastructure rebuild. No infrastructure changes or load escalation are authorized by this report.
+
+## 7. Upstream configuration reconciliation
+
+**Reconciled source revision:** `4d7cba52913080f342273512180aa18090e90eea`.
+
+The earlier report remains a historical observation at
+baseline `c88875400c4c7049217852b761f76ff5739c1858`. This section records newer source
+configuration, not a fresh operational health assessment.
+
+| Capability | Source finding | Runtime status |
+|---|---|---|
+| CPU saturation | Threshold now above 85% of CPU limit for 3m | REVIEW |
+| OOMKilled | Last termination reason plus recent restart | REVIEW |
+| Alertmanager | Critical/warning Discord routing and null fallback | REVIEW |
+| DevOps Agent | Lambda relay with outbound HMAC signing | REVIEW |
+| External Secrets | relay-url mapped to Kubernetes webhook-url key | REVIEW |
+| Retail priority | Production prod-critical; staging staging-low | REVIEW |
+
+The earlier DevOps Agent secret synchronization error remains
+historical evidence. The newer manifest does not independently
+establish that the error has been resolved.
+
+Lambda deployment, secret synchronization, actual webhook
+delivery and incident investigation require current runtime
+verification.
+
+The earlier HPA and k6 dashboard evidence is retained unchanged.
+No additional scaling, CloudWatch panel, trace correlation or
+notification success is claimed by this reconciliation.
+
+The documentation update introduces no runtime configuration
+changes and does not authorize deployment or infrastructure
+modification.
+
+
+---
+
+## Historical report — original content preserved
+
 # 🛒 E-Commerce Application | SRE Health Report
 
 **Project:** Group 2 — E-Commerce Application  
