@@ -49,10 +49,6 @@ spec:
             name: devops-agent-webhook
             key: webhook-url
           sendResolved: true
-          httpConfig:
-            bearerTokenSecret:
-              name: devops-agent-webhook
-              key: hmac-secret
     - name: 'discord-notifications'
       discordConfigs:
         - apiURL:
