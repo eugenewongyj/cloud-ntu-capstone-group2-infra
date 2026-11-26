@@ -194,9 +194,9 @@ resource "aws_lambda_permission" "devops_agent_relay_url" {
 }
 
 resource "aws_lambda_permission" "devops_agent_relay_invoke" {
-  statement_id           = "FunctionURLAllowInvokeAction"
-  action                 = "lambda:InvokeFunction"
-  function_name          = aws_lambda_function.devops_agent_relay.function_name
-  principal              = "*"
+  statement_id             = "FunctionURLAllowInvokeAction"
+  action                   = "lambda:InvokeFunction"
+  function_name            = aws_lambda_function.devops_agent_relay.function_name
+  principal                = "*"
   invoked_via_function_url = true
 }
