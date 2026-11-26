@@ -27,7 +27,9 @@ data "aws_iam_policy_document" "infra_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository_username}*/${var.github_infra_repository_name}*:*"]
+      values = [
+        "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_infra_repository_name}@${var.github_infra_repo_id}:ref:refs/heads/main"
+      ]
     }
   }
 }
@@ -303,20 +305,59 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
         Effect = "Allow"
         Action = [
           "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:UpdateRole",
-          "iam:UpdateAssumeRolePolicy", # <-- ADDED: Allows updating IRSA/OIDC trust policies
-          "iam:ListRolePolicies", "iam:ListAttachedRolePolicies", "iam:AttachRolePolicy", "iam:DetachRolePolicy",
-          "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:GetRolePolicy", "iam:CreatePolicy",
-          "iam:DeletePolicy", "iam:GetPolicy", "iam:CreatePolicyVersion", "iam:DeletePolicyVersion",
-          "iam:SetDefaultPolicyVersion", "iam:GetPolicyVersion", "iam:ListPolicyVersions", "iam:TagRole",
-          "iam:UntagRole", "iam:TagPolicy", "iam:ListInstanceProfilesForRole", "iam:ListRoleTags", "iam:UntagPolicy",
+          "iam:UpdateAssumeRolePolicy",
+          "iam:ListRolePolicies", "iam:ListAttachedRolePolicies",
+          "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:GetRolePolicy",
+          "iam:CreatePolicy", "iam:DeletePolicy", "iam:GetPolicy",
+          "iam:CreatePolicyVersion", "iam:DeletePolicyVersion",
+          "iam:SetDefaultPolicyVersion", "iam:GetPolicyVersion", "iam:ListPolicyVersions",
+          "iam:TagRole", "iam:UntagRole", "iam:TagPolicy", "iam:UntagPolicy",
+          "iam:ListInstanceProfilesForRole", "iam:ListRoleTags",
           "iam:CreateOpenIDConnectProvider", "iam:DeleteOpenIDConnectProvider", "iam:GetOpenIDConnectProvider",
-          "iam:UpdateOpenIDConnectProviderThumbprint", "iam:AddClientIDToOpenIDConnectProvider", "iam:RemoveClientIDFromOpenIDConnectProvider",
-          "iam:TagOpenIDConnectProvider", "iam:UntagOpenIDConnectProvider"
+          "iam:UpdateOpenIDConnectProviderThumbprint", "iam:AddClientIDToOpenIDConnectProvider",
+          "iam:RemoveClientIDFromOpenIDConnectProvider", "iam:TagOpenIDConnectProvider", "iam:UntagOpenIDConnectProvider"
         ]
         Resource = [
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-*",
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/${var.prefix}-*",
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/*"
+        ]
+      },
+      {
+        Sid    = "IAMAttachScopedPoliciesOnly"
+        Effect = "Allow"
+        Action = [
+          "iam:AttachRolePolicy",
+          "iam:DetachRolePolicy"
+        ]
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-*"
+        Condition = {
+          ArnLike = {
+            "iam:PolicyARN" = [
+              "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/${var.prefix}-*",
+              "arn:aws:iam::aws:policy/AmazonEKS*",
+              "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+              "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy",
+              "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+            ]
+          }
+        }
+      },
+      {
+        Sid    = "ProtectBootstrapCICDRoles"
+        Effect = "Deny"
+        Action = [
+          "iam:UpdateAssumeRolePolicy",
+          "iam:AttachRolePolicy",
+          "iam:DetachRolePolicy",
+          "iam:PutRolePolicy",
+          "iam:DeleteRolePolicy",
+          "iam:DeleteRole"
+        ]
+        Resource = [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-infra-deployer-role",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.prefix}-app-deployer-role"
         ]
       },
       {
@@ -553,7 +594,9 @@ data "aws_iam_policy_document" "app_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository_username}*/${var.github_app_repository_name}*:*"]
+      values = [
+        "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_app_repository_name}@${var.github_app_repo_id}:ref:refs/heads/main"
+      ]
     }
   }
 }
