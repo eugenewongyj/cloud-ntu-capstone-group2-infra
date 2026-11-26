@@ -596,7 +596,8 @@ data "aws_iam_policy_document" "app_trust" {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
-        "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_app_repository_name}@${var.github_app_repo_id}:ref:refs/heads/main"
+        "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_app_repository_name}@${var.github_app_repo_id}:ref:refs/heads/main",
+        "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_app_repository_name}@${var.github_app_repo_id}:pull_request"
       ]
     }
   }
