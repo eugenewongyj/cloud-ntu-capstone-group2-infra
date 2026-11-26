@@ -185,14 +185,12 @@ output "devops_agent_relay_url" {
   value       = aws_lambda_function_url.devops_agent_relay.function_url
 }
 
-resource "aws_lambda_permission" "devops_agent_relay_url" {
-  statement_id           = "FunctionURLAllowPublicAccess"
-  action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.devops_agent_relay.function_name
-  principal              = "*"
-  function_url_auth_type = "NONE"
+resource "aws_lambda_permission" "devops_agent_relay_invoke" {
+  statement_id  = "FunctionURLAllowInvokeAction"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.devops_agent_relay.function_name
+  principal     = "*"
 }
-
 resource "aws_lambda_permission" "devops_agent_relay_invoke" {
   statement_id             = "FunctionURLAllowInvokeAction"
   action                   = "lambda:InvokeFunction"
