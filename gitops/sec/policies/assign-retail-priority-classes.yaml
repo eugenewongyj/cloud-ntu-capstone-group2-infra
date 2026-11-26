@@ -16,6 +16,7 @@ spec:
         patchStrategicMerge:
           spec:
             priorityClassName: prod-critical
+            priority: null
     - name: staging-low-retail-staging
       match:
         any:
@@ -27,3 +28,4 @@ spec:
         patchStrategicMerge:
           spec:
             priorityClassName: staging-low
+            priority: null
