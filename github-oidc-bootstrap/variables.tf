@@ -43,3 +43,21 @@ variable "project" {
   description = "Prefix for tagging resources"
   default     = "capstone-project-group-02"
 }
+
+variable "github_owner_id" {
+  description = "Immutable GitHub numeric ID for the repository owner"
+  type        = string
+  default     = "53294396"
+}
+
+variable "github_infra_repo_id" {
+  description = "Immutable GitHub numeric ID for the Terraform infra repository"
+  type        = string
+  default     = "1422914125"
+}
+
+variable "github_app_repo_id" {
+  description = "Immutable GitHub numeric ID for the application repository"
+  type        = string
+  default     = "1430670707"
+}
