@@ -73,10 +73,10 @@ spec:
           enabled: false
 
         # Connect to existing catalog/cart services
-        #app:
-          #endpoints:
-            #catalog: http://catalog.retail-store.svc.cluster.local:80
-            #carts: http://carts.retail-store.svc.cluster.local:80
+        app:
+          endpoints:
+            catalog: http://catalog:80
+            carts: http://carts:80
 
         smokeTest:
           enabled: true
