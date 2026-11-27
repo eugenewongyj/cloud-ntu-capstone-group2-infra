@@ -1,0 +1,20 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: github-dispatch-secret
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: argocd-notifications-secret
+    creationPolicy: Owner
+  data:
+    - secretKey: github-dispatch-token
+      remoteRef:
+        key: group2-capstone/argocd/github-dispatch
+        property: token
