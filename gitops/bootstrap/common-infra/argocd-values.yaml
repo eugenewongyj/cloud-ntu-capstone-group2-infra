@@ -12,3 +12,6 @@ server:
     - --insecure
   ingress:
     enabled: false
+notifications:
+  secret:
+    create: false

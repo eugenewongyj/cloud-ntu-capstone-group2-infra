@@ -111,6 +111,9 @@ spec:
         notifications:
           enabled: true
 
+          secret:
+            create: false
+
           notifiers:
             service.webhook.github-dispatch: |
               url: https://api.github.com
