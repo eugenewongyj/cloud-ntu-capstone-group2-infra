@@ -104,3 +104,95 @@ resource "aws_cloudwatch_metric_alarm" "dynamodb_carts_throttles" {
     TableName = "${var.project_name}-carts"
   }
 }
+
+resource "aws_cloudwatch_dashboard" "capstone" {
+  dashboard_name = "${var.project_name}-overview"
+
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "metric"
+        x      = 0
+        y      = 0
+        width  = 12
+        height = 6
+        properties = {
+          title  = "EKS Cluster - Node CPU & Memory Utilization"
+          region = var.aws_region
+          stat   = "Average"
+          period = 60
+          metrics = [
+            ["ContainerInsights", "node_cpu_utilization", "ClusterName", "${var.project_name}-cluster"],
+            [".", "node_memory_utilization", ".", "."]
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        x      = 12
+        y      = 0
+        width  = 12
+        height = 6
+        properties = {
+          title  = "EKS Cluster - Node & Pod Count"
+          region = var.aws_region
+          stat   = "Average"
+          period = 60
+          metrics = [
+            ["ContainerInsights", "cluster_node_count", "ClusterName", "${var.project_name}-cluster"],
+            [".", "cluster_number_of_running_pods", ".", "."]
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 6
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Aurora MySQL - CPU Utilization (%)"
+          region = var.aws_region
+          stat   = "Average"
+          period = 60
+          metrics = [
+            ["AWS/RDS", "CPUUtilization", "DBClusterIdentifier", "${var.project_name}-aurora-mysql"]
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        x      = 8
+        y      = 6
+        width  = 8
+        height = 6
+        properties = {
+          title  = "DynamoDB Carts - Consumed Read/Write Capacity"
+          region = var.aws_region
+          stat   = "Sum"
+          period = 60
+          metrics = [
+            ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${var.project_name}-carts"],
+            [".", "ConsumedWriteCapacityUnits", ".", "."]
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        x      = 16
+        y      = 6
+        width  = 8
+        height = 6
+        properties = {
+          title  = "SQS Orders Events - Visible Messages"
+          region = var.aws_region
+          stat   = "Average"
+          period = 60
+          metrics = [
+            ["AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "${var.project_name}-orders-events"]
+          ]
+        }
+      }
+    ]
+  })
+}
