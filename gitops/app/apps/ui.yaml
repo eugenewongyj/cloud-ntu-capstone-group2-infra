@@ -74,6 +74,10 @@ spec:
             carts: http://carts:80
             checkout: http://checkout:80   # real checkout service (without this the UI uses a built-in fake checkout)
             orders: http://orders:80
+        image:
+          repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-ui
+          tag: "ff62127ef2e7ac354501f8807690567bb30825a3"
+          pullPolicy: IfNotPresent
   destination:
     server: https://kubernetes.default.svc
     namespace: retail-store
