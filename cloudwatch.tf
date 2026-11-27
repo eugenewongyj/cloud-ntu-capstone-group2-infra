@@ -36,6 +36,18 @@ resource "aws_eks_addon" "cloudwatch_observability" {
   cluster_name = "${var.project_name}-cluster"
   addon_name   = "amazon-cloudwatch-observability"
 
+  configuration_values = jsonencode({
+    manager = {
+      tolerations = [
+        {
+          key      = "CriticalAddonsOnly"
+          operator = "Exists"
+          effect   = "NoSchedule"
+        }
+      ]
+    }
+  })
+
   depends_on = [
     aws_eks_pod_identity_association.cloudwatch_agent,
     aws_eks_pod_identity_association.fluent_bit
