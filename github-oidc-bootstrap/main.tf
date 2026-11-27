@@ -55,6 +55,18 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "CloudWatchAlarms"
+        Effect = "Allow"
+        Action = [
+          "cloudwatch:PutMetricAlarm",
+          "cloudwatch:DeleteAlarms",
+          "cloudwatch:DescribeAlarms",
+          "cloudwatch:ListTagsForResource",
+          "cloudwatch:TagResource",
+          "cloudwatch:UntagResource"
+        ]
+        Resource = "arn:aws:cloudwatch:${var.aws_region}:${data.aws_caller_identity.current.account_id}:alarm:${var.prefix}-*"
+        }, {
         Sid    = "DynamoDBTerraformStateLocking"
         Effect = "Allow"
         Action = [
