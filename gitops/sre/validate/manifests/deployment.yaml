@@ -43,7 +43,7 @@ spec:
 
       containers:
         - name: controller
-          image: capstone-assessment-controller:dev
+          image: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-sre-controller@sha256:8cf847c6fffc30bcbf4548b8761b0a4881c6a910deb978011854e5002f15bc3f
           imagePullPolicy: IfNotPresent
 
           ports:
