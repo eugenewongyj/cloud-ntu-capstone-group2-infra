@@ -97,3 +97,21 @@ variable "orders_db_engine_version" {
   type        = string
   default     = "16.15"
 }
+
+variable "alb_arn_suffix" {
+  description = "ALB ARN suffix (e.g. app/k8s-group2shared-.../...). Leave empty to skip the ALB alarm until ALB is provisioned."
+  type        = string
+  default     = ""
+}
+
+variable "alb_p95_latency_threshold_seconds" {
+  description = "p95 latency SLO threshold in seconds (0.5 = 500ms)"
+  type        = number
+  default     = 0.5
+}
+
+variable "aurora_cpu_threshold_percent" {
+  description = "Aurora CPU alarm threshold percentage"
+  type        = number
+  default     = 80
+}
