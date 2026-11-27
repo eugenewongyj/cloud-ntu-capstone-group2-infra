@@ -381,3 +381,18 @@ resource "aws_cloudwatch_dashboard" "capstone" {
     ]
   })
 }
+
+import {
+  to = aws_cloudwatch_log_group.container_insights["/aws/containerinsights/group2-capstone-cluster/application"]
+  id = "/aws/containerinsights/group2-capstone-cluster/application"
+}
+
+import {
+  to = aws_cloudwatch_log_group.container_insights["/aws/containerinsights/group2-capstone-cluster/host"]
+  id = "/aws/containerinsights/group2-capstone-cluster/host"
+}
+
+import {
+  to = aws_cloudwatch_log_group.container_insights["/aws/containerinsights/group2-capstone-cluster/performance"]
+  id = "/aws/containerinsights/group2-capstone-cluster/performance"
+}
