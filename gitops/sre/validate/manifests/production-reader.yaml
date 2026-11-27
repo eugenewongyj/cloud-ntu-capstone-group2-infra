@@ -1,0 +1,39 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: capstone-assessment-production-reader
+  namespace: retail-store
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames:
+      - ui
+      - catalog
+      - carts
+      - orders
+      - checkout
+    verbs: ["get"]
+
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    resourceNames:
+      - ui
+      - catalog
+      - carts
+      - orders
+      - checkout
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: capstone-assessment-production-reader
+  namespace: retail-store
+subjects:
+  - kind: ServiceAccount
+    name: capstone-assessment-controller
+    namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: capstone-assessment-production-reader

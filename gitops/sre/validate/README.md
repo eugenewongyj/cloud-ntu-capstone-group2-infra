@@ -412,3 +412,146 @@ Run only against approved staging endpoints with teammate authorization.
 Start with one virtual user. Use synthetic data.
 Stop immediately if unexpected errors, instability or cost increases occur.
 Do not commit credentials, sensitive data or generated test results.
+
+## Interactive SRE Mission Control — engineering traceability
+
+The [engineering code transitivity guide](docs/code-transitivity.md) maps the current working-tree source from infrastructure and GitOps through Grafana controls, controller execution, k6 instrumentation, Prometheus, recovery and alerting. It includes exact source lines, syntax and subsystem Mermaid diagrams.
+
+Normal: five minutes at baseline concurrency. 11:11: five minutes of staged 10× and 20× concurrency. Recovery: five to ten minutes at baseline concurrency. These are catalog-only assessments, not purchase simulations. The shared Grafana instance is the intended operator interface; local build validation does not establish shared runtime readiness.
+
+See the guide's release blockers before activation. Existing historical evidence remains unchanged.
+
+<!-- CAPSTONE-SRE-INTERACTIVE-START -->
+
+## Interactive SRE assessment automation
+
+The implementation extends the existing Capstone
+GitOps and observability architecture.
+
+- Normal Sale: five minutes at baseline traffic.
+- 11:11 Flash Sale: five minutes with 10x and 20x stages.
+- Recovery: five to ten minutes at baseline traffic.
+- Application recovery target: within five minutes.
+- Product listing p95 target: below 500 ms.
+- HTTP and content failure targets: below 1%.
+- Shared production target: retail-store via CloudFront.
+- Shared Grafana controls and run-specific telemetry.
+- Existing Prometheus, Alertmanager and Discord routing.
+- Bounded recurrence and authenticated Start/Stop controls.
+
+### Engineering traceability
+
+- [Exact source-line map](docs/engineering-source-map.md)
+- [Detailed code transitivity and Mermaid diagrams](docs/code-transitivity.md)
+
+### Implementation status
+
+Source implementation and local validation are distinct
+from deployment readiness.
+
+Signing, ECR publication, secure Helm provisioning,
+Argo CD activation and shared runtime validation remain
+pending. No production load or infrastructure mutation
+is performed by the local validation script.
+
+<!-- CAPSTONE-SRE-INTERACTIVE-END -->
+
+<!-- CAPSTONE-ADR-ALIGNMENT -->
+
+## Group 2 architecture alignment
+
+The interactive assessment implementation extends the existing
+Capstone architecture without replacing shared Grafana access,
+authentication, ingress, Prometheus or alert routing.
+
+Authoritative architecture decisions:
+
+- [SRE and Observability ADR](../../../../docs/adr/0002-sre-architecture.md)
+- [Infrastructure CI/CD ADR](../../../../docs/adr/0003-infra-cicd.md)
+
+Normal Sale and 11:11 assessments retain Argo CD self-healing.
+No fault injection or application configuration mutation is required.
+
+Container distribution uses immutable image tags and ECR lifecycle
+policies. CI publication remains separate from GitOps activation.
+
+Existing Discord and AWS DevOps Agent routing remains authoritative.
+Notifications depend on actual alert conditions.
+
+The interactive dashboard remains isolated until its controller
+and Grafana plugins are installed and validated.
+
+Source validation does not constitute live deployment evidence.
+
+<!-- BEGIN FINAL SECURITY ARCHITECTURE -->
+
+## Final security and GitOps architecture
+
+```mermaid
+flowchart TD
+    GH[GitHub] --> CI[GitHub Actions]
+    CI --> TEST[Controller regression]
+    CI --> KUST[Kustomize validation]
+    CI --> BUILD[Artifact builds]
+    BUILD -. Publication pending .-> ECR[Amazon ECR]
+    ECR -. Activation pending .-> ARGO[Argo CD]
+    ARGO --> STATE[Assessment state ConfigMap]
+    ARGO --> CTRL[Assessment controller]
+    ARGO --> HELM[Grafana Helm overlay]
+    HELM --> UI[Interactive Grafana]
+    UI --> GO[Authenticated Go backend]
+    GO --> CTRL
+    CTRL -->|Versioned patch| STATE
+    STATE --> CTRL
+    CTRL --> JOB[Kubernetes k6 Job]
+    JOB --> SHOP[Production storefront]
+    JOB --> PROM[Prometheus]
+    SHOP --> CW[CloudWatch]
+    SHOP --> HPA[HPA]
+    PROM --> REC[Recovery evaluation]
+    REC --> CTRL
+    PROM --> ALERT[Alertmanager]
+    ALERT --> DISCORD[Discord]
+    PROM --> UI
+    CW --> UI
+    HPA --> UI
+```
+
+### Operational contracts
+
+- Existing Grafana credentials and URL remain unchanged.
+- Original Mission Control dashboard is preserved.
+- Interactive automation uses an independent dashboard.
+- Argo CD provisions initial assessment state.
+- Controller state uses named patch permissions.
+- Concurrent writes use resourceVersion protection.
+- Runtime state is excluded from Argo CD reconciliation.
+- Arbitrary ConfigMap creation is prohibited.
+- Existing infrastructure IAM permissions are unchanged.
+- Artifact publication remains disabled.
+- Namespace-wide Job creation requires admission review.
+
+### Assessment parameters
+
+| Parameter | Configuration |
+|---|---|
+| Normal Sale | 5 minutes at baseline |
+| 11.11 Flash Sale | 5 minutes, 10x and 20x stages |
+| Recovery observation | 5-10 minutes |
+| Recovery objective | Within 5 minutes |
+| Product listing p95 | Below 500 ms |
+| HTTP failure rate | Below 1% |
+| Content failure rate | Below 1% |
+| Concurrent assessments | One cluster-wide |
+| Maximum recurrence | 3 cycles |
+| Production target | group2-shop.sctp-sandbox.com/catalog |
+
+### Deployment evidence boundary
+
+Local regression and source validation do not prove live deployment.
+Hosted CI, signing, ECR publication, plugin activation,
+live load execution and alert delivery remain pending.
+
+- [Final security source map](docs/final-security-source-map.md)
+
+<!-- END FINAL SECURITY ARCHITECTURE -->

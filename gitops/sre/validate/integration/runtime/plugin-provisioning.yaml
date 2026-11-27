@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: capstone-sre-app-provisioning
+  namespace: monitoring
+data:
+  capstone-srecontrol.yaml: |
+    apiVersion: 1
+    apps:
+      - type: capstone-srecontrol-app
+        org_id: 1
+        disabled: false
+        secureJsonData:
+          controllerToken: $CAPSTONE_CONTROLLER_TOKEN

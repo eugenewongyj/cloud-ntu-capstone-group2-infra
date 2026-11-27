@@ -1,0 +1,28 @@
+{
+  "name": "capstone-sre-mission-control",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "webpack --config webpack.config.cjs"
+  },
+  "dependencies": {
+    "@grafana/data": "13.3.0",
+    "@grafana/runtime": "13.3.0",
+    "@grafana/schema": "13.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.3",
+    "@types/react-dom": "19.3.0",
+    "copy-webpack-plugin": "14.0.0",
+    "ts-loader": "9.6.2",
+    "typescript": "5.7.3",
+    "webpack": "5.113.0",
+    "webpack-cli": "6.0.1"
+  },
+  "engines": {
+    "node": ">=24.5.0 <25"
+  }
+}

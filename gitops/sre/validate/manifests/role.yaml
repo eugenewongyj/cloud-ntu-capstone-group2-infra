@@ -1,0 +1,27 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: capstone-assessment-controller
+  namespace: monitoring
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create"]
+
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    resourceNames:
+      - capstone-assessment-active
+    verbs: ["get", "delete"]
+
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames:
+      - capstone-k6-workload
+    verbs: ["get"]
+
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames:
+      - capstone-assessment-state
+    verbs: ["get", "patch"]

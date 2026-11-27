@@ -23,10 +23,10 @@ data:
       "editable": true,
       "schemaVersion": 39,
       "version": 1,
-      "timezone": "browser",
+      "timezone": "Asia/Singapore",
       "refresh": "10s",
       "time": {
-        "from": "now-1h",
+        "from": "now-30m",
         "to": "now"
       },
       "templating": {

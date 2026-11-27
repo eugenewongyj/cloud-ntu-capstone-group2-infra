@@ -1,0 +1,158 @@
+name: SRE Controller CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'gitops/sre/validate/controller/**'
+      - 'gitops/sre/validate/k6/**'
+      - 'gitops/sre/validate/manifests/**'
+      - 'gitops/sre/validate/integration/**'
+      - 'gitops/sre/validate/kustomization.yaml'
+      - 'gitops/sre/values/**'
+      - 'gitops/sre/projects/**'
+      - 'gitops/app/apps/**'
+      - '.github/workflows/sre-controller-ci.yaml'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sre-controller-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout infrastructure
+        uses: actions/checkout@v4
+
+      - name: Configure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install -r gitops/sre/validate/controller/requirements.txt
+
+      - name: Checkout application contract
+        run: |
+          git clone --depth 1 --branch main https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app.git "$RUNNER_TEMP/capstone-app"
+          git -C "$RUNNER_TEMP/capstone-app" rev-parse HEAD
+
+      - name: Run controller regression
+        run: |
+          export CAPSTONE_APP_REF="$RUNNER_TEMP/capstone-app"
+          export PYTHONPATH="$GITHUB_WORKSPACE/gitops/sre/validate/controller"
+          python -m unittest discover -s gitops/sre/validate/controller/tests -v
+
+      - name: Configure kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.36.2'
+
+      - name: Validate GitOps manifests
+        run: |
+          kubectl kustomize gitops/sre/validate >/dev/null
+          kubectl kustomize gitops/sre/validate/k6 >/dev/null
+          kubectl kustomize gitops/sre/validate/integration/runtime >/dev/null
+          kubectl kustomize gitops/sre/validate/integration/dashboard >/dev/null
+
+      - name: Build controller
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            -t capstone-assessment-controller:ci \
+            gitops/sre/validate/controller
+
+      - name: Validate dependencies
+        run: |
+          docker run --rm \
+            --network none \
+            --entrypoint python \
+            capstone-assessment-controller:ci \
+            -m pip check
+
+      - name: Validate container security
+        run: |
+          docker run --rm \
+            --network none \
+            --read-only \
+            --tmpfs /tmp \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --entrypoint python \
+            capstone-assessment-controller:ci \
+            -c 'import os, bootstrap, server; assert os.getuid() == 10001'
+
+  publish:
+    needs: validate
+
+    # Publication requires an approved main-only IAM identity.
+    if: ${{ false }}
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout infrastructure
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.OIDC_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+
+      - name: Publish immutable controller image
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          REPOSITORY: group2-capstone-sre-controller
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -Eeuo pipefail
+
+          IMAGE="${REGISTRY}/${REPOSITORY}:${IMAGE_TAG}"
+
+          if aws ecr describe-images \
+            --repository-name "$REPOSITORY" \
+            --image-ids imageTag="$IMAGE_TAG" \
+            >/dev/null 2>&1; then
+
+            echo "Immutable image already exists"
+
+          else
+
+            docker build \
+              --platform linux/amd64 \
+              --tag "$IMAGE" \
+              gitops/sre/validate/controller
+
+            docker push "$IMAGE"
+
+          fi
+
+          DIGEST="$(aws ecr describe-images \
+            --repository-name "$REPOSITORY" \
+            --image-ids imageTag="$IMAGE_TAG" \
+            --query 'imageDetails[0].imageDigest' \
+            --output text)"
+
+          echo "### Capstone SRE Controller" \
+            >> "$GITHUB_STEP_SUMMARY"
+
+          echo "\`${REGISTRY}/${REPOSITORY}@${DIGEST}\`" \
+            >> "$GITHUB_STEP_SUMMARY"

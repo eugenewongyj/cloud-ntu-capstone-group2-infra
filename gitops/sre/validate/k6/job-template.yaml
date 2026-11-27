@@ -1,0 +1,85 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: capstone-assessment-template
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: capstone-k6
+    app.kubernetes.io/part-of: capstone-sre
+spec:
+  suspend: true
+  parallelism: 1
+  completions: 1
+  backoffLimit: 0
+  activeDeadlineSeconds: 1020
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: capstone-k6
+    spec:
+      nodeSelector:
+        kubernetes.io/os: linux
+        workload-tier: t3-medium-platform
+      tolerations:
+        - key: workload
+          operator: Equal
+          value: t3-medium-platform
+          effect: NoSchedule
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 12345
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: k6
+          image: grafana/k6:2.4.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - -o
+            - experimental-prometheus-rw
+            - /scripts/product-listing.js
+          env:
+            - name: TARGET_HOST
+              value: https://group2-shop.sctp-sandbox.com
+            - name: CAPSTONE_PRODUCT_PATH
+              value: /catalog
+            - name: LOAD_PROFILE
+              value: normal
+            - name: BASE_USERS
+              value: "1"
+            - name: RECOVERY_MINUTES
+              value: "10"
+            - name: ASSESSMENT_RUN
+              value: template-not-executable
+            - name: CAPSTONE_EXPECT_TEXT
+              value: These products are for demonstration purposes only
+            - name: K6_PROMETHEUS_RW_SERVER_URL
+              value: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write
+            - name: K6_PROMETHEUS_RW_TREND_STATS
+              value: p(95)
+            - name: K6_PROMETHEUS_RW_PUSH_INTERVAL
+              value: 5s
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: workload
+              mountPath: /scripts
+              readOnly: true
+      volumes:
+        - name: workload
+          configMap:
+            name: capstone-k6-workload

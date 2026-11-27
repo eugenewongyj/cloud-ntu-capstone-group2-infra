@@ -1,0 +1,5 @@
+Flask>=3.1,<4
+gunicorn>=23,<24
+kubernetes>=32,<38
+PyYAML>=6.0.2,<7
+requests>=2.32,<3

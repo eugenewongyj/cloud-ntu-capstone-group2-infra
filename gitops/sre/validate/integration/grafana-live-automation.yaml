@@ -1,0 +1,54 @@
+grafana:
+  extraVolumes:
+  - name: capstone-plugins
+    emptyDir: {}
+  - name: capstone-app-provisioning
+    configMap:
+      name: capstone-sre-app-provisioning
+  extraInitContainers:
+  - name: install-capstone-plugins
+    image: CAPSTONE_SIGNED_PLUGIN_IMAGE_REQUIRED
+    command:
+    - /bin/sh
+    - -ec
+    args:
+    - 'cp -R /opt/capstone/plugins/. /plugins/
+
+      test -s /plugins/capstone-sremissioncontrol-panel/MANIFEST.txt
+
+      test -s /plugins/capstone-srecontrol-app/MANIFEST.txt
+
+      test -x /plugins/capstone-srecontrol-app/gpx_capstone_srecontrol_linux_amd64
+
+      '
+    resources:
+      requests:
+        cpu: 25m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 472
+      runAsGroup: 472
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+    volumeMounts:
+    - name: capstone-plugins
+      mountPath: /plugins
+  extraVolumeMounts:
+  - name: capstone-plugins
+    mountPath: /var/lib/grafana/plugins
+  - name: capstone-app-provisioning
+    mountPath: /etc/grafana/provisioning/plugins/capstone-srecontrol.yaml
+    subPath: capstone-srecontrol.yaml
+    readOnly: true
+  envValueFrom:
+    CAPSTONE_CONTROLLER_TOKEN:
+      secretKeyRef:
+        name: capstone-assessment-controller-auth
+        key: token

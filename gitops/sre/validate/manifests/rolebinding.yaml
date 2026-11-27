@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: capstone-assessment-controller
+  namespace: monitoring
+subjects:
+  - kind: ServiceAccount
+    name: capstone-assessment-controller
+    namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: capstone-assessment-controller
