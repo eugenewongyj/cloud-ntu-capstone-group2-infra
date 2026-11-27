@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
-: "${TARGET_HOST:?Set approved staging TARGET_HOST}"
+: "${TARGET_HOST:?Set approved production TARGET_HOST}"
 : "${CAPSTONE_PRODUCT_PATH:?Set verified CAPSTONE_PRODUCT_PATH}"
 case "$TARGET_HOST" in https://*|http://*) ;; *) echo "Invalid TARGET_HOST" >&2; exit 2;; esac
 case "$CAPSTONE_PRODUCT_PATH" in /*) case "$CAPSTONE_PRODUCT_PATH" in //*) exit 2;; esac;; *) exit 2;; esac
-: "${LOAD_PROFILE:=smoke}"
+: "${LOAD_PROFILE:?Select normal or 1111}"
+: "${RECOVERY_MINUTES:=10}"
+: "${ASSESSMENT_RUN:=$(date -u +%Y%m%dT%H%M%SZ)-$$}"
+
+case "$LOAD_PROFILE" in
+  normal|1111) ;;
+  *) echo "Invalid LOAD_PROFILE" >&2; exit 2 ;;
+esac
+
+export RECOVERY_MINUTES ASSESSMENT_RUN
 : "${BASE_USERS:=1}"
-if [[ "$LOAD_PROFILE" == flash-demo && "${CAPSTONE_LOAD_APPROVED:-}" != YES ]]; then
-  echo "Flash demo requires CAPSTONE_LOAD_APPROVED=YES after team approval" >&2; exit 2
-fi
 mkdir -p results
 export TARGET_HOST CAPSTONE_PRODUCT_PATH LOAD_PROFILE BASE_USERS
 if [[ "${CAPSTONE_K6_REMOTE_WRITE:-}" == YES ]]; then
@@ -21,7 +27,6 @@ if [[ "${CAPSTONE_K6_REMOTE_WRITE:-}" == YES ]]; then
   -e "CAPSTONE_PRODUCT_PATH=$CAPSTONE_PRODUCT_PATH" \
   -e "LOAD_PROFILE=$LOAD_PROFILE" \
   -e "BASE_USERS=$BASE_USERS" \
-  -e "CAPSTONE_LOAD_APPROVED=${CAPSTONE_LOAD_APPROVED:-}" \
   -e "CAPSTONE_EXPECT_TEXT=${CAPSTONE_EXPECT_TEXT:-}" \
   --summary-export results/summary.json \
   product-listing.js
@@ -31,7 +36,6 @@ else
   -e "CAPSTONE_PRODUCT_PATH=$CAPSTONE_PRODUCT_PATH" \
   -e "LOAD_PROFILE=$LOAD_PROFILE" \
   -e "BASE_USERS=$BASE_USERS" \
-  -e "CAPSTONE_LOAD_APPROVED=${CAPSTONE_LOAD_APPROVED:-}" \
   -e "CAPSTONE_EXPECT_TEXT=${CAPSTONE_EXPECT_TEXT:-}" \
   --summary-export results/summary.json \
   product-listing.js

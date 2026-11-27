@@ -1,0 +1,22 @@
+{
+  "type": "panel",
+  "name": "Capstone SRE Mission Control",
+  "id": "capstone-sremissioncontrol-panel",
+  "info": {
+    "description": "Interactive SRE assessment and recovery",
+    "author": {
+      "name": "Capstone SRE"
+    },
+    "keywords": ["sre", "k6", "kubernetes"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "version": "0.1.0",
+    "updated": "2026-11-28"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=13.3.0 <14.0.0",
+    "plugins": []
+  }
+}

@@ -37,3 +37,38 @@ For peak events (e.g. 11.11 at midnight, Black Friday). Day-to-day settings are 
 ## After the sale
 - [ ] **Scale back down** to save cost: revert Aurora max ACU, pod replicas, set `checkout_cache_ecpu_min = 0` (ElastiCache).
 - [ ] Note the actual peak numbers here for next time.
+
+<!-- CAPSTONE-SRE-INTERACTIVE-START -->
+
+## Interactive SRE assessment automation
+
+The implementation extends the existing Capstone
+GitOps and observability architecture.
+
+- Normal Sale: five minutes at baseline traffic.
+- 11:11 Flash Sale: five minutes with 10x and 20x stages.
+- Recovery: five to ten minutes at baseline traffic.
+- Application recovery target: within five minutes.
+- Product listing p95 target: below 500 ms.
+- HTTP and content failure targets: below 1%.
+- Shared production target: retail-store via CloudFront.
+- Shared Grafana controls and run-specific telemetry.
+- Existing Prometheus, Alertmanager and Discord routing.
+- Bounded recurrence and authenticated Start/Stop controls.
+
+### Engineering traceability
+
+- [Exact source-line map](gitops/sre/validate/docs/engineering-source-map.md)
+- [Detailed code transitivity and Mermaid diagrams](gitops/sre/validate/docs/code-transitivity.md)
+
+### Implementation status
+
+Source implementation and local validation are distinct
+from deployment readiness.
+
+Signing, ECR publication, secure Helm provisioning,
+Argo CD activation and shared runtime validation remain
+pending. No production load or infrastructure mutation
+is performed by the local validation script.
+
+<!-- CAPSTONE-SRE-INTERACTIVE-END -->

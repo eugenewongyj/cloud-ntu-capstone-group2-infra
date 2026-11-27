@@ -1,0 +1,23 @@
+{
+  "type": "app",
+  "name": "Capstone SRE Control",
+  "id": "capstone-srecontrol-app",
+  "backend": true,
+  "executable": "gpx_capstone_srecontrol",
+  "info": {
+    "description": "Authenticated Capstone assessment controller integration",
+    "author": {
+      "name": "Capstone SRE"
+    },
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "version": "0.1.0",
+    "updated": "2026-11-28"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=13.3.0 <14.0.0",
+    "plugins": []
+  }
+}

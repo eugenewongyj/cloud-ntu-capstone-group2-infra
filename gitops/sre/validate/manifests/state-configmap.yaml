@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: capstone-assessment-state
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: capstone-assessment-state
+    app.kubernetes.io/part-of: capstone-sre
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+data:
+  state.json: '{"assessment_run": null, "base_users": 1, "cycle": 0, "healthy_since":
+    null, "history": [], "job_uid": null, "last_completed_run": null, "last_error":
+    null, "last_observed_at": null, "max_cycles": 3, "profile": null, "recovered_at":
+    null, "recovery_minutes": 10, "recovery_seconds": null, "recovery_started_at":
+    null, "repeat": false, "started_at": null, "state": "idle", "stop_requested":
+    false}'

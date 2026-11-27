@@ -20,13 +20,13 @@ data:
         "autoscaling",
         "gitops"
       ],
-      "timezone": "browser",
+      "timezone": "Asia/Singapore",
       "schemaVersion": 39,
       "version": 1,
-      "refresh": "30s",
+      "refresh": "10s",
       "editable": false,
       "time": {
-        "from": "now-1h",
+        "from": "now-30m",
         "to": "now"
       },
       "templating": {

@@ -1,0 +1,77 @@
+name: SRE Grafana Plugins CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'gitops/sre/validate/grafana-plugin/**'
+      - 'gitops/sre/validate/grafana-backend/**'
+      - 'gitops/sre/validate/plugin-distribution/**'
+      - '.github/workflows/sre-plugins-ci.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sre-plugins-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout infrastructure
+        uses: actions/checkout@v4
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.3'
+          cache: npm
+          cache-dependency-path: gitops/sre/validate/grafana-plugin/package-lock.json
+
+      - name: Validate frontend
+        working-directory: gitops/sre/validate/grafana-plugin
+        run: |
+          npm ci
+          npm run typecheck
+          npm run build
+          npm audit --audit-level=high
+
+      - name: Configure Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.4'
+          cache-dependency-path: gitops/sre/validate/grafana-backend/go.sum
+
+      - name: Validate and package backend
+        working-directory: gitops/sre/validate/grafana-backend
+        run: bash build.sh
+
+      - name: Validate signing utility
+        run: bash -n gitops/sre/validate/plugin-distribution/sign.sh
+
+      - name: Validate package identities
+        run: |
+          BASE=gitops/sre/validate
+
+          jq -e '.id == "capstone-sremissioncontrol-panel"' \
+            "$BASE/grafana-plugin/dist/plugin.json"
+
+          jq -e '.id == "capstone-srecontrol-app" and .backend == true' \
+            "$BASE/grafana-backend/dist/plugin.json"
+
+          test -x "$BASE/grafana-backend/dist/gpx_capstone_srecontrol_linux_amd64"
+
+      - name: Upload unsigned validation packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: capstone-grafana-unsigned-validation
+          retention-days: 3
+          path: |
+            gitops/sre/validate/grafana-plugin/dist/
+            gitops/sre/validate/grafana-backend/dist/

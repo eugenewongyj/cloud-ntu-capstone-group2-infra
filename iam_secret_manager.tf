@@ -17,7 +17,8 @@ resource "aws_iam_policy" "eso_sre_discord_webhook" {
         ]
         Resource = [
           "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}/sre/discord-webhook-??????",
-          "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}/sre/devops-agent-webhook-??????"
+          "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}/sre/devops-agent-webhook-??????",
+          "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}/sre/controller-auth-??????"
         ]
       }
     ]

@@ -1,0 +1,9 @@
+**
+!grafana-plugin/
+!grafana-plugin/dist/
+!grafana-plugin/dist/**
+!grafana-backend/
+!grafana-backend/dist/
+!grafana-backend/dist/**
+!plugin-distribution/
+!plugin-distribution/Dockerfile
