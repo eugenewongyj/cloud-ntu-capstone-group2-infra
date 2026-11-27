@@ -105,6 +105,64 @@ resource "aws_cloudwatch_metric_alarm" "dynamodb_carts_throttles" {
   }
 }
 
+# --- Retail Store Namespace Alarms (Container Insights) ---
+
+resource "aws_cloudwatch_metric_alarm" "retail_store_pod_cpu_high" {
+  alarm_name          = "${var.project_name}-retail-store-pod-cpu-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "pod_cpu_utilization"
+  namespace           = "ContainerInsights"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 80
+  treat_missing_data  = "notBreaching"
+  alarm_description   = "Average pod CPU utilization in ${var.orders_namespace} exceeded 80%"
+
+  dimensions = {
+    ClusterName = "${var.project_name}-cluster"
+    Namespace   = var.orders_namespace
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "retail_store_pod_restarts" {
+  alarm_name          = "${var.project_name}-retail-store-pod-restarts"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "pod_number_of_container_restarts"
+  namespace           = "ContainerInsights"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+  alarm_description   = "Container restarts detected in ${var.orders_namespace} namespace"
+
+  dimensions = {
+    ClusterName = "${var.project_name}-cluster"
+    Namespace   = var.orders_namespace
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "retail_store_running_pods_low" {
+  alarm_name          = "${var.project_name}-retail-store-running-pods-low"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "namespace_number_of_running_pods"
+  namespace           = "ContainerInsights"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 1
+  treat_missing_data  = "breaching"
+  alarm_description   = "Running pods in ${var.orders_namespace} dropped below 1"
+
+  dimensions = {
+    ClusterName = "${var.project_name}-cluster"
+    Namespace   = var.orders_namespace
+  }
+}
+
+# --- Cloudwatch dashboard ---
+
 resource "aws_cloudwatch_dashboard" "capstone" {
   dashboard_name = "${var.project_name}-overview"
 
