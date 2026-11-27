@@ -396,3 +396,18 @@ import {
   to = aws_cloudwatch_log_group.container_insights["/aws/containerinsights/group2-capstone-cluster/performance"]
   id = "/aws/containerinsights/group2-capstone-cluster/performance"
 }
+
+import {
+  to = aws_cloudwatch_log_group.container_insights["/aws/rds/cluster/group2-capstone-orders-pg/postgresql"]
+  id = "/aws/rds/cluster/group2-capstone-orders-pg/postgresql"
+}
+
+import {
+  to = aws_cloudwatch_log_group.container_insights["/aws/rds/cluster/group2-capstone-aurora-mysql/error"]
+  id = "/aws/rds/cluster/group2-capstone-aurora-mysql/error"
+}
+
+import {
+  to = aws_cloudwatch_log_group.container_insights["/aws/lambda/group2-capstone-devops-agent-relay"]
+  id = "/aws/lambda/group2-capstone-devops-agent-relay"
+}
