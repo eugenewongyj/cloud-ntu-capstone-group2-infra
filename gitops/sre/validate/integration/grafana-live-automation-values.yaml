@@ -1,52 +1,53 @@
 grafana:
+  grafana.ini:
+    plugins:
+      allow_loading_unsigned_plugins: capstone-sremissioncontrol-panel,capstone-srecontrol-app
+
   extraVolumes:
-  - name: capstone-plugins
-    emptyDir: {}
-  - name: capstone-app-provisioning
-    configMap:
-      name: capstone-sre-app-provisioning
+    - name: capstone-app-provisioning
+      configMap:
+        name: capstone-sre-app-provisioning
+
   extraInitContainers:
-  - name: install-capstone-plugins
-    image: CAPSTONE_SIGNED_PLUGIN_IMAGE_REQUIRED
-    command:
-    - /bin/sh
-    - -ec
-    args:
-    - 'cp -R /opt/capstone/plugins/. /plugins/
+    - name: install-capstone-plugins
+      image: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-sre-plugins@sha256:102b46a96286c6d60bd74f59e4c1143604ea7d01c9acabcf0f5e9e66af1e600d
+      command:
+        - /bin/sh
+        - -ec
+      args:
+        - |
+          mkdir -p /var/lib/grafana/plugins
+          cp -R /opt/capstone/plugins/capstone-sremissioncontrol-panel /var/lib/grafana/plugins/
+          cp -R /opt/capstone/plugins/capstone-srecontrol-app /var/lib/grafana/plugins/
+          test -s /var/lib/grafana/plugins/capstone-sremissioncontrol-panel/module.js
+          test -s /var/lib/grafana/plugins/capstone-srecontrol-app/module.js
+          test -x /var/lib/grafana/plugins/capstone-srecontrol-app/gpx_capstone_srecontrol_linux_amd64
+      resources:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
+        runAsGroup: 472
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: storage
+          mountPath: /var/lib/grafana
 
-      test -s /plugins/capstone-sremissioncontrol-panel/MANIFEST.txt
-
-      test -s /plugins/capstone-srecontrol-app/MANIFEST.txt
-
-      test -x /plugins/capstone-srecontrol-app/gpx_capstone_srecontrol_linux_amd64
-
-      '
-    resources:
-      requests:
-        cpu: 25m
-        memory: 32Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
-    securityContext:
-      runAsNonRoot: true
-      runAsUser: 472
-      runAsGroup: 472
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-        - ALL
-    volumeMounts:
-    - name: capstone-plugins
-      mountPath: /plugins
   extraVolumeMounts:
-  - name: capstone-plugins
-    mountPath: /var/lib/grafana/plugins
-  - name: capstone-app-provisioning
-    mountPath: /etc/grafana/provisioning/plugins/capstone-srecontrol.yaml
-    subPath: capstone-srecontrol.yaml
-    readOnly: true
+    - name: capstone-app-provisioning
+      mountPath: /etc/grafana/provisioning/plugins/capstone-srecontrol.yaml
+      subPath: capstone-srecontrol.yaml
+      readOnly: true
+
   envValueFrom:
     CAPSTONE_CONTROLLER_TOKEN:
       secretKeyRef:
