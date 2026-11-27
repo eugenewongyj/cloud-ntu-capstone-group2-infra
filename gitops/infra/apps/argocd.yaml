@@ -111,6 +111,15 @@ spec:
         notifications:
           enabled: true
 
+          notifiers:
+            service.webhook.github-dispatch: |
+              url: https://api.github.com
+              headers:
+                - name: Accept
+                  value: application/vnd.github+json
+                - name: Content-Type
+                  value: application/json
+
           triggers:
             trigger.on-ui-staging-validated: |
               - description: UI staging deployment and smoke test succeeded
@@ -135,19 +144,23 @@ spec:
 
           templates:
             template.ui-staging-validated: |
-              message: |
-                {
-                  "event_type": "ui-staging-validated",
-                  "client_payload": {
-                    "application": "{{ .app.metadata.name }}",
-                    "namespace": "{{ .app.spec.destination.namespace }}",
-                    "image_repository": "{{ .app.status.operationState.syncResult.source.helm.valuesObject.image.repository }}",
-                    "image_tag": "{{ .app.status.operationState.syncResult.source.helm.valuesObject.image.tag }}",
-                    "chart_revision": "{{ .app.status.operationState.syncResult.revision }}",
-                    "sync_finished_at": "{{ .app.status.operationState.finishedAt }}",
-                    "sync_phase": "{{ .app.status.operationState.phase }}"
-                  }
-                }
+              webhook:
+                github-dispatch:
+                  method: POST
+                  path: /repos/eugenewongyj/cloud-ntu-capstone-group2-app/dispatches
+                  body: |
+                    {
+                      "event_type": "ui-staging-validated",
+                      "client_payload": {
+                        "application": "{{ .app.metadata.name }}",
+                        "namespace": "{{ .app.spec.destination.namespace }}",
+                        "image_repository": "{{ .app.status.operationState.syncResult.source.helm.valuesObject.image.repository }}",
+                        "image_tag": "{{ .app.status.operationState.syncResult.source.helm.valuesObject.image.tag }}",
+                        "chart_revision": "{{ .app.status.operationState.syncResult.revision }}",
+                        "sync_finished_at": "{{ .app.status.operationState.finishedAt }}",
+                        "sync_phase": "{{ .app.status.operationState.phase }}"
+                      }
+                    }
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
