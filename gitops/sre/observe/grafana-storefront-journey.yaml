@@ -1,0 +1,1481 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: capstone-storefront-journey-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: '1'
+    app.kubernetes.io/part-of: capstone-sre
+data:
+  capstone-storefront-journey.json: |
+    {
+      "id": null,
+      "uid": "capstone-storefront-journey",
+      "title": "Capstone — Storefront Customer Journey",
+      "schemaVersion": 39,
+      "version": 1,
+      "timezone": "Asia/Singapore",
+      "refresh": "10s",
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "tags": [
+        "capstone",
+        "sre",
+        "storefront"
+      ],
+      "editable": true,
+      "templating": {
+        "list": [
+          {
+            "name": "assessment_run",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "query": {
+              "query": "label_values(k6_vus{project=\"Capstone\",namespace=\"retail-store\"}, assessment_run)",
+              "refId": "run"
+            },
+            "refresh": 2,
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".*",
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          },
+          {
+            "name": "cloudwatch_datasource",
+            "type": "datasource",
+            "query": "cloudwatch",
+            "refresh": 1,
+            "current": {
+              "text": "CloudWatch",
+              "value": "CloudWatch"
+            }
+          },
+          {
+            "name": "distribution_id",
+            "label": "Production CloudFront distribution",
+            "type": "textbox",
+            "query": "EG61F5PSVL6LX",
+            "current": {
+              "text": "EG61F5PSVL6LX",
+              "value": "EG61F5PSVL6LX"
+            }
+          },
+          {
+            "name": "catalog_db",
+            "label": "Catalog DB instance",
+            "type": "textbox",
+            "query": "VERIFY_PRODUCTION_DB",
+            "current": {
+              "text": "VERIFY_PRODUCTION_DB",
+              "value": "VERIFY_PRODUCTION_DB"
+            }
+          },
+          {
+            "name": "basket_table",
+            "label": "Basket DynamoDB table",
+            "type": "textbox",
+            "query": "VERIFY_PRODUCTION_TABLE",
+            "current": {
+              "text": "VERIFY_PRODUCTION_TABLE",
+              "value": "VERIFY_PRODUCTION_TABLE"
+            }
+          },
+          {
+            "name": "orders_db",
+            "label": "Orders DB instance",
+            "type": "textbox",
+            "query": "VERIFY_PRODUCTION_DB",
+            "current": {
+              "text": "VERIFY_PRODUCTION_DB",
+              "value": "VERIFY_PRODUCTION_DB"
+            }
+          }
+        ]
+      },
+      "links": [
+        {
+          "title": "Storefront",
+          "type": "link",
+          "url": "https://group2-shop.sctp-sandbox.com",
+          "targetBlank": true
+        },
+        {
+          "title": "Original 11.11",
+          "type": "link",
+          "url": "/d/capstone-retail-sre-1111",
+          "targetBlank": true
+        },
+        {
+          "title": "Live Mission Control",
+          "type": "link",
+          "url": "/d/capstone-retail-sre-live",
+          "targetBlank": true
+        }
+      ],
+      "panels": [
+        {
+          "id": 1,
+          "title": "Storefront customer journey",
+          "type": "text",
+          "description": "**Visit → Browse → Basket → Checkout → Order**\n\n[Open production storefront](https://group2-shop.sctp-sandbox.com) · [Browse products](https://group2-shop.sctp-sandbox.com/catalog)\n\nCloudWatch is aggregate telemetry, not individual clicks. k6 is synthetic catalog traffic only. Missing metrics are not zero. Database selectors must be verified against production resources.",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 5
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "**Visit → Browse → Basket → Checkout → Order**\n\n[Open production storefront](https://group2-shop.sctp-sandbox.com) · [Browse products](https://group2-shop.sctp-sandbox.com/catalog)\n\nCloudWatch is aggregate telemetry, not individual clicks. k6 is synthetic catalog traffic only. Missing metrics are not zero. Database selectors must be verified against production resources."
+          }
+        },
+        {
+          "id": 2,
+          "title": "01 — Enter storefront",
+          "type": "text",
+          "description": "**Technical:** CloudFront edge requests and errors. **Customer:** Can shoppers reach the store? Distribution identifier inherited from original dashboard; verify after infrastructure recreation.",
+          "gridPos": {
+            "x": 0,
+            "y": 5,
+            "w": 24,
+            "h": 5
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "**Technical:** CloudFront edge requests and errors. **Customer:** Can shoppers reach the store? Distribution identifier inherited from original dashboard; verify after infrastructure recreation."
+          }
+        },
+        {
+          "id": 3,
+          "title": "Edge requests",
+          "type": "timeseries",
+          "description": "All distribution requests, including assets.",
+          "gridPos": {
+            "x": 0,
+            "y": 10,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "us-east-1",
+              "namespace": "AWS/CloudFront",
+              "metricName": "Requests",
+              "dimensions": {
+                "DistributionId": "${distribution_id}",
+                "Region": "Global"
+              },
+              "statistic": "Sum",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "Requests"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Edge 5xx errors",
+          "type": "timeseries",
+          "description": "Edge server errors.",
+          "gridPos": {
+            "x": 12,
+            "y": 10,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "us-east-1",
+              "namespace": "AWS/CloudFront",
+              "metricName": "5xxErrorRate",
+              "dimensions": {
+                "DistributionId": "${distribution_id}",
+                "Region": "Global"
+              },
+              "statistic": "Average",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "5xxErrorRate"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 5,
+          "title": "02 — Browse products | Catalog",
+          "type": "text",
+          "description": "**Technical:** k6 GET /catalog, sampled p95 and failure rate, Catalog HPA and MySQL. **Customer:** Can shoppers browse quickly? Synthetic metrics do not measure real browser clicks; cache may bypass origin.",
+          "gridPos": {
+            "x": 0,
+            "y": 18,
+            "w": 24,
+            "h": 5
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "**Technical:** k6 GET /catalog, sampled p95 and failure rate, Catalog HPA and MySQL. **Customer:** Can shoppers browse quickly? Synthetic metrics do not measure real browser clicks; cache may bypass origin."
+          }
+        },
+        {
+          "id": 6,
+          "title": "Catalog synthetic p95",
+          "type": "timeseries",
+          "description": "Sampled p95, not whole-run percentile. Target 500 ms.",
+          "gridPos": {
+            "x": 0,
+            "y": 23,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "1000 * max by(assessment_run,test_profile,assessment_phase)(k6_capstone_product_listing_duration_p95{project=\"Capstone\",namespace=\"retail-store\",assessment_run=~\"${assessment_run:regex}\"})",
+              "legendFormat": "sampled p95",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 7,
+          "title": "Catalog synthetic failures",
+          "type": "timeseries",
+          "description": "Target below 1%.",
+          "gridPos": {
+            "x": 12,
+            "y": 23,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "100 * max by(assessment_run,test_profile,assessment_phase)(k6_capstone_product_listing_failed_rate{project=\"Capstone\",namespace=\"retail-store\",assessment_run=~\"${assessment_run:regex}\"})",
+              "legendFormat": "content failure",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 8,
+          "title": "Synthetic request rate",
+          "type": "timeseries",
+          "description": "k6 requests only.",
+          "gridPos": {
+            "x": 0,
+            "y": 31,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by(assessment_run,test_profile)(rate(k6_http_reqs_total{project=\"Capstone\",namespace=\"retail-store\",assessment_run=~\"${assessment_run:regex}\"}[2m]))",
+              "legendFormat": "requests/s",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 9,
+          "title": "Synthetic virtual users",
+          "type": "timeseries",
+          "description": "Concurrent synthetic users, not customers.",
+          "gridPos": {
+            "x": 12,
+            "y": 31,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by(assessment_run,test_profile)(k6_vus{project=\"Capstone\",namespace=\"retail-store\",assessment_run=~\"${assessment_run:regex}\"})",
+              "legendFormat": "VUs",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 10,
+          "title": "Catalog HPA CPU",
+          "type": "timeseries",
+          "description": "CPU relative to requested CPU; not node CPU.",
+          "gridPos": {
+            "x": 0,
+            "y": 39,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by(horizontalpodautoscaler)(kube_horizontalpodautoscaler_status_target_metric{namespace=\"retail-store\",horizontalpodautoscaler=\"catalog\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
+              "legendFormat": "current",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "max by(horizontalpodautoscaler)(kube_horizontalpodautoscaler_spec_target_metric{namespace=\"retail-store\",horizontalpodautoscaler=\"catalog\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
+              "legendFormat": "target",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 11,
+          "title": "Catalog replicas",
+          "type": "timeseries",
+          "description": "Desired versus available replicas.",
+          "gridPos": {
+            "x": 12,
+            "y": 39,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by(deployment)(kube_deployment_spec_replicas{namespace=\"retail-store\",deployment=\"catalog\"})",
+              "legendFormat": "desired",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "max by(deployment)(kube_deployment_status_replicas_available{namespace=\"retail-store\",deployment=\"catalog\"})",
+              "legendFormat": "available",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 12,
+          "title": "MySQL DatabaseConnections",
+          "type": "timeseries",
+          "description": "Select verified production DB instance.",
+          "gridPos": {
+            "x": 0,
+            "y": 47,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/RDS",
+              "metricName": "DatabaseConnections",
+              "dimensions": {
+                "DBInstanceIdentifier": "${catalog_db}"
+              },
+              "statistic": "Average",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "DatabaseConnections"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 13,
+          "title": "MySQL ReadLatency",
+          "type": "timeseries",
+          "description": "Select verified production DB instance.",
+          "gridPos": {
+            "x": 12,
+            "y": 47,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/RDS",
+              "metricName": "ReadLatency",
+              "dimensions": {
+                "DBInstanceIdentifier": "${catalog_db}"
+              },
+              "statistic": "Average",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "ReadLatency"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 14,
+          "title": "Basket — DynamoDB",
+          "type": "text",
+          "description": "**Technical:** service replicas and CPU plus available storage telemetry. **Customer:** Basket selections should persist. Current k6 does not exercise this journey; no synthetic transaction counts are claimed.",
+          "gridPos": {
+            "x": 0,
+            "y": 55,
+            "w": 24,
+            "h": 5
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "**Technical:** service replicas and CPU plus available storage telemetry. **Customer:** Basket selections should persist. Current k6 does not exercise this journey; no synthetic transaction counts are claimed."
+          }
+        },
+        {
+          "id": 15,
+          "title": "Basket HPA CPU",
+          "type": "timeseries",
+          "description": "CPU relative to requested CPU; not node CPU.",
+          "gridPos": {
+            "x": 0,
+            "y": 60,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by(horizontalpodautoscaler)(kube_horizontalpodautoscaler_status_target_metric{namespace=\"retail-store\",horizontalpodautoscaler=\"carts\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
+              "legendFormat": "current",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "max by(horizontalpodautoscaler)(kube_horizontalpodautoscaler_spec_target_metric{namespace=\"retail-store\",horizontalpodautoscaler=\"carts\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
+              "legendFormat": "target",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 16,
+          "title": "Basket replicas",
+          "type": "timeseries",
+          "description": "Desired versus available replicas.",
+          "gridPos": {
+            "x": 12,
+            "y": 60,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by(deployment)(kube_deployment_spec_replicas{namespace=\"retail-store\",deployment=\"carts\"})",
+              "legendFormat": "desired",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "max by(deployment)(kube_deployment_status_replicas_available{namespace=\"retail-store\",deployment=\"carts\"})",
+              "legendFormat": "available",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 17,
+          "title": "Basket ConsumedReadCapacityUnits",
+          "type": "timeseries",
+          "description": "Aggregate table activity; does not prove individual basket persistence.",
+          "gridPos": {
+            "x": 0,
+            "y": 68,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/DynamoDB",
+              "metricName": "ConsumedReadCapacityUnits",
+              "dimensions": {
+                "TableName": "${basket_table}"
+              },
+              "statistic": "Sum",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "ConsumedReadCapacityUnits"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 18,
+          "title": "Basket ConsumedWriteCapacityUnits",
+          "type": "timeseries",
+          "description": "Aggregate table activity; does not prove individual basket persistence.",
+          "gridPos": {
+            "x": 12,
+            "y": 68,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/DynamoDB",
+              "metricName": "ConsumedWriteCapacityUnits",
+              "dimensions": {
+                "TableName": "${basket_table}"
+              },
+              "statistic": "Sum",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "ConsumedWriteCapacityUnits"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 19,
+          "title": "Basket ReadThrottleEvents",
+          "type": "timeseries",
+          "description": "Aggregate table activity; does not prove individual basket persistence.",
+          "gridPos": {
+            "x": 0,
+            "y": 76,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/DynamoDB",
+              "metricName": "ReadThrottleEvents",
+              "dimensions": {
+                "TableName": "${basket_table}"
+              },
+              "statistic": "Sum",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "ReadThrottleEvents"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 20,
+          "title": "Basket WriteThrottleEvents",
+          "type": "timeseries",
+          "description": "Aggregate table activity; does not prove individual basket persistence.",
+          "gridPos": {
+            "x": 12,
+            "y": 76,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/DynamoDB",
+              "metricName": "WriteThrottleEvents",
+              "dimensions": {
+                "TableName": "${basket_table}"
+              },
+              "statistic": "Sum",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "WriteThrottleEvents"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 21,
+          "title": "Checkout — Redis",
+          "type": "text",
+          "description": "**Technical:** service replicas and CPU plus available storage telemetry. **Customer:** Checkout should remain responsive. Current k6 does not exercise this journey; no synthetic transaction counts are claimed.",
+          "gridPos": {
+            "x": 0,
+            "y": 84,
+            "w": 24,
+            "h": 5
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "**Technical:** service replicas and CPU plus available storage telemetry. **Customer:** Checkout should remain responsive. Current k6 does not exercise this journey; no synthetic transaction counts are claimed."
+          }
+        },
+        {
+          "id": 22,
+          "title": "Checkout HPA CPU",
+          "type": "timeseries",
+          "description": "CPU relative to requested CPU; not node CPU.",
+          "gridPos": {
+            "x": 0,
+            "y": 89,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by(horizontalpodautoscaler)(kube_horizontalpodautoscaler_status_target_metric{namespace=\"retail-store\",horizontalpodautoscaler=\"checkout\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
+              "legendFormat": "current",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "max by(horizontalpodautoscaler)(kube_horizontalpodautoscaler_spec_target_metric{namespace=\"retail-store\",horizontalpodautoscaler=\"checkout\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
+              "legendFormat": "target",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 23,
+          "title": "Checkout replicas",
+          "type": "timeseries",
+          "description": "Desired versus available replicas.",
+          "gridPos": {
+            "x": 12,
+            "y": 89,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by(deployment)(kube_deployment_spec_replicas{namespace=\"retail-store\",deployment=\"checkout\"})",
+              "legendFormat": "desired",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "max by(deployment)(kube_deployment_status_replicas_available{namespace=\"retail-store\",deployment=\"checkout\"})",
+              "legendFormat": "available",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 24,
+          "title": "Redis telemetry verification",
+          "type": "text",
+          "description": "Redis deployment type and metric exporter must be verified before adding cache metrics. No fabricated data or assumed ElastiCache dimensions.",
+          "gridPos": {
+            "x": 0,
+            "y": 97,
+            "w": 24,
+            "h": 5
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "Redis deployment type and metric exporter must be verified before adding cache metrics. No fabricated data or assumed ElastiCache dimensions."
+          }
+        },
+        {
+          "id": 25,
+          "title": "Orders — PostgreSQL",
+          "type": "text",
+          "description": "**Technical:** service replicas and CPU plus available storage telemetry. **Customer:** Orders should be processed reliably. Current k6 does not exercise this journey; no synthetic transaction counts are claimed.",
+          "gridPos": {
+            "x": 0,
+            "y": 102,
+            "w": 24,
+            "h": 5
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "**Technical:** service replicas and CPU plus available storage telemetry. **Customer:** Orders should be processed reliably. Current k6 does not exercise this journey; no synthetic transaction counts are claimed."
+          }
+        },
+        {
+          "id": 26,
+          "title": "Orders HPA CPU",
+          "type": "timeseries",
+          "description": "CPU relative to requested CPU; not node CPU.",
+          "gridPos": {
+            "x": 0,
+            "y": 107,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by(horizontalpodautoscaler)(kube_horizontalpodautoscaler_status_target_metric{namespace=\"retail-store\",horizontalpodautoscaler=\"orders\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
+              "legendFormat": "current",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "max by(horizontalpodautoscaler)(kube_horizontalpodautoscaler_spec_target_metric{namespace=\"retail-store\",horizontalpodautoscaler=\"orders\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
+              "legendFormat": "target",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 27,
+          "title": "Orders replicas",
+          "type": "timeseries",
+          "description": "Desired versus available replicas.",
+          "gridPos": {
+            "x": 12,
+            "y": 107,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by(deployment)(kube_deployment_spec_replicas{namespace=\"retail-store\",deployment=\"orders\"})",
+              "legendFormat": "desired",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "max by(deployment)(kube_deployment_status_replicas_available{namespace=\"retail-store\",deployment=\"orders\"})",
+              "legendFormat": "available",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 28,
+          "title": "Orders database connections",
+          "type": "timeseries",
+          "description": "Select verified production DB instance.",
+          "gridPos": {
+            "x": 0,
+            "y": 115,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/RDS",
+              "metricName": "DatabaseConnections",
+              "dimensions": {
+                "DBInstanceIdentifier": "${orders_db}"
+              },
+              "statistic": "Average",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "DatabaseConnections"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 29,
+          "title": "Orders database write latency",
+          "type": "timeseries",
+          "description": "Database writes are not completed order counts.",
+          "gridPos": {
+            "x": 12,
+            "y": 115,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/RDS",
+              "metricName": "WriteLatency",
+              "dimensions": {
+                "DBInstanceIdentifier": "${orders_db}"
+              },
+              "statistic": "Average",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "WriteLatency"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 30,
+          "title": "Recovery and incidents",
+          "type": "text",
+          "description": "Compare the same time window with Live Mission Control. HPA scaling and recovery are observed, not guaranteed. Alert counts are not proof of Discord delivery.",
+          "gridPos": {
+            "x": 0,
+            "y": 123,
+            "w": 24,
+            "h": 5
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "Compare the same time window with Live Mission Control. HPA scaling and recovery are observed, not guaranteed. Alert counts are not proof of Discord delivery."
+          }
+        },
+        {
+          "id": 31,
+          "title": "Application alerts",
+          "type": "timeseries",
+          "description": "No series may mean no matching alert or missing telemetry.",
+          "gridPos": {
+            "x": 0,
+            "y": 128,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by(alertname,severity)(ALERTS{namespace=\"retail-store\",alertstate=\"firing\"})",
+              "legendFormat": "firing",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        },
+        {
+          "id": 32,
+          "title": "Monitoring scrape health",
+          "type": "timeseries",
+          "description": "Scrape health, not customer availability.",
+          "gridPos": {
+            "x": 12,
+            "y": 128,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "avg by(job)(up)",
+              "legendFormat": "up",
+              "range": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "noValue": "No data — verify telemetry"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        }
+      ]
+    }
