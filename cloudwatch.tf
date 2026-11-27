@@ -411,3 +411,22 @@ import {
   to = aws_cloudwatch_log_group.container_insights["/aws/lambda/group2-capstone-devops-agent-relay"]
   id = "/aws/lambda/group2-capstone-devops-agent-relay"
 }
+
+resource "aws_iam_role_policy" "grafana_cloudwatch_oam" {
+  name = "group2-capstone-grafana-cloudwatch-oam"
+  role = "group2-capstone-grafana-cloudwatch-role"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowCloudWatchObservabilitySinkDiscovery"
+        Effect = "Allow"
+        Action = [
+          "oam:ListSinks"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
