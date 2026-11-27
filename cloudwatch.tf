@@ -1,3 +1,20 @@
+# --- CloudWatch Log Groups with Explicit Retention ---
+
+locals {
+  cw_log_groups = toset([
+    "/aws/containerinsights/${var.project_name}-cluster/application",
+    "/aws/containerinsights/${var.project_name}-cluster/dataplane",
+    "/aws/containerinsights/${var.project_name}-cluster/host",
+    "/aws/containerinsights/${var.project_name}-cluster/performance",
+  ])
+}
+
+resource "aws_cloudwatch_log_group" "container_insights" {
+  for_each          = local.cw_log_groups
+  name              = each.value
+  retention_in_days = 14
+}
+
 # --- EKS CloudWatch Observability Add-on (Container Insights + App Logs) ---
 
 resource "aws_iam_role" "cloudwatch_observability" {
