@@ -108,6 +108,34 @@ spec:
               enabled: true
               additionalLabels:
                 release: kube-prometheus-stack
+          notifications:
+          enabled: true
+
+          triggers:
+            trigger.on-ui-staging-validated: |
+              - description: UI staging deployment and smoke test succeeded
+                oncePer: app.status.operationState.finishedAt
+                send:
+                  - ui-staging-validated
+                when: >-
+                  app.metadata.name == 'ui-staging' and
+                  app.spec.destination.namespace == 'retail-staging' and
+                  app.status.operationState?.phase == 'Succeeded' and
+                  any(app.status.operationState.syncResult?.resources ?? [], {
+                    #.kind == 'Job' and
+                    #.name == 'ui-smoke-test' and
+                    #.namespace == 'retail-staging' and
+                    #.syncPhase == 'PostSync' and
+                    #.hookPhase == 'Succeeded'
+                  }) and
+                  app.status.operationState.syncResult.source?.helm?.valuesObject?.image?.repository ==
+                    '255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-ui' and
+                  (app.status.operationState.syncResult.source?.helm?.valuesObject?.image?.tag ?? '')
+                    matches '^[0-9a-f]{40}$'
+
+          templates:
+            template.ui-staging-validated: |
+              message: UI staging deployment and smoke test succeeded.
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
