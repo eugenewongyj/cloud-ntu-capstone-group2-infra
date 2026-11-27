@@ -144,7 +144,8 @@ resource "aws_cloudwatch_metric_alarm" "aurora_pg_cpu" {
   ok_actions          = [aws_sns_topic.alerts.arn]
 
   dimensions = {
-    DBClusterIdentifier = "${var.project_name}-aurora-pg"
+    #DBClusterIdentifier = "${var.project_name}-aurora-pg"
+    DBClusterIdentifier = "${var.project_name}-orders-pg"
   }
 }
 
