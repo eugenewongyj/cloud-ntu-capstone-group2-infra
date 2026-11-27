@@ -35,3 +35,30 @@ output "eso_sre_discord_webhook_policy_arn" {
   description = "The ARN of the least-privilege IAM policy for the SRE Discord webhook secret"
   value       = aws_iam_policy.eso_sre_discord_webhook.arn
 }
+
+# Allow ESO to retrieve the Argo CD GitHub dispatch token.
+resource "aws_iam_policy" "eso_argocd_github_dispatch" {
+  name        = "${var.project_name}-eso-argocd-github-dispatch-policy"
+  description = "Allows External Secrets Operator to read the Argo CD GitHub dispatch token"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "ReadArgoCDGitHubDispatchSecret"
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}/argocd/github-dispatch-??????"
+      }
+    ]
+  })
+}
+
+# Attach the policy to the existing ESO IAM role.
+resource "aws_iam_role_policy_attachment" "eso_argocd_github_dispatch" {
+  policy_arn = aws_iam_policy.eso_argocd_github_dispatch.arn
+  role       = aws_iam_role.eso.name
+}
