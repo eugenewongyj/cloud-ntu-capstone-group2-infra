@@ -65,10 +65,6 @@ spec:
             alb.ingress.kubernetes.io/ssl-redirect: "443"
             # Attach the WAF by NAME (from waf.tf), not ARN: the ARN changes on every daily rebuild
             alb.ingress.kubernetes.io/wafv2-acl-name: group2-capstone-web-acl
-            alb.ingress.kubernetes.io/load-balancer-attributes: >-
-              access_logs.s3.enabled=true,
-              access_logs.s3.bucket=group2-capstone-alb-access-logs-255945442255,
-              access_logs.s3.prefix=retail-store
           hosts: 
             - group2-retail.sctp-sandbox.com
           tls: []
