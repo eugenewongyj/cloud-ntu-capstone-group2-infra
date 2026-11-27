@@ -108,7 +108,7 @@ spec:
               enabled: true
               additionalLabels:
                 release: kube-prometheus-stack
-          notifications:
+        notifications:
           enabled: true
 
           triggers:
