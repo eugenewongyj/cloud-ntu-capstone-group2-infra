@@ -126,9 +126,10 @@ resource "aws_lb_target_group" "replacement" {
   }
 
   tags = {
-    Name      = "group2-repl-${each.key}"
-    ManagedBy = "Terraform"
-    component = "infra"
+    "eks:eks-cluster-name" = "group2-capstone-cluster"
+    Name                   = "group2-repl-${each.key}"
+    ManagedBy              = "Terraform"
+    component              = "infra"
   }
 }
 
