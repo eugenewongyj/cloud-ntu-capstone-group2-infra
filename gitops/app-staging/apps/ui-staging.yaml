@@ -6,6 +6,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "6"
+    notifications.argoproj.io/subscribe.on-ui-staging-validated.github-dispatch: ""
 
 spec:
   project: app-staging-project
