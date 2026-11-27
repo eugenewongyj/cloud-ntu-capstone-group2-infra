@@ -147,6 +147,7 @@ data "archive_file" "devops_agent_relay_zip" {
           )
 
           try:
+              print(f"Posting to {webhook_url} headers={list(req.headers.keys())} payload={payload_str}")
               with urllib.request.urlopen(req, timeout=10) as resp:
                   resp_body = resp.read().decode("utf-8")
                   print(f"Forwarded {alertname} ({status}) -> HTTP {resp.status}: {resp_body}")
