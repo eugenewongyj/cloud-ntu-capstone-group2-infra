@@ -17,10 +17,10 @@ spec:
         nodeSelector:
           workload-tier: t3-medium-apps
         tolerations:
-          - key: workload
-            operator: Equal
-            value: t3-medium-apps
-            effect: NoSchedule
+        - key: workload
+          operator: Equal
+          value: t3-medium-apps
+          effect: NoSchedule
         # Add the OTel instrumentation annotation here
         podAnnotations:
           # Change "-java" to "-nodejs", "-python", or "-go" if your UI is built with a different language
@@ -48,7 +48,7 @@ spec:
         podDisruptionBudget:
           enabled: true
           minAvailable: 1
-          maxUnavailable: null
+          maxUnavailable:
         # Add this block to enable Prometheus scraping
         metrics:
           enabled: true
@@ -65,8 +65,8 @@ spec:
             alb.ingress.kubernetes.io/ssl-redirect: "443"
             # Attach the WAF by NAME (from waf.tf), not ARN: the ARN changes on every daily rebuild
             alb.ingress.kubernetes.io/wafv2-acl-name: group2-capstone-web-acl
-          hosts: 
-            - group2-retail.sctp-sandbox.com
+          hosts:
+          - group2-retail.sctp-sandbox.com
           tls: []
         app:
           endpoints:
@@ -75,8 +75,9 @@ spec:
             checkout: http://checkout:80   # real checkout service (without this the UI uses a built-in fake checkout)
             orders: http://orders:80
         image:
-          repository: 255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-ui
-          tag: "ff62127ef2e7ac354501f8807690567bb30825a3"
+          repository: 
+            255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-ui
+          tag: "72a5644da135f24eeb5f3ec462506c4f458bde50"
           pullPolicy: IfNotPresent
   destination:
     server: https://kubernetes.default.svc
@@ -86,9 +87,9 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+    - CreateNamespace=true
   ignoreDifferences:
-    - group: apps
-      kind: Deployment
-      jsonPointers:
-        - /spec/replicas
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas
