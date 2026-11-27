@@ -289,6 +289,23 @@ resource "aws_iam_policy" "infra_scoped_policy_part2" {
           "acm:ListTagsForResource"
         ]
         Resource = "*"
+        }, {
+        Sid    = "SNSAlerts"
+        Effect = "Allow"
+        Action = [
+          "sns:CreateTopic",
+          "sns:DeleteTopic",
+          "sns:GetTopicAttributes",
+          "sns:SetTopicAttributes",
+          "sns:ListTagsForResource",
+          "sns:TagResource",
+          "sns:UntagResource",
+          "sns:Subscribe",
+          "sns:Unsubscribe",
+          "sns:GetSubscriptionAttributes",
+          "sns:SetSubscriptionAttributes"
+        ]
+        Resource = "arn:aws:sns:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${var.prefix}-*"
       },
       {
         Sid    = "Route53CertificateValidation"

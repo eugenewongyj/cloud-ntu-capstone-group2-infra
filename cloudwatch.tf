@@ -6,6 +6,9 @@ locals {
     "/aws/containerinsights/${var.project_name}-cluster/dataplane",
     "/aws/containerinsights/${var.project_name}-cluster/host",
     "/aws/containerinsights/${var.project_name}-cluster/performance",
+    "/aws/lambda/${var.project_name}-devops-agent-relay",
+    "/aws/rds/cluster/${var.project_name}-aurora-mysql/error",
+    "/aws/rds/cluster/${var.project_name}-orders-pg/postgresql",
   ])
 }
 
@@ -141,7 +144,8 @@ resource "aws_cloudwatch_metric_alarm" "aurora_pg_cpu" {
   ok_actions          = [aws_sns_topic.alerts.arn]
 
   dimensions = {
-    DBClusterIdentifier = "${var.project_name}-aurora-pg"
+    #DBClusterIdentifier = "${var.project_name}-aurora-pg"
+    DBClusterIdentifier = "${var.project_name}-orders-pg"
   }
 }
 
@@ -376,4 +380,19 @@ resource "aws_cloudwatch_dashboard" "capstone" {
       }
     ]
   })
+}
+
+import {
+  to = aws_cloudwatch_log_group.container_insights["/aws/containerinsights/group2-capstone-cluster/application"]
+  id = "/aws/containerinsights/group2-capstone-cluster/application"
+}
+
+import {
+  to = aws_cloudwatch_log_group.container_insights["/aws/containerinsights/group2-capstone-cluster/host"]
+  id = "/aws/containerinsights/group2-capstone-cluster/host"
+}
+
+import {
+  to = aws_cloudwatch_log_group.container_insights["/aws/containerinsights/group2-capstone-cluster/performance"]
+  id = "/aws/containerinsights/group2-capstone-cluster/performance"
 }
