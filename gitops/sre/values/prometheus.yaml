@@ -44,19 +44,18 @@ grafana:
     dashboards:
       provider:
         allowUiUpdates: true
-  resources:
-    requests:
-      cpu: 100m
-      memory: 384Mi
-    limits:
-      cpu: 500m
-      memory: 768Mi
-  sidecar:
     resources:
       requests:
         memory: 64Mi
       limits:
         memory: 256Mi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
   nodeSelector:
     workload-tier: t3-medium-monitoring
   tolerations:
