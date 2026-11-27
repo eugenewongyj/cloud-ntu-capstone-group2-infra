@@ -118,6 +118,8 @@ spec:
             service.webhook.github-dispatch: |
               url: https://api.github.com
               headers:
+                - name: Authorization
+                  value: Bearer $github-dispatch-token
                 - name: Accept
                   value: application/vnd.github+json
                 - name: Content-Type
