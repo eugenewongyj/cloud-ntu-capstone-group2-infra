@@ -68,6 +68,12 @@ spec:
                 index:
                   prefix: index_
                   period: 24h
+          limits_config:
+            retention_period: 336h # 14 days (use 168h for 7 days)
+
+          compactor:
+            retention_enabled: true
+            delete_request_store: s3
 
         # Disable the local MinIO sandbox
         minio:
