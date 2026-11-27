@@ -67,6 +67,16 @@ resource "aws_iam_policy" "infra_scoped_policy_part1" {
         ]
         Resource = "arn:aws:cloudwatch:${var.aws_region}:${data.aws_caller_identity.current.account_id}:alarm:${var.prefix}-*"
         }, {
+        Sid    = "CloudWatchDashboards"
+        Effect = "Allow"
+        Action = [
+          "cloudwatch:PutDashboard",
+          "cloudwatch:GetDashboard",
+          "cloudwatch:DeleteDashboards",
+          "cloudwatch:ListDashboards"
+        ]
+        Resource = "arn:aws:cloudwatch::${data.aws_caller_identity.current.account_id}:dashboard/${var.prefix}-*"
+        }, {
         Sid    = "DynamoDBTerraformStateLocking"
         Effect = "Allow"
         Action = [
