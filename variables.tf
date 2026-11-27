@@ -115,3 +115,9 @@ variable "aurora_cpu_threshold_percent" {
   type        = number
   default     = 80
 }
+
+variable "alert_emails" {
+  description = "List of email addresses for CloudWatch SNS alarm notifications"
+  type        = list(string)
+  default     = ["tk_peh@hotmail.com"]
+}

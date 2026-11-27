@@ -15,6 +15,19 @@ resource "aws_cloudwatch_log_group" "container_insights" {
   retention_in_days = 14
 }
 
+# --- SNS Alert Topic & Email Subscription ---
+
+resource "aws_sns_topic" "alerts" {
+  name = "${var.project_name}-alerts"
+}
+
+resource "aws_sns_topic_subscription" "alerts_email" {
+  for_each  = toset(var.alert_emails)
+  topic_arn = aws_sns_topic.alerts.arn
+  protocol  = "email"
+  endpoint  = each.value
+}
+
 # --- EKS CloudWatch Observability Add-on (Container Insights + App Logs) ---
 
 resource "aws_iam_role" "cloudwatch_observability" {
@@ -66,12 +79,13 @@ resource "aws_eks_addon" "cloudwatch_observability" {
   })
 
   depends_on = [
+    aws_cloudwatch_log_group.container_insights,
     aws_eks_pod_identity_association.cloudwatch_agent,
     aws_eks_pod_identity_association.fluent_bit
   ]
 }
 
-# --- CloudWatch Metric Alarms ---
+# --- CloudWatch Metric Alarms (ALB, Aurora, DynamoDB, SQS) ---
 
 resource "aws_cloudwatch_metric_alarm" "alb_p95_latency_slo" {
   count               = var.alb_arn_suffix != "" ? 1 : 0
@@ -83,7 +97,10 @@ resource "aws_cloudwatch_metric_alarm" "alb_p95_latency_slo" {
   period              = 60
   extended_statistic  = "p95"
   threshold           = var.alb_p95_latency_threshold_seconds
+  treat_missing_data  = "notBreaching"
   alarm_description   = "Retail UI p95 latency exceeded ${var.alb_p95_latency_threshold_seconds * 1000}ms SLO"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
 
   dimensions = {
     LoadBalancer = var.alb_arn_suffix
@@ -99,10 +116,32 @@ resource "aws_cloudwatch_metric_alarm" "aurora_mysql_cpu" {
   period              = 60
   statistic           = "Average"
   threshold           = var.aurora_cpu_threshold_percent
+  treat_missing_data  = "notBreaching"
   alarm_description   = "Aurora MySQL cluster CPU exceeded ${var.aurora_cpu_threshold_percent}%"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
 
   dimensions = {
     DBClusterIdentifier = "${var.project_name}-aurora-mysql"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "aurora_pg_cpu" {
+  alarm_name          = "${var.project_name}-aurora-pg-cpu-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/RDS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = var.aurora_cpu_threshold_percent
+  treat_missing_data  = "notBreaching"
+  alarm_description   = "Aurora PostgreSQL cluster CPU exceeded ${var.aurora_cpu_threshold_percent}%"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    DBClusterIdentifier = "${var.project_name}-aurora-pg"
   }
 }
 
@@ -115,14 +154,74 @@ resource "aws_cloudwatch_metric_alarm" "dynamodb_carts_throttles" {
   period              = 60
   statistic           = "Sum"
   threshold           = 0
+  treat_missing_data  = "notBreaching"
   alarm_description   = "DynamoDB carts table experienced throttled requests"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
 
   dimensions = {
     TableName = "${var.project_name}-carts"
   }
 }
 
-# --- Retail Store Namespace Alarms (Container Insights) ---
+resource "aws_cloudwatch_metric_alarm" "sqs_orders_backlog" {
+  alarm_name          = "${var.project_name}-sqs-orders-backlog"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 100
+  treat_missing_data  = "notBreaching"
+  alarm_description   = "SQS orders queue visible messages exceeded 100"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    QueueName = "${var.project_name}-orders-events"
+  }
+}
+
+# --- EKS Node & Retail Store Namespace Alarms (Container Insights) ---
+
+resource "aws_cloudwatch_metric_alarm" "eks_node_cpu_high" {
+  alarm_name          = "${var.project_name}-eks-node-cpu-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "node_cpu_utilization"
+  namespace           = "ContainerInsights"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 80
+  treat_missing_data  = "notBreaching"
+  alarm_description   = "EKS cluster average node CPU utilization exceeded 80%"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    ClusterName = "${var.project_name}-cluster"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "eks_node_memory_high" {
+  alarm_name          = "${var.project_name}-eks-node-memory-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "node_memory_utilization"
+  namespace           = "ContainerInsights"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 85
+  treat_missing_data  = "notBreaching"
+  alarm_description   = "EKS cluster average node memory utilization exceeded 85%"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    ClusterName = "${var.project_name}-cluster"
+  }
+}
 
 resource "aws_cloudwatch_metric_alarm" "retail_store_pod_cpu_high" {
   alarm_name          = "${var.project_name}-retail-store-pod-cpu-high"
@@ -135,6 +234,8 @@ resource "aws_cloudwatch_metric_alarm" "retail_store_pod_cpu_high" {
   threshold           = 80
   treat_missing_data  = "notBreaching"
   alarm_description   = "Average pod CPU utilization in ${var.orders_namespace} exceeded 80%"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
 
   dimensions = {
     ClusterName = "${var.project_name}-cluster"
@@ -153,6 +254,8 @@ resource "aws_cloudwatch_metric_alarm" "retail_store_pod_restarts" {
   threshold           = 0
   treat_missing_data  = "notBreaching"
   alarm_description   = "Container restarts detected in ${var.orders_namespace} namespace"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
 
   dimensions = {
     ClusterName = "${var.project_name}-cluster"
@@ -171,6 +274,8 @@ resource "aws_cloudwatch_metric_alarm" "retail_store_running_pods_low" {
   threshold           = 1
   treat_missing_data  = "breaching"
   alarm_description   = "Running pods in ${var.orders_namespace} dropped below 1"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
 
   dimensions = {
     ClusterName = "${var.project_name}-cluster"
@@ -178,7 +283,7 @@ resource "aws_cloudwatch_metric_alarm" "retail_store_running_pods_low" {
   }
 }
 
-# --- Cloudwatch dashboard ---
+# --- CloudWatch Dashboard ---
 
 resource "aws_cloudwatch_dashboard" "capstone" {
   dashboard_name = "${var.project_name}-overview"
@@ -226,12 +331,13 @@ resource "aws_cloudwatch_dashboard" "capstone" {
         width  = 8
         height = 6
         properties = {
-          title  = "Aurora MySQL - CPU Utilization (%)"
+          title  = "Aurora MySQL & PG - CPU Utilization (%)"
           region = var.aws_region
           stat   = "Average"
           period = 60
           metrics = [
-            ["AWS/RDS", "CPUUtilization", "DBClusterIdentifier", "${var.project_name}-aurora-mysql"]
+            ["AWS/RDS", "CPUUtilization", "DBClusterIdentifier", "${var.project_name}-aurora-mysql"],
+            ["AWS/RDS", "CPUUtilization", "DBClusterIdentifier", "${var.project_name}-aurora-pg"]
           ]
         }
       },
