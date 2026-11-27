@@ -135,7 +135,19 @@ spec:
 
           templates:
             template.ui-staging-validated: |
-              message: UI staging deployment and smoke test succeeded.
+              message: |
+                {
+                  "event_type": "ui-staging-validated",
+                  "client_payload": {
+                    "application": "{{ .app.metadata.name }}",
+                    "namespace": "{{ .app.spec.destination.namespace }}",
+                    "image_repository": "{{ .app.status.operationState.syncResult.source.helm.valuesObject.image.repository }}",
+                    "image_tag": "{{ .app.status.operationState.syncResult.source.helm.valuesObject.image.tag }}",
+                    "chart_revision": "{{ .app.status.operationState.syncResult.revision }}",
+                    "sync_finished_at": "{{ .app.status.operationState.finishedAt }}",
+                    "sync_phase": "{{ .app.status.operationState.phase }}"
+                  }
+                }
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
