@@ -81,6 +81,7 @@ spec:
 
         smokeTest:
           enabled: true
+          path: /actuator/health/nonexistent-test-endpoint
 
   destination:
     server: https://kubernetes.default.svc
