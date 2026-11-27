@@ -1,12 +1,11 @@
-import { MetricExplanationGrid } from './MetricExplanationGrid';
-import { LiveTelemetry } from './LiveTelemetry';
 import React, { useMemo } from 'react';
-
 import type { PanelProps } from '@grafana/data';
 
 import { AssessmentAPI } from './api';
 import { grafanaTransport } from './transport';
 import { ControlPanel } from './ControlPanel';
+import { BroadcastTicker } from './BroadcastTicker';
+import { MetricExplanationGrid } from './MetricExplanationGrid';
 
 export function MissionControlPanel({
   width,
@@ -19,15 +18,15 @@ export function MissionControlPanel({
   );
 
   return (
-    <div style={{
+    <main style={{
       width,
       height,
       overflow: 'auto',
       boxSizing: 'border-box',
     }}>
       <ControlPanel api={api} />
-      <LiveTelemetry data={data} />
+      <BroadcastTicker data={data} />
       <MetricExplanationGrid />
-    </div>
+    </main>
   );
 }

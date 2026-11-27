@@ -11,66 +11,34 @@ data:
     {
       "id": null,
       "uid": "capstone-retail-sre-live",
-      "title": "Capstone — Live Mission Control",
-      "description": "Business-to-infrastructure SRE dashboard: real k6, Kubernetes HPA and CloudFront data with gated checkout KPIs.",
+      "title": "Capstone — SRE Live Mission Control",
+      "description": "Independent interactive production assessment and reliability broadcast dashboard.",
       "tags": [
         "capstone",
         "sre",
-        "11-11",
-        "retail-store",
-        "gitops",
-        "presentation"
+        "live",
+        "production"
       ],
       "editable": true,
       "schemaVersion": 39,
-      "version": 1,
+      "version": 5,
       "timezone": "Asia/Singapore",
       "refresh": "10s",
       "time": {
         "from": "now-30m",
         "to": "now"
       },
-      "timepicker": {
-        "refresh_intervals": [
-          "5s",
-          "10s",
-          "30s",
-          "1m",
-          "5m"
-        ]
+      "annotations": {
+        "list": []
       },
-      "links": [
-        {
-          "title": "k6 details",
-          "type": "link",
-          "url": "/d/capstone-k6",
-          "targetBlank": true
-        },
-        {
-          "title": "HPA details",
-          "type": "link",
-          "url": "/d/capstone-hpa",
-          "targetBlank": true
-        },
-        {
-          "title": "Existing SRE health",
-          "type": "link",
-          "url": "/d/capstone-sre-health",
-          "targetBlank": true
-        }
-      ],
       "templating": {
         "list": [
           {
             "name": "namespace",
-            "label": "Environment",
-            "type": "custom",
-            "query": "retail-store,retail-staging",
-            "multi": true,
-            "includeAll": true,
-            "allValue": "retail-store|retail-staging",
+            "type": "constant",
+            "query": "retail-store",
+            "hide": 2,
             "current": {
-              "selected": true,
               "text": "retail-store",
               "value": "retail-store"
             }
@@ -78,1406 +46,341 @@ data:
           {
             "name": "assessment_run",
             "label": "Assessment run",
-            "type": "query",
-            "datasource": {
-              "type": "prometheus",
-              "uid": "prometheus"
-            },
-            "query": {
-              "query": "label_values(k6_vus{namespace=~\"${namespace:regex}\",project=\"Capstone\"}, assessment_run)",
-              "refId": "assessment-run-var"
-            },
-            "refresh": 2,
-            "sort": 2,
-            "multi": true,
-            "includeAll": true,
-            "allValue": ".*",
+            "type": "textbox",
+            "query": "awaiting-run",
             "current": {
-              "selected": true,
-              "text": "All",
-              "value": "$__all"
+              "text": "awaiting-run",
+              "value": "awaiting-run"
             }
           },
           {
-            "name": "scenario",
-            "label": "HTTP test profile",
+            "name": "service",
+            "label": "Microservice",
             "type": "custom",
-            "query": "smoke,baseline,flash-demo,normal-day,flash-sale-1111",
-            "multi": true,
-            "includeAll": true,
-            "allValue": ".*",
+            "query": "ui,catalog,carts,checkout,orders",
+            "multi": false,
+            "includeAll": false,
             "current": {
-              "selected": true,
-              "text": "All",
-              "value": "$__all"
+              "text": "catalog",
+              "value": "catalog"
             }
           },
           {
             "name": "cloudwatch_datasource",
-            "label": "CloudWatch datasource",
+            "label": "Cloudwatch Datasource",
             "type": "datasource",
             "query": "cloudwatch",
             "refresh": 1,
-            "current": {
-              "text": "CloudWatch",
-              "value": "CloudWatch"
-            }
+            "hide": 0
+          },
+          {
+            "name": "loki_datasource",
+            "label": "Loki Datasource",
+            "type": "datasource",
+            "query": "loki",
+            "refresh": 1,
+            "hide": 0
           }
         ]
       },
-      "annotations": {
-        "list": []
-      },
       "panels": [
         {
-          "id": 77,
-          "type": "text",
-          "title": "Normal Sale — 1x Traffic",
+          "type": "capstone-sremissioncontrol-panel",
+          "title": "01 | LIVE EXECUTION & BROADCAST STUDIO",
+          "description": "Shared controller execution, technical and layman commentary, and current infrastructure observations.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "gridPos": {
             "x": 0,
             "y": 0,
-            "w": 12,
-            "h": 10
-          },
-          "options": {
-            "mode": "markdown",
-            "content": "### Normal Sale\n\n**Duration:** 5 minutes\n\n**Baseline:** 1 virtual user\n\n**Recovery:** 5–10 minutes\n\nObserve normal storefront performance,\nrequest throughput, latency and resource\nutilization.\n\n[Open GitHub Actions](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/actions)\n\n[Open Production Storefront](https://group2-shop.sctp-sandbox.com/catalog)\n\nExecution requires a separate authorized\nload-test runner.\n"
-          }
-        },
-        {
-          "id": 78,
-          "type": "text",
-          "title": "11.11 Flash Sale — 10x / 20x Traffic",
-          "gridPos": {
-            "x": 12,
-            "y": 0,
-            "w": 12,
-            "h": 10
-          },
-          "options": {
-            "mode": "markdown",
-            "content": "### 11.11 Flash Sale\n\n**Duration:** 5 minutes\n\n**Peak:** 20 virtual users at baseline 1\n\n**Recovery:** 5–10 minutes\n\nObserve latency, HTTP failures,\nCPU utilization, HPA replicas\nand application recovery.\n\n[Open GitHub Actions](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra/actions)\n\n[Open k6 Performance Dashboard](/d/capstone-k6)\n\nExecution requires a separate authorized\nload-test runner.\n"
-          }
-        },
-        {
-          "id": 79,
-          "type": "text",
-          "title": "Technical Commentary — Live Assessment",
-          "gridPos": {
-            "x": 0,
-            "y": 10,
-            "w": 16,
-            "h": 10
-          },
-          "options": {
-            "mode": "markdown",
-            "content": "### What are we monitoring?\n\n- **Latency:** Product listing p95 target below 500 ms.\n- **Errors:** HTTP and content failure targets below 1%.\n- **Traffic:** Requests per second and virtual users.\n- **Scaling:** CPU utilization and HPA replica changes.\n- **Recovery:** Target within 5 minutes; maximum 10 minutes.\n\n### What does this mean?\n\nThe dashboard shows whether the online\nstore remains responsive during increased\ncustomer demand and whether application\nhealth returns to normal afterwards.\n\nNo data means no matching telemetry.\nIt does not mean zero failures or\nsuccessful recovery.\n"
-          }
-        },
-        {
-          "id": 80,
-          "type": "text",
-          "title": "Shared SRE Navigation",
-          "gridPos": {
-            "x": 16,
-            "y": 10,
-            "w": 8,
-            "h": 10
-          },
-          "options": {
-            "mode": "markdown",
-            "content": "### Capstone Dashboards\n\n[Original 11.11 Mission Control](/d/capstone-retail-sre-1111)\n\n[Storefront Customer Journey](/d/capstone-storefront-journey)\n\n[k6 Performance](/d/capstone-k6)\n\n[HPA and Autoscaling](/d/capstone-hpa)\n\n[Argo CD](https://group2-capstone-argocd.sctp-sandbox.com)\n\n**Refresh:** 10 seconds\n\n**Environment:** Production\n\n**Execution:** External authorized runner\n"
-          }
-        },
-        {
-          "id": 1,
-          "type": "text",
-          "title": "Capstone — Retail SRE Mission Control",
-          "gridPos": {
-            "x": 0,
-            "y": 20,
             "w": 24,
-            "h": 6
+            "h": 48
           },
-          "options": {
-            "mode": "markdown",
-            "content": "## NORMAL DAY → 11.11 FLASH SALE → RECOVERY\n**Production shopper URL:** `https://group2-shop.sctp-sandbox.com` → **CloudFront WAF** → protected **ALB WAF** → **EKS retail-store**. The ALB-origin URL returns HTTP 403 when accessed directly **by design**.\n\n**How to demo:** select `retail-store`, set time range covering **both** tests, choose `All` assessment runs and profiles. For a precise comparison, select one run at a time and preserve its time window. **The dashboard never fabricates purchases or capacity changes.** Missing metrics show **No data**, not zero.\n\n🟢 Green = within threshold · 🟠 Orange = degraded/approaching limit · 🔴 Red = threshold breached · **No data = telemetry not yet available**.\n\n**PRESENTATION RUNBOOK:** Expand sections 00A–00H below in sequence. Copy each command into WSL. All presenters must compare repository revisions before starting. Only one operator runs load tests.\n\n[Flash Sale p95 Latency & SLO Health](/d/p95-slo-health)"
-          }
-        },
-        {
-          "id": 62,
-          "type": "row",
-          "title": "00A — Synchronise GitHub repositories",
-          "collapsed": true,
-          "gridPos": {
-            "x": 0,
-            "y": 26,
-            "w": 24,
-            "h": 1
-          },
-          "panels": [
+          "targets": [
             {
-              "id": 63,
-              "type": "text",
-              "title": "Instructions and expected evidence",
-              "transparent": false,
-              "gridPos": {
-                "x": 0,
-                "y": 39,
-                "w": 24,
-                "h": 39
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
               },
-              "options": {
-                "mode": "markdown",
-                "content": "### Start every presentation from a clean, shared source baseline.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\n(\nset -euo pipefail\n\nmkdir -p ~/capstone-presentation\ncd ~/capstone-presentation\n\nfor REPO in \\\n  cloud-ntu-capstone-group2-infra \\\n  cloud-ntu-capstone-group2-app\ndo\n  if [[ ! -d \"$REPO/.git\" ]]; then\n    git clone \\\n      \"https://github.com/eugenewongyj/$REPO.git\"\n  fi\n\n  (\n    cd \"$REPO\"\n    test -z \"$(git status --porcelain)\"\n    git switch main\n    git pull --ff-only origin main\n\n    echo \"===== $REPO =====\"\n    git log -1 --oneline\n    git rev-parse HEAD\n\n    test \"$(git rev-parse HEAD)\" = \\\n      \"$(git rev-parse origin/main)\"\n  )\ndone\n)\n```\n\n**Expected evidence:** Both repositories synchronised. Compare full commit SHAs across all group members. Agree on fixed revisions if main changes."
-              }
-            }
-          ]
-        },
-        {
-          "id": 64,
-          "type": "row",
-          "title": "00B — Initialise AWS and EKS",
-          "collapsed": true,
-          "gridPos": {
-            "x": 0,
-            "y": 27,
-            "w": 24,
-            "h": 1
-          },
-          "panels": [
+              "expr": "1000 * max((k6_capstone_product_listing_duration_p95{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"} and (time() - timestamp(k6_capstone_product_listing_duration_p95{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}) <= 15)))",
+              "legendFormat": "Product p95",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
             {
-              "id": 65,
-              "type": "text",
-              "title": "Instructions and expected evidence",
-              "transparent": false,
-              "gridPos": {
-                "x": 0,
-                "y": 40,
-                "w": 24,
-                "h": 17
+              "refId": "B",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
               },
-              "options": {
-                "mode": "markdown",
-                "content": "### Use your own authorised AWS credentials.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\naws sts get-caller-identity\n\naws eks update-kubeconfig \\\n  --name group2-capstone-cluster \\\n  --region ap-southeast-1\n\nkubectl config current-context\nkubectl get nodes\n```\n\n**Expected evidence:** Correct AWS account and EKS cluster. All expected nodes Ready."
-              }
-            }
-          ]
-        },
-        {
-          "id": 66,
-          "type": "row",
-          "title": "00C — Verify GitOps deployment",
-          "collapsed": true,
-          "gridPos": {
-            "x": 0,
-            "y": 28,
-            "w": 24,
-            "h": 1
-          },
-          "panels": [
+              "expr": "100 * max((k6_http_req_failed_rate{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"} and (time() - timestamp(k6_http_req_failed_rate{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}) <= 15)))",
+              "legendFormat": "HTTP failure",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
             {
-              "id": 67,
-              "type": "text",
-              "title": "Instructions and expected evidence",
-              "transparent": false,
-              "gridPos": {
-                "x": 0,
-                "y": 41,
-                "w": 24,
-                "h": 18
+              "refId": "C",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
               },
-              "options": {
-                "mode": "markdown",
-                "content": "### Confirm that GitHub changes have reached the cluster.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\nkubectl get applications -n argocd\n\nkubectl get application capstone-monitoring \\\n  -n argocd -o json |\njq '{\n  revision: .status.sync.revision,\n  sync: .status.sync.status,\n  health: .status.health.status\n}'\n```\n\n**Expected evidence:** Synced and Healthy. Compare the deployed monitoring revision with the agreed infrastructure SHA."
-              }
-            }
-          ]
-        },
-        {
-          "id": 68,
-          "type": "row",
-          "title": "00D — Verify application health",
-          "collapsed": true,
-          "gridPos": {
-            "x": 0,
-            "y": 29,
-            "w": 24,
-            "h": 1
-          },
-          "panels": [
+              "expr": "100 * max((k6_capstone_product_listing_failed_rate{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"} and (time() - timestamp(k6_capstone_product_listing_failed_rate{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}) <= 15)))",
+              "legendFormat": "Content failure",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
             {
-              "id": 69,
-              "type": "text",
-              "title": "Instructions and expected evidence",
-              "transparent": false,
-              "gridPos": {
-                "x": 0,
-                "y": 42,
-                "w": 24,
-                "h": 12
+              "refId": "D",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
               },
-              "options": {
-                "mode": "markdown",
-                "content": "### Establish the production health baseline.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\nkubectl get deployments,pods,hpa \\\n  -n retail-store\n```\n\n**Expected evidence:** Five healthy microservices. Available replicas equal desired replicas. Observe the configured HPA targets."
-              }
-            }
-          ]
-        },
-        {
-          "id": 70,
-          "type": "row",
-          "title": "00E — Validate storefront and security",
-          "collapsed": true,
-          "gridPos": {
-            "x": 0,
-            "y": 30,
-            "w": 24,
-            "h": 1
-          },
-          "panels": [
+              "expr": "sum(rate(k6_http_reqs_total{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}[1m])) and count((k6_vus{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"} and (time() - timestamp(k6_vus{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}) <= 15)))",
+              "legendFormat": "Requests/sec",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
             {
-              "id": 71,
-              "type": "text",
-              "title": "Instructions and expected evidence",
-              "transparent": false,
-              "gridPos": {
-                "x": 0,
-                "y": 43,
-                "w": 24,
-                "h": 17
+              "refId": "E",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
               },
-              "options": {
-                "mode": "markdown",
-                "content": "### Open the production storefront and complete a demonstration purchase.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\nfor HOST in group2-shop group2-retail; do\n  echo \"===== $HOST =====\"\n\n  curl -sS --max-time 20 \\\n    -o /dev/null \\\n    -w 'HTTP: %{http_code}\\n' \\\n    \"https://${HOST}.sctp-sandbox.com/catalog\"\ndone\n```\n\n**Expected evidence:** Public storefront HTTP 200. Protected origin HTTP 403 by design. Show the manual order confirmation."
-              }
-            }
-          ]
-        },
-        {
-          "id": 72,
-          "type": "row",
-          "title": "00F — Normal-day assessment",
-          "collapsed": true,
-          "gridPos": {
-            "x": 0,
-            "y": 31,
-            "w": 24,
-            "h": 1
-          },
-          "panels": [
+              "expr": "max((k6_vus{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"} and (time() - timestamp(k6_vus{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}) <= 15)))",
+              "legendFormat": "Virtual users",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
             {
-              "id": 73,
-              "type": "text",
-              "title": "Instructions and expected evidence",
-              "transparent": false,
-              "gridPos": {
-                "x": 0,
-                "y": 44,
-                "w": 24,
-                "h": 16
+              "refId": "F",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
               },
-              "options": {
-                "mode": "markdown",
-                "content": "### Catalogue workload; not an automated purchase.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\ncd ~/capstone-presentation/cloud-ntu-capstone-group2-infra\n\nif [[ -f gitops/sre/validate/capstone-demo.sh ]]; then\n  bash gitops/sre/validate/capstone-demo.sh baseline\nelse\n  echo \"Shared assessment runner not yet integrated\"\nfi\n```\n\n**Expected evidence:** Select retail-store and the assessment run in Grafana. Measure p95, throughput and failures."
-              }
-            }
-          ]
-        },
-        {
-          "id": 74,
-          "type": "row",
-          "title": "00G — 11.11 flash sale",
-          "collapsed": true,
-          "gridPos": {
-            "x": 0,
-            "y": 32,
-            "w": 24,
-            "h": 1
-          },
-          "panels": [
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"retail-store\",container!=\"\",container!=\"POD\"}[2m]))",
+              "legendFormat": "CPU cores",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
             {
-              "id": 75,
-              "type": "text",
-              "title": "Instructions and expected evidence",
-              "transparent": false,
-              "gridPos": {
-                "x": 0,
-                "y": 45,
-                "w": 24,
-                "h": 17
+              "refId": "G",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
               },
-              "options": {
-                "mode": "markdown",
-                "content": "### Only one designated operator executes load testing. Verify the runner and agreed load limits first.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\ncd ~/capstone-presentation/cloud-ntu-capstone-group2-infra\n\nif [[ -f gitops/sre/validate/capstone-demo.sh ]]; then\n  CAPSTONE_LOAD_APPROVED=YES \\\n    bash gitops/sre/validate/capstone-demo.sh flash-demo\nelse\n  echo \"Shared assessment runner not yet integrated\"\nfi\n```\n\n**Expected evidence:** Observe demand, latency, errors, HPA and CloudWatch. Stop on sustained degradation. Scaling is not guaranteed."
-              }
-            }
-          ]
-        },
-        {
-          "id": 76,
-          "type": "row",
-          "title": "00H — Recovery assessment",
-          "collapsed": true,
-          "gridPos": {
-            "x": 0,
-            "y": 33,
-            "w": 24,
-            "h": 1
-          },
-          "panels": [
+              "expr": "sum((container_memory_working_set_bytes{namespace=\"retail-store\",container!=\"\",container!=\"POD\"} and (time() - timestamp(container_memory_working_set_bytes{namespace=\"retail-store\",container!=\"\",container!=\"POD\"}) <= 90))) / 1048576",
+              "legendFormat": "Memory MiB",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
             {
-              "id": 77,
-              "type": "text",
-              "title": "Instructions and expected evidence",
-              "transparent": false,
-              "gridPos": {
-                "x": 0,
-                "y": 46,
-                "w": 24,
-                "h": 15
+              "refId": "H",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
               },
-              "options": {
-                "mode": "markdown",
-                "content": "### Observe recovery after the synthetic workload stops.\n\n[Production storefront](https://group2-shop.sctp-sandbox.com/catalog) | [Infrastructure repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-infra) | [Application repository](https://github.com/eugenewongyj/cloud-ntu-capstone-group2-app)\n\n**Copy into WSL:**\n\n```bash\nkubectl get hpa,deployments,pods \\\n  -n retail-store\n\nkubectl get events \\\n  -n retail-store \\\n  --sort-by=.lastTimestamp\n```\n\n**Expected evidence:** Observe recovery for at least five minutes. Preserve the assessment run ID and absolute dashboard time range."
-              }
+              "expr": "sum((kube_deployment_status_replicas_ready{namespace=\"retail-store\"} and (time() - timestamp(kube_deployment_status_replicas_ready{namespace=\"retail-store\"}) <= 90)))",
+              "legendFormat": "Ready replicas",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
+            {
+              "refId": "I",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum((kube_deployment_spec_replicas{namespace=\"retail-store\"} and (time() - timestamp(kube_deployment_spec_replicas{namespace=\"retail-store\"}) <= 90)))",
+              "legendFormat": "Desired replicas",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
+            {
+              "refId": "J",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum((kube_pod_status_phase{namespace=\"retail-store\",phase=\"Pending\"} and (time() - timestamp(kube_pod_status_phase{namespace=\"retail-store\",phase=\"Pending\"}) <= 90)))",
+              "legendFormat": "Pending pods",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
+            {
+              "refId": "K",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum((kube_node_status_condition{condition=\"Ready\",status=\"true\"} and (time() - timestamp(kube_node_status_condition{condition=\"Ready\",status=\"true\"}) <= 90)))",
+              "legendFormat": "Ready nodes",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
+            {
+              "refId": "L",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"retail-store\"}[5m]))",
+              "legendFormat": "Recent restarts",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
+            },
+            {
+              "refId": "M",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "(count(ALERTS{namespace=\"retail-store\",alertstate=\"firing\"})) or (0 * max(up{job=\"prometheus\"} == 1))",
+              "legendFormat": "Firing production alerts",
+              "instant": true,
+              "range": false,
+              "editorMode": "code"
             }
-          ]
-        },
-        {
-          "id": 2,
-          "type": "row",
-          "title": "01 — LIVE | Customer-facing platform health",
-          "collapsed": false,
-          "gridPos": {
-            "x": 0,
-            "y": 34,
-            "w": 24,
-            "h": 1
-          },
-          "panels": []
+          ],
+          "options": {},
+          "id": 1
         },
         {
           "type": "text",
-          "title": "About this section",
-          "description": "",
+          "title": "02 | CUSTOMER EXPERIENCE & RELIABILITY",
+          "gridPos": {
+            "x": 0,
+            "y": 48,
+            "w": 24,
+            "h": 5
+          },
           "options": {
             "mode": "markdown",
-            "content": "Live Kubernetes status, independent of selected k6 run. Application deployment readiness is not proof of successful checkout."
+            "content": "**Technical:** Product-listing latency, request failures, content validation and actual request throughput.\n\n**Layman:** Is the store fast, available and returning the correct product page?"
           },
-          "gridPos": {
-            "x": 0,
-            "y": 35,
-            "w": 24,
-            "h": 2
-          },
-          "id": 3
+          "id": 2
         },
         {
-          "id": 4,
-          "title": "Ready EKS nodes",
-          "description": "Current Ready node count; does not assert all nodes healthy without comparing node total.",
-          "type": "stat",
+          "type": "timeseries",
+          "title": "Product listing p95 — SLO 500 ms",
+          "description": "Interval p95, not whole-run percentile.",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
           "gridPos": {
             "x": 0,
-            "y": 37,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "sum(max by(node)(kube_node_status_condition{condition=\"Ready\",status=\"true\"}))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 5,
-          "title": "EKS nodes discovered",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 6,
-            "y": 37,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "count(max by(node)(kube_node_info))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 6,
-          "title": "Healthy app replicas",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 12,
-            "y": 37,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "sum(max by(namespace,deployment) (kube_deployment_status_replicas_available{namespace=~\"${namespace:regex}\",deployment=~\"(ui|catalog|carts|orders|checkout)\"}))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 7,
-          "title": "Desired app replicas",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 18,
-            "y": 37,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "sum(max by(namespace,deployment) (kube_deployment_spec_replicas{namespace=~\"${namespace:regex}\",deployment=~\"(ui|catalog|carts|orders|checkout)\"}))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 8,
-          "title": "Application replica availability",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 42,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "100 * sum(max by(namespace,deployment) (kube_deployment_status_replicas_available{namespace=~\"${namespace:regex}\",deployment=~\"(ui|catalog|carts|orders|checkout)\"})) / clamp_min(sum(max by(namespace,deployment) (kube_deployment_spec_replicas{namespace=~\"${namespace:regex}\",deployment=~\"(ui|catalog|carts|orders|checkout)\"})),1)",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "percent",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 99
-                  },
-                  {
-                    "color": "green",
-                    "value": 100
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 9,
-          "title": "Restarts in last 15 minutes",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 6,
-            "y": 42,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=~\"${namespace:regex}\",container=~\"(ui|catalog|carts|orders|checkout)\"}[15m]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 10,
-          "title": "Firing application alerts",
-          "description": "Zero assumes Prometheus is reachable; verify monitoring health separately.",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 12,
-            "y": 42,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "sum(ALERTS{namespace=~\"${namespace:regex}\",alertstate=\"firing\"}) or vector(0)",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 11,
-          "title": "Monitoring target availability",
-          "description": "Average scrape health across all Prometheus targets; not app request success.",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 18,
-            "y": 42,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "100 * avg(up)",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "percent",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 95
-                  },
-                  {
-                    "color": "green",
-                    "value": 100
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 12,
-          "title": "Microservice replicas: available",
-          "description": "",
-          "type": "bargauge",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 47,
+            "y": 53,
             "w": 12,
             "h": 8
           },
           "targets": [
             {
               "refId": "A",
-              "expr": "max by(namespace,deployment) (kube_deployment_status_replicas_available{namespace=~\"${namespace:regex}\",deployment=~\"(ui|catalog|carts|orders|checkout)\"})",
-              "legendFormat": "{{namespace}} · {{deployment}}",
               "datasource": {
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "orientation": "horizontal",
-            "displayMode": "basic",
-            "showUnfilled": true
-          }
-        },
-        {
-          "id": 13,
-          "title": "Microservice replicas: desired",
-          "description": "",
-          "type": "bargauge",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 12,
-            "y": 47,
-            "w": 12,
-            "h": 8
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "max by(namespace,deployment) (kube_deployment_spec_replicas{namespace=~\"${namespace:regex}\",deployment=~\"(ui|catalog|carts|orders|checkout)\"})",
-              "legendFormat": "{{namespace}} · {{deployment}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "orientation": "horizontal",
-            "displayMode": "basic",
-            "showUnfilled": true
-          }
-        },
-        {
-          "id": 14,
-          "title": "Node CPU utilization",
-          "description": "",
-          "type": "bargauge",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 55,
-            "w": 12,
-            "h": 8
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "100 * (1 - avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))",
-              "legendFormat": "{{instance}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "percent",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 70
-                  },
-                  {
-                    "color": "red",
-                    "value": 90
-                  }
-                ]
-              },
-              "min": 0,
-              "max": 100
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "orientation": "horizontal",
-            "displayMode": "basic",
-            "showUnfilled": true
-          }
-        },
-        {
-          "id": 15,
-          "title": "Node memory utilization",
-          "description": "",
-          "type": "bargauge",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 12,
-            "y": 55,
-            "w": 12,
-            "h": 8
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
-              "legendFormat": "{{instance}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "percent",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 70
-                  },
-                  {
-                    "color": "red",
-                    "value": 90
-                  }
-                ]
-              },
-              "min": 0,
-              "max": 100
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "orientation": "horizontal",
-            "displayMode": "basic",
-            "showUnfilled": true
-          }
-        },
-        {
-          "id": 16,
-          "type": "row",
-          "title": "02 — DEMAND | Normal day versus 11.11 sale",
-          "collapsed": false,
-          "gridPos": {
-            "x": 0,
-            "y": 63,
-            "w": 24,
-            "h": 1
-          },
-          "panels": []
-        },
-        {
-          "type": "text",
-          "title": "About this section",
-          "description": "",
-          "options": {
-            "mode": "markdown",
-            "content": "Historic k6 HTTP metrics from Prometheus remote write. `test_profile` distinguishes normal, baseline and flash. **VUs are concurrency, not orders, and VU multipliers are not RPS multipliers.**"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 64,
-            "w": 24,
-            "h": 2
-          },
-          "id": 17
-        },
-        {
-          "id": 18,
-          "title": "Peak concurrent HTTP users",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 66,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "max by(namespace,test_profile,assessment_run) (max_over_time(k6_vus{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"${scenario:regex}\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 19,
-          "title": "HTTP p95 latency — worst sampled",
-          "description": "Worst exported sampled p95 per run; NOT pooled p95 across runs. Target <500ms.",
-          "type": "gauge",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 6,
-            "y": 66,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "1000 * max by(namespace,test_profile,assessment_run) (last_over_time(k6_http_req_duration_p95{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"${scenario:regex}\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
+              "expr": "1000 * max((k6_capstone_product_listing_duration_p95{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"} and (time() - timestamp(k6_capstone_product_listing_duration_p95{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}) <= 15)))",
+              "legendFormat": "p95",
+              "instant": false,
+              "range": true,
+              "editorMode": "code"
             }
           ],
           "fieldConfig": {
             "defaults": {
               "unit": "ms",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
+              "decimals": 2,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 400
                   },
                   {
                     "color": "red",
                     "value": 500
                   }
                 ]
-              },
-              "min": 0,
-              "max": 1000
+              }
             },
             "overrides": []
           },
           "options": {
-            "reduceOptions": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
               "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
+                "lastNotNull",
+                "max"
+              ]
             },
-            "showThresholdLabels": false,
-            "showThresholdMarkers": true
-          }
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "id": 3
         },
         {
-          "id": 20,
-          "title": "HTTP failure rate — max sample",
-          "description": "Maximum sampled failure ratio, not cumulative failure rate.",
-          "type": "stat",
+          "type": "timeseries",
+          "title": "Customer request failures",
+          "description": "",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
           "gridPos": {
             "x": 12,
-            "y": 66,
-            "w": 6,
-            "h": 5
+            "y": 53,
+            "w": 12,
+            "h": 8
           },
           "targets": [
             {
               "refId": "A",
-              "expr": "100 * max by(namespace,test_profile,assessment_run) (last_over_time(k6_http_req_failed_rate{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"${scenario:regex}\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
               "datasource": {
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
+              "expr": "100 * max((k6_http_req_failed_rate{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"} and (time() - timestamp(k6_http_req_failed_rate{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}) <= 15)))",
+              "legendFormat": "HTTP failure",
+              "instant": false,
+              "range": true,
+              "editorMode": "code"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "100 * max((k6_capstone_product_listing_failed_rate{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"} and (time() - timestamp(k6_capstone_product_listing_failed_rate{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}) <= 15)))",
+              "legendFormat": "Content failure",
+              "instant": false,
+              "range": true,
+              "editorMode": "code"
             }
           ],
           "fieldConfig": {
             "defaults": {
               "unit": "percent",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
+              "decimals": 2,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -1495,143 +398,52 @@ data:
             "overrides": []
           },
           "options": {
-            "reduceOptions": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
               "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
+                "lastNotNull",
+                "max"
+              ]
             },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 21,
-          "title": "Content checks — min sampled",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 18,
-            "y": 66,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "100 * min by(namespace,test_profile,assessment_run) (last_over_time(k6_checks_rate{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"${scenario:regex}\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
+            "tooltip": {
+              "mode": "multi"
             }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "percent",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "green",
-                    "value": 100
-                  }
-                ]
-              }
-            },
-            "overrides": []
           },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
+          "id": 4
         },
         {
-          "id": 22,
-          "title": "HTTP throughput by test profile",
-          "description": "At least two samples required; 2-minute window may show limited data for 40-second smoke runs.",
           "type": "timeseries",
+          "title": "Measured customer throughput",
+          "description": "",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
           "gridPos": {
             "x": 0,
-            "y": 72,
+            "y": 61,
             "w": 12,
-            "h": 9
+            "h": 8
           },
           "targets": [
             {
               "refId": "A",
-              "expr": "sum by(namespace,test_profile,assessment_run) (rate(k6_http_reqs_total{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"${scenario:regex}\"}[2m]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
               "datasource": {
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "editorMode": "code",
-              "format": "time_series",
+              "expr": "sum(rate(k6_http_reqs_total{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}[1m])) and count((k6_vus{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"} and (time() - timestamp(k6_vus{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}) <= 15)))",
+              "legendFormat": "Requests/sec",
               "instant": false,
-              "range": true
+              "range": true,
+              "editorMode": "code"
             }
           ],
           "fieldConfig": {
             "defaults": {
               "unit": "reqps",
-              "noValue": "No data",
-              "color": {
-                "mode": "palette-classic"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "fillOpacity": 15,
-                "showPoints": "never",
-                "spanNulls": false,
-                "axisPlacement": "auto"
-              }
+              "decimals": 2
             },
             "overrides": []
           },
@@ -1639,147 +451,49 @@ data:
             "legend": {
               "displayMode": "table",
               "placement": "bottom",
-              "showLegend": true,
               "calcs": [
                 "lastNotNull",
                 "max"
               ]
             },
             "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
+              "mode": "multi"
             }
-          }
+          },
+          "id": 5
         },
         {
-          "id": 23,
-          "title": "HTTP p95 during sale (sampled)",
-          "description": "",
           "type": "timeseries",
+          "title": "Concurrent simulated shoppers",
+          "description": "",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
           "gridPos": {
             "x": 12,
-            "y": 72,
-            "w": 12,
-            "h": 9
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "1000 * max by(namespace,test_profile,assessment_run) (k6_http_req_duration_p95{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"${scenario:regex}\"})",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": false,
-              "range": true
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "ms",
-              "noValue": "No data",
-              "color": {
-                "mode": "palette-classic"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "fillOpacity": 15,
-                "showPoints": "never",
-                "spanNulls": false,
-                "axisPlacement": "auto"
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true,
-              "calcs": [
-                "lastNotNull",
-                "max"
-              ]
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          }
-        },
-        {
-          "id": 24,
-          "title": "Concurrency — k6 VUs",
-          "description": "",
-          "type": "timeseries",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 81,
+            "y": 61,
             "w": 12,
             "h": 8
           },
           "targets": [
             {
               "refId": "A",
-              "expr": "max by(namespace,test_profile,assessment_run) (k6_vus{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"${scenario:regex}\"})",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
               "datasource": {
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "editorMode": "code",
-              "format": "time_series",
+              "expr": "max((k6_vus{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"} and (time() - timestamp(k6_vus{project=\"Capstone\",namespace=\"retail-store\",assessment_run=\"${assessment_run}\"}) <= 15)))",
+              "legendFormat": "Virtual users",
               "instant": false,
-              "range": true
+              "range": true,
+              "editorMode": "code"
             }
           ],
           "fieldConfig": {
             "defaults": {
               "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "palette-classic"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "fillOpacity": 15,
-                "showPoints": "never",
-                "spanNulls": false,
-                "axisPlacement": "auto"
-              }
+              "decimals": 2
             },
             "overrides": []
           },
@@ -1787,73 +501,64 @@ data:
             "legend": {
               "displayMode": "table",
               "placement": "bottom",
-              "showLegend": true,
               "calcs": [
                 "lastNotNull",
                 "max"
               ]
             },
             "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
+              "mode": "multi"
             }
-          }
+          },
+          "id": 6
         },
         {
-          "id": 25,
-          "title": "Request failures over time",
-          "description": "",
+          "type": "text",
+          "title": "03 | APPLICATION RESOURCE PRESSURE",
+          "gridPos": {
+            "x": 0,
+            "y": 69,
+            "w": 24,
+            "h": 5
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "**Technical:** CPU usage and memory working set by pod. Select a service to inspect its workloads.\n\n**Layman:** How much processing power and memory does each part of the store need?"
+          },
+          "id": 7
+        },
+        {
           "type": "timeseries",
+          "title": "CPU consumption by pod",
+          "description": "",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
           "gridPos": {
-            "x": 12,
-            "y": 81,
+            "x": 0,
+            "y": 74,
             "w": 12,
             "h": 8
           },
           "targets": [
             {
               "refId": "A",
-              "expr": "100 * max by(namespace,test_profile,assessment_run) (k6_http_req_failed_rate{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"${scenario:regex}\"})",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
               "datasource": {
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "editorMode": "code",
-              "format": "time_series",
+              "expr": "sum by(pod)(rate(container_cpu_usage_seconds_total{namespace=\"retail-store\",pod=~\"${service}-.*\",container!=\"\",container!=\"POD\"}[2m])) * 1000",
+              "legendFormat": "{{pod}}",
               "instant": false,
-              "range": true
+              "range": true,
+              "editorMode": "code"
             }
           ],
           "fieldConfig": {
             "defaults": {
-              "unit": "percent",
-              "noValue": "No data",
-              "color": {
-                "mode": "palette-classic"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "fillOpacity": 15,
-                "showPoints": "never",
-                "spanNulls": false,
-                "axisPlacement": "auto"
-              }
+              "unit": "mcores",
+              "decimals": 2
             },
             "overrides": []
           },
@@ -1861,1365 +566,49 @@ data:
             "legend": {
               "displayMode": "table",
               "placement": "bottom",
-              "showLegend": true,
               "calcs": [
                 "lastNotNull",
                 "max"
               ]
             },
             "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
+              "mode": "multi"
             }
-          }
-        },
-        {
-          "id": 26,
-          "type": "row",
-          "title": "03 — CHECKOUT | Real shopping journey metrics",
-          "collapsed": false,
-          "gridPos": {
-            "x": 0,
-            "y": 89,
-            "w": 24,
-            "h": 1
           },
-          "panels": []
+          "id": 8
         },
         {
-          "type": "text",
-          "title": "About this section",
+          "type": "timeseries",
+          "title": "Memory working set by pod",
           "description": "",
-          "options": {
-            "mode": "markdown",
-            "content": "**Instrumentation gate:** `customer-purchase.js` has not yet been validated against retail-store. All checkout and order KPIs remain **No data** until a safely gated k6 purchase test emits these metrics. Do not mislabel `GET /catalog` as purchase success."
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 90,
-            "w": 24,
-            "h": 2
-          },
-          "id": 27
-        },
-        {
-          "id": 28,
-          "title": "Completed synthetic orders",
-          "description": "Requires a verified order-confirmation assertion; no confirmed test orders have been run here.",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 92,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "max by(namespace,test_profile,assessment_run) (last_over_time(k6_capstone_orders_completed_total{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"normal-day|flash-sale-1111\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 29,
-          "title": "Purchase success ratio",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 6,
-            "y": 92,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "100 * max by(namespace,test_profile,assessment_run) (last_over_time(k6_capstone_purchase_success_rate{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"normal-day|flash-sale-1111\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "percent",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "green",
-                    "value": 100
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 30,
-          "title": "End-to-end purchase p95",
-          "description": "",
-          "type": "stat",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
           "gridPos": {
             "x": 12,
-            "y": 92,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "1000 * max by(namespace,test_profile,assessment_run) (last_over_time(k6_capstone_purchase_duration_p95{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"normal-day|flash-sale-1111\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "ms",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 2000
-                  },
-                  {
-                    "color": "red",
-                    "value": 5000
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 31,
-          "title": "Failed synthetic orders",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 18,
-            "y": 92,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "max by(namespace,test_profile,assessment_run) (last_over_time(k6_capstone_purchase_failures_total{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"normal-day|flash-sale-1111\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 32,
-          "title": "Purchase funnel — counts by stage",
-          "description": "Stage values are per run. Do not sum or average completed orders across overlapping runs.",
-          "type": "bargauge",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 97,
-            "w": 24,
+            "y": 74,
+            "w": 12,
             "h": 8
           },
           "targets": [
             {
               "refId": "A",
-              "expr": "max by(namespace,test_profile,assessment_run) (last_over_time(k6_capstone_shopping_sessions_total{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"normal-day|flash-sale-1111\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} · 01 Sessions",
               "datasource": {
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            },
-            {
-              "refId": "B",
-              "expr": "max by(namespace,test_profile,assessment_run) (last_over_time(k6_capstone_cart_additions_total{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"normal-day|flash-sale-1111\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} · 02 Added cart",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            },
-            {
-              "refId": "C",
-              "expr": "max by(namespace,test_profile,assessment_run) (last_over_time(k6_capstone_checkout_attempts_total{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"normal-day|flash-sale-1111\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} · 03 Checkout",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            },
-            {
-              "refId": "D",
-              "expr": "max by(namespace,test_profile,assessment_run) (last_over_time(k6_capstone_orders_completed_total{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=~\"normal-day|flash-sale-1111\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} · 04 Orders",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "orientation": "horizontal",
-            "displayMode": "basic",
-            "showUnfilled": true
-          }
-        },
-        {
-          "id": 33,
-          "type": "row",
-          "title": "04 — USER EXPERIENCE | Real browser sessions",
-          "collapsed": false,
-          "gridPos": {
-            "x": 0,
-            "y": 105,
-            "w": 24,
-            "h": 1
-          },
-          "panels": []
-        },
-        {
-          "type": "text",
-          "title": "About this section",
-          "description": "",
-          "options": {
-            "mode": "markdown",
-            "content": "The existing k6 browser test currently validates storefront navigation/rendering, not complete purchases. Latest staging smoke run found favicon HTTP 404s; report these separately from navigation success."
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 106,
-            "w": 24,
-            "h": 2
-          },
-          "id": 34
-        },
-        {
-          "id": 35,
-          "title": "Browser LCP p95 (worst exported)",
-          "description": "",
-          "type": "gauge",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 108,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "1000 * max by(namespace,assessment_run) (last_over_time(k6_browser_web_vital_lcp_p95{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=\"browser-smoke\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "ms",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 2500
-                  },
-                  {
-                    "color": "red",
-                    "value": 4000
-                  }
-                ]
-              },
-              "min": 0,
-              "max": 4500
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showThresholdLabels": false,
-            "showThresholdMarkers": true
-          }
-        },
-        {
-          "id": 36,
-          "title": "Browser TTFB p95",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 6,
-            "y": 108,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "1000 * max by(namespace,assessment_run) (last_over_time(k6_browser_web_vital_ttfb_p95{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=\"browser-smoke\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "ms",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 800
-                  },
-                  {
-                    "color": "red",
-                    "value": 1800
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 37,
-          "title": "Browser navigation success",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 12,
-            "y": 108,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "100 * max by(namespace,assessment_run) (last_over_time(k6_capstone_browser_navigation_success_rate{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=\"browser-smoke\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "percent",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "green",
-                    "value": 100
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 38,
-          "title": "Browser resource errors",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 18,
-            "y": 108,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "max by(namespace,assessment_run) (last_over_time(k6_capstone_browser_resource_errors_total{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=\"browser-smoke\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 39,
-          "title": "Browser navigation p95",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 113,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "1000 * max by(namespace,assessment_run) (last_over_time(k6_capstone_browser_navigation_duration_p95{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=\"browser-smoke\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "ms",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 2500
-                  },
-                  {
-                    "color": "red",
-                    "value": 4000
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 40,
-          "title": "FCP p95",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 6,
-            "y": 113,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "1000 * max by(namespace,assessment_run) (last_over_time(k6_browser_web_vital_fcp_p95{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=\"browser-smoke\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "ms",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 1800
-                  },
-                  {
-                    "color": "red",
-                    "value": 3000
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 41,
-          "title": "Layout shift (CLS) p95",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 12,
-            "y": 113,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "max by(namespace,assessment_run) (last_over_time(k6_browser_web_vital_cls_p95{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=\"browser-smoke\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 0.1
-                  },
-                  {
-                    "color": "red",
-                    "value": 0.25
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 42,
-          "title": "Completed browser sessions",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 18,
-            "y": 113,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "max by(namespace,assessment_run) (last_over_time(k6_capstone_browser_completed_sessions_total{project=\"Capstone\",namespace=~\"${namespace:regex}\",assessment_run=~\"${assessment_run:regex}\",test_profile=\"browser-smoke\"}[$__range]))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 43,
-          "type": "row",
-          "title": "05 — ELASTICITY | EKS HPA reaction and recovery",
-          "collapsed": false,
-          "gridPos": {
-            "x": 0,
-            "y": 118,
-            "w": 24,
-            "h": 1
-          },
-          "panels": []
-        },
-        {
-          "type": "text",
-          "title": "About this section",
-          "description": "",
-          "options": {
-            "mode": "markdown",
-            "content": "**Observe, do not assume:** real scale-up requires sufficient CPU pressure, resource capacity and sufficient time. The 70% CPU HPA target is a configured threshold, not guaranteed scaling proof."
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 119,
-            "w": 24,
-            "h": 2
-          },
-          "id": 44
-        },
-        {
-          "id": 45,
-          "title": "Current HPA replicas",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 121,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "sum(max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_current_replicas{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\"}))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 46,
-          "title": "Desired HPA replicas",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 6,
-            "y": 121,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "sum(max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_desired_replicas{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\"}))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 47,
-          "title": "Maximum HPA capacity",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 12,
-            "y": 121,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "sum(max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_spec_max_replicas{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\"}))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 48,
-          "title": "Additional desired replicas",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 18,
-            "y": 121,
-            "w": 6,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "sum(clamp_min((max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_desired_replicas{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\"})) - (max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_current_replicas{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\"})),0))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "orange",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 49,
-          "title": "HPA current and desired replicas",
-          "description": "",
-          "type": "timeseries",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 0,
-            "y": 126,
-            "w": 12,
-            "h": 9
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_current_replicas{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\"})",
-              "legendFormat": "{{namespace}} / {{horizontalpodautoscaler}} current",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
+              "expr": "sum by(pod)(container_memory_working_set_bytes{namespace=\"retail-store\",pod=~\"${service}-.*\",container!=\"\",container!=\"POD\"})",
+              "legendFormat": "{{pod}}",
               "instant": false,
-              "range": true
-            },
-            {
-              "refId": "B",
-              "expr": "max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_desired_replicas{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\"})",
-              "legendFormat": "{{namespace}} / {{horizontalpodautoscaler}} desired",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": false,
-              "range": true
+              "range": true,
+              "editorMode": "code"
             }
           ],
           "fieldConfig": {
             "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "palette-classic"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "fillOpacity": 15,
-                "showPoints": "never",
-                "spanNulls": false,
-                "axisPlacement": "auto"
-              }
+              "unit": "bytes",
+              "decimals": 2
             },
             "overrides": []
           },
@@ -3227,86 +616,76 @@ data:
             "legend": {
               "displayMode": "table",
               "placement": "bottom",
-              "showLegend": true,
               "calcs": [
                 "lastNotNull",
                 "max"
               ]
             },
             "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
+              "mode": "multi"
             }
-          }
+          },
+          "id": 9
         },
         {
-          "id": 50,
-          "title": "HPA CPU utilization versus target",
-          "description": "",
+          "type": "text",
+          "title": "04 | AUTOMATIC ELASTICITY",
+          "gridPos": {
+            "x": 0,
+            "y": 82,
+            "w": 24,
+            "h": 5
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "**Technical:** Compare HPA CPU utilisation, configured targets, desired replicas and ready replicas.\n\n**Layman:** Does the store automatically add workers when demand increases and release them afterwards?"
+          },
+          "id": 10
+        },
+        {
           "type": "timeseries",
+          "title": "HPA CPU utilisation versus target",
+          "description": "",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
           "gridPos": {
-            "x": 12,
-            "y": 126,
+            "x": 0,
+            "y": 87,
             "w": 12,
-            "h": 9
+            "h": 8
           },
           "targets": [
             {
               "refId": "A",
-              "expr": "max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_target_metric{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
-              "legendFormat": "{{namespace}} / {{horizontalpodautoscaler}} current",
               "datasource": {
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "editorMode": "code",
-              "format": "time_series",
+              "expr": "kube_horizontalpodautoscaler_status_target_metric{namespace=\"retail-store\",metric_name=\"cpu\",metric_target_type=\"utilization\"}",
+              "legendFormat": "{{horizontalpodautoscaler}} current",
               "instant": false,
-              "range": true
+              "range": true,
+              "editorMode": "code"
             },
             {
               "refId": "B",
-              "expr": "max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_spec_target_metric{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\",metric_name=\"cpu\",metric_target_type=\"utilization\"})",
-              "legendFormat": "{{namespace}} / {{horizontalpodautoscaler}} target",
               "datasource": {
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "editorMode": "code",
-              "format": "time_series",
+              "expr": "kube_horizontalpodautoscaler_spec_target_metric{namespace=\"retail-store\",metric_name=\"cpu\",metric_target_type=\"utilization\"}",
+              "legendFormat": "{{horizontalpodautoscaler}} target",
               "instant": false,
-              "range": true
+              "range": true,
+              "editorMode": "code"
             }
           ],
           "fieldConfig": {
             "defaults": {
               "unit": "percent",
-              "noValue": "No data",
-              "color": {
-                "mode": "palette-classic"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "fillOpacity": 15,
-                "showPoints": "never",
-                "spanNulls": false,
-                "axisPlacement": "auto"
-              }
+              "decimals": 2
             },
             "overrides": []
           },
@@ -3314,220 +693,397 @@ data:
             "legend": {
               "displayMode": "table",
               "placement": "bottom",
-              "showLegend": true,
               "calcs": [
                 "lastNotNull",
                 "max"
               ]
             },
             "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
+              "mode": "multi"
             }
-          }
+          },
+          "id": 11
         },
         {
-          "id": 51,
-          "title": "Deployment replica scaling during the test",
-          "description": "",
           "type": "timeseries",
+          "title": "HPA current versus desired replicas",
+          "description": "",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
+          "gridPos": {
+            "x": 12,
+            "y": 87,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=\"retail-store\"}",
+              "legendFormat": "{{horizontalpodautoscaler}} current",
+              "instant": false,
+              "range": true,
+              "editorMode": "code"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "kube_horizontalpodautoscaler_status_desired_replicas{namespace=\"retail-store\"}",
+              "legendFormat": "{{horizontalpodautoscaler}} desired",
+              "instant": false,
+              "range": true,
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "id": 12
+        },
+        {
+          "type": "timeseries",
+          "title": "Ready replicas by microservice",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 95,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "kube_deployment_status_replicas_ready{namespace=\"retail-store\"}",
+              "legendFormat": "{{deployment}}",
+              "instant": false,
+              "range": true,
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "id": 13
+        },
+        {
+          "type": "timeseries",
+          "title": "Node readiness and pending workloads",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 95,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum((kube_node_status_condition{condition=\"Ready\",status=\"true\"} and (time() - timestamp(kube_node_status_condition{condition=\"Ready\",status=\"true\"}) <= 90)))",
+              "legendFormat": "Ready nodes",
+              "instant": false,
+              "range": true,
+              "editorMode": "code"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum((kube_pod_status_phase{namespace=\"retail-store\",phase=\"Pending\"} and (time() - timestamp(kube_pod_status_phase{namespace=\"retail-store\",phase=\"Pending\"}) <= 90)))",
+              "legendFormat": "Pending pods",
+              "instant": false,
+              "range": true,
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "id": 14
+        },
+        {
+          "type": "text",
+          "title": "05 | AWS CLOUDWATCH",
+          "gridPos": {
+            "x": 0,
+            "y": 103,
+            "w": 24,
+            "h": 6
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "**Technical:** Regional AWS infrastructure telemetry and global CloudFront measurements.\n\n**Layman:** Is the infrastructure delivering requests to the store reliably?\n\n[Open Storefront Customer Journey](/d/capstone-storefront-journey) for existing AWS panels."
+          },
+          "id": 15
+        },
+        {
+          "type": "text",
+          "title": "06 | INCIDENT RESPONSE & CENTRALISED LOGGING",
+          "gridPos": {
+            "x": 0,
+            "y": 109,
+            "w": 24,
+            "h": 6
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "**Technical:** Loki collects application logs; Prometheus evaluates alert rules and Alertmanager routes notifications.\n\n**Layman:** Detect problems, investigate their cause and notify the operations team.\n\nA firing alert is not proof of Discord delivery."
+          },
+          "id": 16
+        },
+        {
+          "type": "timeseries",
+          "title": "Container restarts",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 115,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by(pod)(increase(kube_pod_container_status_restarts_total{namespace=\"retail-store\"}[5m]))",
+              "legendFormat": "{{pod}}",
+              "instant": false,
+              "range": true,
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "id": 17
+        },
+        {
+          "type": "timeseries",
+          "title": "Production alert state",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 115,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "ALERTS{namespace=\"retail-store\",alertstate=~\"pending|firing\"}",
+              "legendFormat": "{{alertname}} {{alertstate}}",
+              "instant": false,
+              "range": true,
+              "editorMode": "code"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "id": 18
+        },
+        {
+          "type": "text",
+          "title": "Centralised log investigation",
+          "gridPos": {
+            "x": 0,
+            "y": 123,
+            "w": 24,
+            "h": 5
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "[Open Grafana Explore](/explore)\n\nSelect the existing Loki datasource and inspect the production namespace. Verify actual Loki labels and retention before claiming logging compliance."
+          },
+          "id": 19
+        },
+        {
+          "type": "text",
+          "title": "07 | RECOVERY & COST ACCOUNTABILITY",
+          "gridPos": {
+            "x": 0,
+            "y": 128,
+            "w": 24,
+            "h": 7
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "**Recovery:** Controller evaluates sustained customer health after demand returns to baseline. Target: within five minutes; observation: five to ten minutes.\n\n**Cost:** Compare verified baseline and peak node-hours, AWS unit rates, fixed services and storage. No estimated cost is presented as actual billing."
+          },
+          "id": 20
+        },
+        {
+          "type": "text",
+          "title": "08 | CAPSTONE ASSESSMENT EVIDENCE",
           "gridPos": {
             "x": 0,
             "y": 135,
-            "w": 12,
-            "h": 8
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "max by(namespace,deployment) (kube_deployment_status_replicas_available{namespace=~\"${namespace:regex}\",deployment=~\"(ui|catalog|carts|orders|checkout)\"})",
-              "legendFormat": "{{namespace}} / {{deployment}} available",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": false,
-              "range": true
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "palette-classic"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "fillOpacity": 15,
-                "showPoints": "never",
-                "spanNulls": false,
-                "axisPlacement": "auto"
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true,
-              "calcs": [
-                "lastNotNull",
-                "max"
-              ]
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          }
-        },
-        {
-          "id": 52,
-          "title": "HPA headroom (max minus current)",
-          "description": "",
-          "type": "bargauge",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 12,
-            "y": 135,
-            "w": 12,
-            "h": 8
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "clamp_min((max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_spec_max_replicas{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\"})) - (max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_current_replicas{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\"})),0)",
-              "legendFormat": "{{namespace}} / {{horizontalpodautoscaler}} headroom",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "orientation": "horizontal",
-            "displayMode": "basic",
-            "showUnfilled": true
-          }
-        },
-        {
-          "id": 53,
-          "type": "row",
-          "title": "06 — AWS EDGE | CloudFront customer traffic",
-          "collapsed": false,
-          "gridPos": {
-            "x": 0,
-            "y": 143,
             "w": 24,
-            "h": 1
+            "h": 12
           },
-          "panels": []
-        },
-        {
-          "type": "text",
-          "title": "About this section",
-          "description": "",
           "options": {
             "mode": "markdown",
-            "content": "**AWS/CloudFront metrics query `us-east-1` and `Region=Global`.** Grafana CloudWatch data source must have AWS read permission. CloudFront request totals reflect the whole distribution, not just synthetic k6 traffic. ALB/WAF/RDS charts require resource dimensions and permissions verified live."
+            "content": "| Requirement | Evidence source |\n|---|---|\n| p95 <= 500 ms | Run-specific k6 measurements |\n| Request rate and errors | Prometheus |\n| CPU and memory | Container metrics |\n| Automatic elasticity | HPA and ready replicas |\n| Centralised logs | Loki |\n| Log retention | Deployed Loki configuration |\n| Two SLIs/SLOs | Documented objectives |\n| Two alerts | Deployed Prometheus rules |\n| Notification delivery | Discord evidence |\n| Incident runbook | GitHub documentation |\n| Baseline versus peak cost | Verified cost model |\n\n**No automatic pass is assigned without evidence.**"
           },
-          "gridPos": {
-            "x": 0,
-            "y": 144,
-            "w": 24,
-            "h": 2
-          },
-          "id": 54
+          "id": 21
         },
         {
-          "id": 55,
-          "title": "CloudFront requests · 1-min sum",
-          "description": "CloudFront distribution EG61F5PSVL6LX, not ALB origin traffic; AWS CloudWatch in us-east-1.",
+          "id": 200,
+          "type": "row",
+          "title": "AWS EDGE & LOAD BALANCER TELEMETRY",
+          "collapsed": false,
+          "panels": [],
+          "gridPos": {
+            "x": 0,
+            "y": 147,
+            "w": 24,
+            "h": 1
+          }
+        },
+        {
+          "id": 201,
+          "title": "CloudFront customer requests",
           "type": "timeseries",
+          "description": "Technical: requests per 60-second period. Layman: how many requests reach the shop edge. Includes traffic outside the assessment.",
           "datasource": {
             "type": "cloudwatch",
             "uid": "${cloudwatch_datasource}"
           },
           "gridPos": {
             "x": 0,
-            "y": 146,
+            "y": 148,
             "w": 12,
             "h": 8
           },
           "fieldConfig": {
             "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "palette-classic"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "value": null,
-                    "color": "blue"
-                  }
-                ]
-              },
-              "custom": {
-                "drawStyle": "line",
-                "lineWidth": 2,
-                "fillOpacity": 12,
-                "showPoints": "never"
-              }
+              "unit": "short"
             },
             "overrides": []
           },
@@ -3542,74 +1098,36 @@ data:
               "namespace": "AWS/CloudFront",
               "metricName": "Requests",
               "dimensions": {
-                "DistributionId": "EG61F5PSVL6LX",
+                "DistributionId": "E32MQ4TPS7O344",
                 "Region": "Global"
               },
               "statistic": "Sum",
-              "period": "auto",
+              "period": "60",
               "metricQueryType": 0,
               "matchExact": true,
               "expression": "",
-              "label": "CloudFront Requests"
+              "label": "Requests"
             }
-          ],
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          }
+          ]
         },
         {
-          "id": 56,
-          "title": "CloudFront 5xx error rate",
-          "description": "CloudFront distribution EG61F5PSVL6LX, not ALB origin traffic; AWS CloudWatch in us-east-1.",
+          "id": 202,
+          "title": "CloudFront server errors",
           "type": "timeseries",
+          "description": "Technical: percentage of edge requests with 5xx responses. Layman: server-side failures.",
           "datasource": {
             "type": "cloudwatch",
             "uid": "${cloudwatch_datasource}"
           },
           "gridPos": {
             "x": 12,
-            "y": 146,
+            "y": 148,
             "w": 12,
             "h": 8
           },
           "fieldConfig": {
             "defaults": {
-              "unit": "percent",
-              "noValue": "No data",
-              "color": {
-                "mode": "palette-classic"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "value": null,
-                    "color": "green"
-                  },
-                  {
-                    "value": 1,
-                    "color": "orange"
-                  },
-                  {
-                    "value": 5,
-                    "color": "red"
-                  }
-                ]
-              },
-              "custom": {
-                "drawStyle": "line",
-                "lineWidth": 2,
-                "fillOpacity": 12,
-                "showPoints": "never"
-              }
+              "unit": "percent"
             },
             "overrides": []
           },
@@ -3624,259 +1142,396 @@ data:
               "namespace": "AWS/CloudFront",
               "metricName": "5xxErrorRate",
               "dimensions": {
-                "DistributionId": "EG61F5PSVL6LX",
+                "DistributionId": "E32MQ4TPS7O344",
                 "Region": "Global"
               },
               "statistic": "Average",
-              "period": "auto",
+              "period": "60",
               "metricQueryType": 0,
               "matchExact": true,
               "expression": "",
-              "label": "CloudFront 5xxErrorRate"
+              "label": "5xxErrorRate"
             }
-          ],
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          }
+          ]
         },
         {
-          "id": 57,
-          "type": "row",
-          "title": "07 — INCIDENT | Alerts and operational drill-down",
-          "collapsed": false,
+          "id": 203,
+          "title": "ALB request volume",
+          "type": "timeseries",
+          "description": "Requests routed through the shared ALB. Includes other shared endpoints.",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
           "gridPos": {
             "x": 0,
-            "y": 154,
+            "y": 156,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/ApplicationELB",
+              "metricName": "RequestCount",
+              "dimensions": {
+                "LoadBalancer": "app/k8s-group2shared-4d0661e371/5e126b0e9c77032a"
+              },
+              "statistic": "Sum",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "RequestCount"
+            }
+          ]
+        },
+        {
+          "id": 204,
+          "title": "ALB target response time",
+          "type": "timeseries",
+          "description": "Technical: ALB target response p95 in seconds. Layman: backend response speed. Not equivalent to end-to-end k6 latency.",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 156,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/ApplicationELB",
+              "metricName": "TargetResponseTime",
+              "dimensions": {
+                "LoadBalancer": "app/k8s-group2shared-4d0661e371/5e126b0e9c77032a"
+              },
+              "statistic": "p95",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "TargetResponseTime"
+            }
+          ]
+        },
+        {
+          "id": 210,
+          "type": "row",
+          "title": "DATABASE PERFORMANCE",
+          "collapsed": false,
+          "panels": [],
+          "gridPos": {
+            "x": 0,
+            "y": 164,
             "w": 24,
             "h": 1
-          },
-          "panels": []
+          }
         },
         {
-          "id": 58,
-          "title": "Critical alerts (selected namespace)",
-          "description": "",
-          "type": "stat",
+          "id": 211,
+          "title": "Catalog database CPU",
+          "type": "timeseries",
+          "description": "Database processing utilisation.",
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
           },
           "gridPos": {
             "x": 0,
-            "y": 155,
-            "w": 8,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "sum(ALERTS{namespace=~\"${namespace:regex}\",alertstate=\"firing\",severity=\"critical\"}) or vector(0)",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 59,
-          "title": "HPA at replica ceiling",
-          "description": "Number of HPAs at max configured replicas. No-data distinct from 0 if metrics absent.",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 8,
-            "y": 155,
-            "w": 8,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "sum((max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_status_current_replicas{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\"})) == bool (max by(namespace,horizontalpodautoscaler) (kube_horizontalpodautoscaler_spec_max_replicas{namespace=~\"${namespace:regex}\",horizontalpodautoscaler=~\"(ui|catalog|carts|orders|checkout)\"})))",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 60,
-          "title": "Unready desired app replicas",
-          "description": "",
-          "type": "stat",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "gridPos": {
-            "x": 16,
-            "y": 155,
-            "w": 8,
-            "h": 5
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "clamp_min(sum(max by(namespace,deployment) (kube_deployment_spec_replicas{namespace=~\"${namespace:regex}\",deployment=~\"(ui|catalog|carts|orders|checkout)\"})) - sum(max by(namespace,deployment) (kube_deployment_status_replicas_available{namespace=~\"${namespace:regex}\",deployment=~\"(ui|catalog|carts|orders|checkout)\"})),0)",
-              "legendFormat": "{{namespace}} / {{test_profile}} / {{assessment_run}}",
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "format": "time_series",
-              "instant": true,
-              "range": false
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "noValue": "No data",
-              "color": {
-                "mode": "thresholds"
-              },
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "center",
-            "textMode": "auto",
-            "wideLayout": true
-          }
-        },
-        {
-          "id": 61,
-          "type": "text",
-          "title": "Incident triage: golden signals → logs → traces → AWS",
-          "gridPos": {
-            "x": 0,
-            "y": 160,
-            "w": 24,
+            "y": 165,
+            "w": 12,
             "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/RDS",
+              "metricName": "CPUUtilization",
+              "dimensions": {
+                "DBInstanceIdentifier": "group2-capstone-aurora-mysql-1"
+              },
+              "statistic": "Average",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "CPUUtilization"
+            }
+          ]
+        },
+        {
+          "id": 212,
+          "title": "Catalog database connections",
+          "type": "timeseries",
+          "description": "Concurrent database connections. Not a count of individual shoppers.",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 165,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/RDS",
+              "metricName": "DatabaseConnections",
+              "dimensions": {
+                "DBInstanceIdentifier": "group2-capstone-aurora-mysql-1"
+              },
+              "statistic": "Average",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "DatabaseConnections"
+            }
+          ]
+        },
+        {
+          "id": 213,
+          "title": "Orders database CPU",
+          "type": "timeseries",
+          "description": "Database processing utilisation.",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 173,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/RDS",
+              "metricName": "CPUUtilization",
+              "dimensions": {
+                "DBInstanceIdentifier": "group2-capstone-orders-pg-1"
+              },
+              "statistic": "Average",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "CPUUtilization"
+            }
+          ]
+        },
+        {
+          "id": 214,
+          "title": "Orders database connections",
+          "type": "timeseries",
+          "description": "Concurrent database connections. Not a count of individual shoppers.",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${cloudwatch_datasource}"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 173,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "${cloudwatch_datasource}"
+              },
+              "region": "ap-southeast-1",
+              "namespace": "AWS/RDS",
+              "metricName": "DatabaseConnections",
+              "dimensions": {
+                "DBInstanceIdentifier": "group2-capstone-orders-pg-1"
+              },
+              "statistic": "Average",
+              "period": "60",
+              "metricQueryType": 0,
+              "matchExact": true,
+              "expression": "",
+              "label": "DatabaseConnections"
+            }
+          ]
+        },
+        {
+          "id": 220,
+          "type": "row",
+          "title": "LIVE APPLICATION LOGS",
+          "collapsed": false,
+          "panels": [],
+          "gridPos": {
+            "x": 0,
+            "y": 181,
+            "w": 24,
+            "h": 1
+          }
+        },
+        {
+          "id": 221,
+          "title": "Production application stream",
+          "type": "logs",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "description": "Alloy collects Kubernetes logs into Loki. Configured retention: 14 days. Keyword matches require investigation.",
+          "gridPos": {
+            "x": 0,
+            "y": 182,
+            "w": 12,
+            "h": 12
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "loki",
+                "uid": "${loki_datasource}"
+              },
+              "expr": "{namespace=\"retail-store\"}",
+              "queryType": "range",
+              "editorMode": "code"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "wrapLogMessage": true,
+            "sortOrder": "Descending"
+          }
+        },
+        {
+          "id": 222,
+          "title": "Potential application errors",
+          "type": "logs",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "description": "Alloy collects Kubernetes logs into Loki. Configured retention: 14 days. Keyword matches require investigation.",
+          "gridPos": {
+            "x": 12,
+            "y": 182,
+            "w": 12,
+            "h": 12
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "loki",
+                "uid": "${loki_datasource}"
+              },
+              "expr": "{namespace=\"retail-store\"} |~ \"(?i)error|exception|failed\"",
+              "queryType": "range",
+              "editorMode": "code"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "wrapLogMessage": true,
+            "sortOrder": "Descending"
+          }
+        },
+        {
+          "id": 230,
+          "type": "row",
+          "title": "ASSESSMENT EVIDENCE & COST ACCOUNTABILITY",
+          "collapsed": false,
+          "panels": [],
+          "gridPos": {
+            "x": 0,
+            "y": 194,
+            "w": 24,
+            "h": 1
+          }
+        },
+        {
+          "id": 231,
+          "title": "Assessment acceptance criteria",
+          "type": "text",
+          "gridPos": {
+            "x": 0,
+            "y": 195,
+            "w": 24,
+            "h": 16
           },
           "options": {
             "mode": "markdown",
-            "content": "| Investigation | Existing provisioned dashboard |\n|:--|:--|\n| Detailed k6 metrics | [Capstone — k6 Load Testing](/d/capstone-k6) |\n| Pod scaling and HPA | [Capstone — Kubernetes HPA](/d/capstone-hpa) |\n| SRE deployment health | [Capstone — SRE Health](/d/capstone-sre-health) |\n| Kubernetes node fleet | [Kubernetes Cluster Overview](/d/k8s-cluster-overview-custom) |\n| OTel metrics / Loki / Tempo | [Lightweight APM](/d/lightweight-apm-otel-custom) |\n| CloudWatch, Loki, alert logs | [All provisioned dashboards](/dashboards) |\n\n**Closed-loop demonstration:** GitHub code → image build + security scan → staging image PR → review/merge → Argo CD sync → EKS → k6 / Prometheus + CloudWatch → Grafana → Alertmanager → Discord. **Discord delivery must be validated separately; Grafana viewing does not prove notification delivery.**"
+            "content": "\n### Operational assessment objectives\n\n| Objective | Acceptance criterion |\n|---|---|\n| Normal Sale | Five-minute baseline |\n| Flash Sale | Five-minute staged 10x / 20x workload |\n| Product listing latency | p95 below 500 ms |\n| HTTP failures | Below 1% |\n| Content failures | Below 1% |\n| Recovery | Target within 5 minutes; maximum 10 |\n| Capacity | Observe actual HPA and ready replicas |\n| Alerting | Verify genuine threshold breach and delivery |\n| Logging | Correlate application logs with run timestamps |\n\n### Cost accountability\n\n- Observe node count and instance types.\n- Compare resource utilisation before, during and after load.\n- Monitor whether additional capacity is released.\n- Include EKS, EC2, ALB, CloudFront, RDS, storage and telemetry.\n- Actual billing requires verified AWS billing data.\n- Missing cost data must not be interpreted as zero cost.\n\nCloudWatch metrics are shared infrastructure observations,\nnot measurements attributable exclusively to one k6 run.\n"
           }
         }
       ]
