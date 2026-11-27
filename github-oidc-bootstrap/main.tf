@@ -28,12 +28,8 @@ data "aws_iam_policy_document" "infra_trust" {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
-<<<<<<< HEAD
         "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_infra_repository_name}@${var.github_infra_repo_id}:ref:refs/heads/main",
         "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_infra_repository_name}@${var.github_infra_repo_id}:pull_request"
-=======
-        "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_infra_repository_name}@${var.github_infra_repo_id}:ref:refs/heads/main"
->>>>>>> 2acd258 (UPDATE oidc role)
       ]
     }
   }
@@ -649,12 +645,8 @@ data "aws_iam_policy_document" "app_trust" {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
-<<<<<<< HEAD
         "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_app_repository_name}@${var.github_app_repo_id}:ref:refs/heads/main",
         "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_app_repository_name}@${var.github_app_repo_id}:pull_request"
-=======
-        "repo:${var.github_repository_username}@${var.github_owner_id}/${var.github_app_repository_name}@${var.github_app_repo_id}:ref:refs/heads/main"
->>>>>>> 2acd258 (UPDATE oidc role)
       ]
     }
   }
