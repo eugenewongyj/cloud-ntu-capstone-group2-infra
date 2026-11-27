@@ -6,6 +6,9 @@ locals {
     "/aws/containerinsights/${var.project_name}-cluster/dataplane",
     "/aws/containerinsights/${var.project_name}-cluster/host",
     "/aws/containerinsights/${var.project_name}-cluster/performance",
+    "/aws/lambda/${var.project_name}-devops-agent-relay",
+    "/aws/rds/cluster/${var.project_name}-aurora-mysql/error",
+    "/aws/rds/cluster/${var.project_name}-orders-pg/postgresql",
   ])
 }
 
