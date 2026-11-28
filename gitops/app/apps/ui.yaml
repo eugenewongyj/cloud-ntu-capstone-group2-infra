@@ -77,7 +77,7 @@ spec:
         image:
           repository: 
             255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-ui
-          tag: "72a5644da135f24eeb5f3ec462506c4f458bde50"
+          tag: "e642fa2c8369c321d65d36baf22aa5bd3875efc2"
           pullPolicy: IfNotPresent
   destination:
     server: https://kubernetes.default.svc
