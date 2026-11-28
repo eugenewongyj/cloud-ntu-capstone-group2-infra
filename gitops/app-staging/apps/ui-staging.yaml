@@ -35,7 +35,7 @@ spec:
         image:
           repository: 
             255945442255.dkr.ecr.ap-southeast-1.amazonaws.com/group2-capstone-ui
-          tag: "5979c916c5e0b812f2fd1941ae81b29f4b0a71ee"
+          tag: "c50adc8584bec986d5c1054d372a6b3dcfa82f18"
           pullPolicy: IfNotPresent
 
         # Single replica for initial staging
